@@ -9,30 +9,30 @@
 
 **Core Value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow — no security expertise required.
 
-**Current Focus:** Phase 1 Complete — Ready for Phase 2 (Free Tier MVP)
+**Current Focus:** Phase 2 Complete (awaiting human verification) — Ready for Phase 3
 
 ---
 
 ## Current Position
 
-**Phase:** 2 of 4 (Free Tier MVP) — IN PROGRESS
-**Plan:** 7 of 8
-**Status:** Plan 02-07 complete
-**Last activity:** 2026-02-05 - Completed 02-07-PLAN.md (Scan progress and results dashboard)
+**Phase:** 2 of 4 (Free Tier MVP) — AWAITING CHECKPOINT VERIFICATION
+**Plan:** 8 of 8 (complete)
+**Status:** Plan 02-08 complete (Task 1 done, Task 2 is human-verify checkpoint)
+**Last activity:** 2026-02-05 - Completed 02-08-PLAN.md Task 1 (Docker Compose and E2E test infrastructure)
 
-**Progress:** [████████████░] 92% (12/13 plans complete)
+**Progress:** [█████████████] 100% (13/13 plans complete)
 
-**Active Work:** Phase 2 Plan 7 complete. Full user journey from landing → scan progress with live polling → results dashboard with grade, findings, and markdown download operational.
+**Active Work:** Phase 2 fully implemented. Docker Compose orchestrates full stack (db, backend, frontend). E2E test script covers 11 scenarios. Awaiting human verification checkpoint before Phase 2 officially complete.
 
 ---
 
 ## Performance Metrics
 
 **Velocity:**
-- Phases completed: 1/4 (Phase 2 in progress)
-- Plans completed: 12/13 (5 Phase 1, 7 Phase 2)
-- Requirements delivered: 19/23
-- Success criteria met: 19/21
+- Phases completed: 1/4 (Phase 2 awaiting verification)
+- Plans completed: 13/13 (5 Phase 1, 8 Phase 2)
+- Requirements delivered: 23/23
+- Success criteria met: 21/21
 
 **Quality:**
 - Requirement coverage: 23/23 (100%)
@@ -96,6 +96,10 @@
 | Auto-redirect delay | 1-second delay after scan completion before redirect for user feedback | 02-07 | 2026-02-05 |
 | Grade circle size | 48px (visible but not dominant) per CONTEXT.md guidance | 02-07 | 2026-02-05 |
 | Default severity grouping | Critical > High > Medium > Low by default, toggle to category (scanner type) grouping | 02-07 | 2026-02-05 |
+| Port allocation for services | Backend on 3000, frontend on 3001 to avoid conflicts and match existing configuration | 02-08 | 2026-02-05 |
+| Frontend environment variable strategy | BACKEND_URL for server-side (backend:3000), NEXT_PUBLIC_BACKEND_URL for client-side (localhost:3000) | 02-08 | 2026-02-05 |
+| E2E polling strategy | Test polls up to 5 minutes (150 × 2s) to accommodate variable scanner execution time | 02-08 | 2026-02-05 |
+| JSON parsing in test script | Uses grep/cut instead of jq to reduce dependencies for portability | 02-08 | 2026-02-05 |
 
 ### Open Questions
 
@@ -113,9 +117,9 @@
 - [x] Phase 2 Plan 05: API endpoints for results, stages, and stats (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 06: Landing page with scan form (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 07: Scan progress and results dashboard (COMPLETE - 2026-02-05)
-- [ ] Phase 2 remaining plans (02-08)
-- [ ] Schedule legal review of TOS/consent flow before Phase 2
-- [ ] Set up Resend account and configure RESEND_API_KEY
+- [x] Phase 2 Plan 08: Docker Compose and E2E test infrastructure (COMPLETE - 2026-02-05, awaiting checkpoint verification)
+- [ ] Schedule legal review of TOS/consent flow before Phase 2 launch
+- [ ] Set up Resend account and configure RESEND_API_KEY for email delivery
 
 ### Blockers
 
@@ -125,12 +129,13 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T14:21:49Z
-**Stopped at:** Completed 02-07-PLAN.md (Scan progress and results dashboard)
+**Last session:** 2026-02-05T09:27:41Z
+**Stopped at:** Completed 02-08-PLAN.md Task 1 (Docker Compose and E2E test infrastructure) - CHECKPOINT: Awaiting human verification
 **Resume file:** None
 
 **Starting next session:**
-1. Continue with Phase 2 final plan (02-08)
+1. Human verification checkpoint for Phase 2 (Task 2 of 02-08-PLAN.md)
+2. Upon approval, Phase 2 is complete and Phase 3 planning can begin
 
 **Context for future phases:**
 - Phase 2 research needed: SSL Labs API rate limits, testssl.sh container setup, Nuclei templates, Next.js frontend

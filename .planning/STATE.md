@@ -15,24 +15,24 @@
 
 ## Current Position
 
-**Phase:** 1 of 4 (Foundation) — COMPLETE
-**Plan:** 5 of 5
-**Status:** Phase complete
-**Last activity:** 2026-02-05 - Completed 01-05-PLAN.md (verified)
+**Phase:** 2 of 4 (Free Tier MVP) — IN PROGRESS
+**Plan:** 1 of 6
+**Status:** Plan 02-01 complete
+**Last activity:** 2026-02-05 - Completed 02-01-PLAN.md (database schema + frontend scaffold)
 
-**Progress:** [██████████] 100% (5/5 plans complete)
+**Progress:** [████░░░░░░░░░] 46% (6/13 plans complete)
 
-**Active Work:** Phase 1 complete and verified. Ready to plan Phase 2 (Free Tier MVP).
+**Active Work:** Phase 2 Plan 1 complete. Database schema extended with results tokens and scan stages. Next.js frontend scaffolded.
 
 ---
 
 ## Performance Metrics
 
 **Velocity:**
-- Phases completed: 1/4
-- Plans completed: 5/5 (Phase 1)
-- Requirements delivered: 5/23
-- Success criteria met: 5/21
+- Phases completed: 1/4 (Phase 2 in progress)
+- Plans completed: 6/13 (5 Phase 1, 1 Phase 2)
+- Requirements delivered: 7/23
+- Success criteria met: 7/21
 
 **Quality:**
 - Requirement coverage: 23/23 (100%)
@@ -66,6 +66,10 @@
 | Rate limiting as handler function | Database-backed approach persists across restarts, simpler than Tower middleware | 01-04 | 2026-02-05 |
 | SQL type casts for compatibility | inet→text and timestamptz→timestamp for Rust type compatibility | 01-05 | 2026-02-05 |
 | Unique migration timestamps | YYYYMMDDHHMMSS format prevents SQLx version conflicts | 01-05 | 2026-02-05 |
+| Results token format | 64-char VARCHAR for base64url-encoded 32 bytes with safety margin | 02-01 | 2026-02-05 |
+| Stage tracking as columns | Individual booleans instead of JSONB for simpler SQL queries | 02-01 | 2026-02-05 |
+| 3-day free tier expiry | expires_at set 3 days after scan completion for free tier access | 02-01 | 2026-02-05 |
+| Next.js standalone output | Configured for Docker deployment compatibility | 02-01 | 2026-02-05 |
 
 ### Open Questions
 
@@ -76,7 +80,8 @@
 ### Active TODOs
 
 - [x] Phase 1: Foundation (COMPLETE - verified 2026-02-05)
-- [ ] Phase 2: Free Tier MVP (next)
+- [x] Phase 2 Plan 01: Database schema + frontend scaffold (COMPLETE - 2026-02-05)
+- [ ] Phase 2 remaining plans (02-02 through 02-06)
 - [ ] Schedule legal review of TOS/consent flow before Phase 2
 - [ ] Research SSL Labs API documentation for Phase 2 planning
 
@@ -88,12 +93,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T03:35:07Z
-**Stopped at:** Completed Phase 1 (Foundation) - verified
+**Last session:** 2026-02-05T14:04:29Z
+**Stopped at:** Completed 02-01-PLAN.md (database schema + frontend scaffold)
 **Resume file:** None
 
 **Starting next session:**
-1. Run `/gsd:plan-phase 2` to plan Free Tier MVP
+1. Continue with Phase 2 remaining plans (02-02 through 02-06)
 
 **Context for future phases:**
 - Phase 2 research needed: SSL Labs API rate limits, testssl.sh container setup, Nuclei templates, Next.js frontend

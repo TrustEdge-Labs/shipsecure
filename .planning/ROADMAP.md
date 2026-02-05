@@ -31,7 +31,6 @@ Plans:
 - INFRA-02: Findings aggregator normalizes scanner output
 - INFRA-03: Rate limiting restricts free tier scans
 - INFRA-04: SSRF protection blocks dangerous targets
-- INFRA-05: Containerized scanner execution with security hardening
 - SCAN-02: Security headers analysis
 
 **Success Criteria:**
@@ -57,6 +56,7 @@ Plans:
 - SCAN-03: TLS/certificate analysis via SSL Labs API
 - SCAN-04: Exposed file/directory detection
 - SCAN-05: JavaScript secret scanning
+- INFRA-05: Containerized scanner execution with security hardening (Nuclei, testssl.sh)
 - DLVR-01: Results page with findings by severity
 - DLVR-02: Plain-language explanations and remediation steps
 - DLVR-03: Overall security score (A-F grade)
@@ -116,8 +116,8 @@ Plans:
 
 | Phase | Status | Requirements | Success Criteria | Completion |
 |-------|--------|--------------|------------------|------------|
-| 1 - Foundation | Planned | 6 | 5 | 0% |
-| 2 - Free Tier MVP | Pending | 11 | 6 | 0% |
+| 1 - Foundation | Planned | 5 | 5 | 0% |
+| 2 - Free Tier MVP | Pending | 12 | 6 | 0% |
 | 3 - Vibe-Code Intelligence | Pending | 3 | 5 | 0% |
 | 4 - Monetization | Pending | 3 | 5 | 0% |
 

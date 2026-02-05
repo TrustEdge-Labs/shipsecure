@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 2 of 4 (Free Tier MVP) — IN PROGRESS
-**Plan:** 4 of 6
-**Status:** Plan 02-04 complete
-**Last activity:** 2026-02-05 - Completed 02-04-PLAN.md (Scanner integration and email delivery)
+**Plan:** 5 of 8
+**Status:** Plan 02-05 complete
+**Last activity:** 2026-02-05 - Completed 02-05-PLAN.md (API endpoints for results, stages, and stats)
 
-**Progress:** [████████░░░░░] 69% (9/13 plans complete)
+**Progress:** [██████████░░░] 77% (10/13 plans complete)
 
-**Active Work:** Phase 2 Plan 4 complete. All 4 scanners wired with concurrent execution, stage tracking, results token generation, and Resend email notifications.
+**Active Work:** Phase 2 Plan 5 complete. Backend API fully operational with token-based results, markdown downloads, stage progress tracking, and scan counter.
 
 ---
 
@@ -30,9 +30,9 @@
 
 **Velocity:**
 - Phases completed: 1/4 (Phase 2 in progress)
-- Plans completed: 9/13 (5 Phase 1, 4 Phase 2)
-- Requirements delivered: 13/23
-- Success criteria met: 13/21
+- Plans completed: 10/13 (5 Phase 1, 5 Phase 2)
+- Requirements delivered: 14/23
+- Success criteria met: 14/21
 
 **Quality:**
 - Requirement coverage: 23/23 (100%)
@@ -83,6 +83,10 @@
 | Email failure doesn't fail scan | Email send errors logged as warnings, scan still completes successfully | 02-04 | 2026-02-05 |
 | 256-bit results token | Base64url encoded 32 random bytes, 3-day expiry for free tier access | 02-04 | 2026-02-05 |
 | No upgrade CTAs in email | Phase 2 free tier emails don't mention paid tiers per CONTEXT.md | 02-04 | 2026-02-05 |
+| Return token not scan ID | Results endpoint returns token as "id" to prevent correlation to internal UUIDs | 02-05 | 2026-02-05 |
+| Exclude PII from results | Email and IP addresses excluded from token-based results responses for privacy | 02-05 | 2026-02-05 |
+| Markdown download format | Structured markdown with severity grouping and remediation guidance for developer-friendly reports | 02-05 | 2026-02-05 |
+| CORS via layer not per-endpoint | Apply tower-http CorsLayer to entire router for consistent cross-origin behavior | 02-05 | 2026-02-05 |
 
 ### Open Questions
 
@@ -97,7 +101,8 @@
 - [x] Phase 2 Plan 02: TLS and exposed files scanners (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 03: JavaScript secrets & container scanners (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 04: Scanner integration and email delivery (COMPLETE - 2026-02-05)
-- [ ] Phase 2 remaining plans (02-05, 02-06)
+- [x] Phase 2 Plan 05: API endpoints for results, stages, and stats (COMPLETE - 2026-02-05)
+- [ ] Phase 2 remaining plans (02-06, 02-07, 02-08)
 - [ ] Schedule legal review of TOS/consent flow before Phase 2
 - [ ] Set up Resend account and configure RESEND_API_KEY
 
@@ -109,12 +114,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T14:34:33Z
-**Stopped at:** Completed 02-04-PLAN.md (Scanner integration and email delivery)
+**Last session:** 2026-02-05T14:15:07Z
+**Stopped at:** Completed 02-05-PLAN.md (API endpoints for results, stages, and stats)
 **Resume file:** None
 
 **Starting next session:**
-1. Continue with Phase 2 remaining plans (02-05, 02-06)
+1. Continue with Phase 2 remaining plans (02-06, 02-07, 02-08)
 
 **Context for future phases:**
 - Phase 2 research needed: SSL Labs API rate limits, testssl.sh container setup, Nuclei templates, Next.js frontend

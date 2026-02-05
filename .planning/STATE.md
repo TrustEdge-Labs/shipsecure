@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 1 of 4 (Foundation)
-**Plan:** 2 of 5
+**Plan:** 3 of 5
 **Status:** In progress
-**Last activity:** 2026-02-05 - Completed 01-02-PLAN.md
+**Last activity:** 2026-02-05 - Completed 01-03-PLAN.md
 
-**Progress:** [████░░░░░░] 40% (2/5 plans complete)
+**Progress:** [██████░░░░] 60% (3/5 plans complete)
 
-**Active Work:** Plans 01-01 and 01-02 complete. Ready for 01-04 (API handlers) and 01-05 (Docker infrastructure)
+**Active Work:** Plans 01-01, 01-02, and 01-03 complete. Ready for 01-04 (API handlers) and 01-05 (Docker infrastructure)
 
 ---
 
@@ -30,7 +30,7 @@
 
 **Velocity:**
 - Phases completed: 0/4
-- Plans completed: 2/5 (Phase 1)
+- Plans completed: 3/5 (Phase 1)
 - Requirements delivered: 0/23
 - Success criteria met: 0/21
 
@@ -63,6 +63,10 @@
 | Async DNS resolution | Use tokio::net::lookup_host for non-blocking DNS validation in SSRF protection | 01-02 | 2026-02-05 |
 | A-F scoring boundaries | 0=A+, 1-5=A, 6-10=B, 11-20=C, 21-40=D, 41+=F based on severity weights | 01-02 | 2026-02-05 |
 | Finding deduplication by title | Keep highest severity when multiple scanners find same issue | 01-02 | 2026-02-05 |
+| Use sqlx query_as not macro | Avoid DATABASE_URL requirement at compile time for better developer experience | 01-03 | 2026-02-05 |
+| Semaphore concurrency control | 5 workers default for simple effective throttling of parallel scan execution | 01-03 | 2026-02-05 |
+| Scanner timeout and retry | 60s timeout with single retry balances completion time and preventing hangs | 01-03 | 2026-02-05 |
+| Allow partial scanner success | Provide value even if some scanners fail rather than total failure | 01-03 | 2026-02-05 |
 
 ### Open Questions
 
@@ -90,8 +94,8 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T03:07:29Z
-**Stopped at:** Completed 01-02-PLAN.md (01-03 also completed in parallel)
+**Last session:** 2026-02-05T03:08:01Z
+**Stopped at:** Completed 01-03-PLAN.md (parallel execution with 01-02)
 **Resume file:** None
 
 **Starting next session:**

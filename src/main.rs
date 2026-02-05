@@ -1,13 +1,16 @@
+use axum::http::Method;
 use axum::routing::{get, post};
 use axum::Router;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
+use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::EnvFilter;
 
 // Import from lib
 use trustedge_audit::api::scans::{self, AppState};
+use trustedge_audit::api::{results, stats};
 use trustedge_audit::orchestrator::ScanOrchestrator;
 
 #[tokio::main]
@@ -47,11 +50,24 @@ async fn main() {
         orchestrator,
     };
 
+    // CORS middleware for frontend communication
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // For development; restrict in production
+        .allow_methods([Method::GET, Method::POST])
+        .allow_headers(Any);
+
     // Router
     let app = Router::new()
         .route("/health", get(|| async { "ok" }))
         .route("/api/v1/scans", post(scans::create_scan))
         .route("/api/v1/scans/{id}", get(scans::get_scan))
+        .route("/api/v1/results/{token}", get(results::get_results_by_token))
+        .route(
+            "/api/v1/results/{token}/download",
+            get(results::download_results_markdown),
+        )
+        .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
+        .layer(cors)
         .with_state(state)
         .into_make_service_with_connect_info::<SocketAddr>();
 

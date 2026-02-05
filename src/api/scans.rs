@@ -120,12 +120,17 @@ pub async fn get_scan(
         })
         .collect();
 
-    // 5. Return JSON response
+    // 5. Return JSON response with stage tracking and results_token
     let response = json!({
         "id": scan.id,
         "target_url": scan.target_url,
         "status": format!("{:?}", scan.status).to_lowercase(),
         "score": scan.score,
+        "results_token": scan.results_token,
+        "stage_headers": scan.stage_headers,
+        "stage_tls": scan.stage_tls,
+        "stage_files": scan.stage_files,
+        "stage_secrets": scan.stage_secrets,
         "created_at": scan.created_at,
         "started_at": scan.started_at,
         "completed_at": scan.completed_at,

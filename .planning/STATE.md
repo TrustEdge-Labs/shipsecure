@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 2 of 4 (Free Tier MVP) — IN PROGRESS
-**Plan:** 3 of 6
-**Status:** Plan 02-02 complete
-**Last activity:** 2026-02-05 - Completed 02-02-PLAN.md (TLS and exposed files scanners)
+**Plan:** 4 of 6
+**Status:** Plan 02-04 complete
+**Last activity:** 2026-02-05 - Completed 02-04-PLAN.md (Scanner integration and email delivery)
 
-**Progress:** [██████░░░░░░░] 62% (8/13 plans complete)
+**Progress:** [████████░░░░░] 69% (9/13 plans complete)
 
-**Active Work:** Phase 2 Plan 2 complete. TLS/SSL scanner with SSL Labs API and exposed files scanner with content validation built.
+**Active Work:** Phase 2 Plan 4 complete. All 4 scanners wired with concurrent execution, stage tracking, results token generation, and Resend email notifications.
 
 ---
 
@@ -30,9 +30,9 @@
 
 **Velocity:**
 - Phases completed: 1/4 (Phase 2 in progress)
-- Plans completed: 8/13 (5 Phase 1, 3 Phase 2)
-- Requirements delivered: 11/23
-- Success criteria met: 11/21
+- Plans completed: 9/13 (5 Phase 1, 4 Phase 2)
+- Requirements delivered: 13/23
+- Success criteria met: 13/21
 
 **Quality:**
 - Requirement coverage: 23/23 (100%)
@@ -79,6 +79,10 @@
 | Rate limit tracking via headers | Track X-Current-Assessments and X-Max-Assessments, add 30s delay at capacity, 60s on 429 | 02-02 | 2026-02-05 |
 | Content validation for false positives | .env files checked for env patterns, .git for config markers, reduces false positives | 02-02 | 2026-02-05 |
 | Concurrent path probing | Use tokio::spawn for parallel probes with individual 10-second timeouts | 02-02 | 2026-02-05 |
+| tokio::spawn per scanner | Each scanner runs in separate task for true per-stage tracking updates | 02-04 | 2026-02-05 |
+| Email failure doesn't fail scan | Email send errors logged as warnings, scan still completes successfully | 02-04 | 2026-02-05 |
+| 256-bit results token | Base64url encoded 32 random bytes, 3-day expiry for free tier access | 02-04 | 2026-02-05 |
+| No upgrade CTAs in email | Phase 2 free tier emails don't mention paid tiers per CONTEXT.md | 02-04 | 2026-02-05 |
 
 ### Open Questions
 
@@ -92,9 +96,10 @@
 - [x] Phase 2 Plan 01: Database schema + frontend scaffold (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 02: TLS and exposed files scanners (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 03: JavaScript secrets & container scanners (COMPLETE - 2026-02-05)
-- [ ] Phase 2 remaining plans (02-04, 02-05, 02-06)
+- [x] Phase 2 Plan 04: Scanner integration and email delivery (COMPLETE - 2026-02-05)
+- [ ] Phase 2 remaining plans (02-05, 02-06)
 - [ ] Schedule legal review of TOS/consent flow before Phase 2
-- [ ] Research SSL Labs API documentation for Phase 2 planning
+- [ ] Set up Resend account and configure RESEND_API_KEY
 
 ### Blockers
 
@@ -104,12 +109,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T14:14:55Z
-**Stopped at:** Completed 02-02-PLAN.md (TLS and exposed files scanners)
+**Last session:** 2026-02-05T14:34:33Z
+**Stopped at:** Completed 02-04-PLAN.md (Scanner integration and email delivery)
 **Resume file:** None
 
 **Starting next session:**
-1. Continue with Phase 2 remaining plans (02-04, 02-05, 02-06)
+1. Continue with Phase 2 remaining plans (02-05, 02-06)
 
 **Context for future phases:**
 - Phase 2 research needed: SSL Labs API rate limits, testssl.sh container setup, Nuclei templates, Next.js frontend

@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 2 of 4 (Free Tier MVP) — IN PROGRESS
-**Plan:** 5 of 8
-**Status:** Plan 02-05 complete
-**Last activity:** 2026-02-05 - Completed 02-05-PLAN.md (API endpoints for results, stages, and stats)
+**Plan:** 6 of 8
+**Status:** Plan 02-06 complete
+**Last activity:** 2026-02-05 - Completed 02-06-PLAN.md (Landing page with scan form)
 
-**Progress:** [██████████░░░] 77% (10/13 plans complete)
+**Progress:** [███████████░░] 85% (11/13 plans complete)
 
-**Active Work:** Phase 2 Plan 5 complete. Backend API fully operational with token-based results, markdown downloads, stage progress tracking, and scan counter.
+**Active Work:** Phase 2 Plan 6 complete. Landing page with Server Action form submission, Zod validation, and scan counter social proof operational.
 
 ---
 
@@ -30,9 +30,9 @@
 
 **Velocity:**
 - Phases completed: 1/4 (Phase 2 in progress)
-- Plans completed: 10/13 (5 Phase 1, 5 Phase 2)
-- Requirements delivered: 14/23
-- Success criteria met: 14/21
+- Plans completed: 11/13 (5 Phase 1, 6 Phase 2)
+- Requirements delivered: 16/23
+- Success criteria met: 16/21
 
 **Quality:**
 - Requirement coverage: 23/23 (100%)
@@ -87,6 +87,9 @@
 | Exclude PII from results | Email and IP addresses excluded from token-based results responses for privacy | 02-05 | 2026-02-05 |
 | Markdown download format | Structured markdown with severity grouping and remediation guidance for developer-friendly reports | 02-05 | 2026-02-05 |
 | CORS via layer not per-endpoint | Apply tower-http CorsLayer to entire router for consistent cross-origin behavior | 02-05 | 2026-02-05 |
+| BACKEND_URL for Server Actions | Use BACKEND_URL env var (not NEXT_PUBLIC_) in Server Actions to keep API endpoint private from client | 02-06 | 2026-02-05 |
+| Client-side delayed redirect | Server Action returns scanId, client shows success 2.5s before redirect for better UX feedback | 02-06 | 2026-02-05 |
+| Scan counter graceful degradation | Server-side fetch with 60s revalidation, hidden if backend unreachable (no error to user) | 02-06 | 2026-02-05 |
 
 ### Open Questions
 
@@ -102,7 +105,8 @@
 - [x] Phase 2 Plan 03: JavaScript secrets & container scanners (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 04: Scanner integration and email delivery (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 05: API endpoints for results, stages, and stats (COMPLETE - 2026-02-05)
-- [ ] Phase 2 remaining plans (02-06, 02-07, 02-08)
+- [x] Phase 2 Plan 06: Landing page with scan form (COMPLETE - 2026-02-05)
+- [ ] Phase 2 remaining plans (02-07, 02-08)
 - [ ] Schedule legal review of TOS/consent flow before Phase 2
 - [ ] Set up Resend account and configure RESEND_API_KEY
 
@@ -114,12 +118,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T14:15:07Z
-**Stopped at:** Completed 02-05-PLAN.md (API endpoints for results, stages, and stats)
+**Last session:** 2026-02-05T14:20:15Z
+**Stopped at:** Completed 02-06-PLAN.md (Landing page with scan form)
 **Resume file:** None
 
 **Starting next session:**
-1. Continue with Phase 2 remaining plans (02-06, 02-07, 02-08)
+1. Continue with Phase 2 remaining plans (02-07, 02-08)
 
 **Context for future phases:**
 - Phase 2 research needed: SSL Labs API rate limits, testssl.sh container setup, Nuclei templates, Next.js frontend

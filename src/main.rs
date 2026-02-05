@@ -1,69 +1,70 @@
-use axum::{routing::get, Router};
+use axum::routing::{get, post};
+use axum::Router;
 use sqlx::postgres::PgPoolOptions;
-use std::env;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use std::net::SocketAddr;
+use std::sync::Arc;
+use tokio::net::TcpListener;
+use tracing_subscriber::EnvFilter;
+
+// Import from lib
+use trustedge_audit::api::scans::{self, AppState};
+use trustedge_audit::orchestrator::ScanOrchestrator;
 
 #[tokio::main]
 async fn main() {
-    // Load .env file
+    // Load .env
     dotenvy::dotenv().ok();
 
-    // Initialize tracing
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "trustedge_audit=debug,tower_http=debug".into()),
+    // Init tracing
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info")),
         )
-        .with(tracing_subscriber::fmt::layer())
         .init();
 
-    // Get database URL and port
-    let database_url = env::var("DATABASE_URL").ok();
-    let port = env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    // Database pool
+    let database_url =
+        std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let pool = PgPoolOptions::new()
+        .max_connections(10)
+        .connect(&database_url)
+        .await
+        .expect("Failed to connect to database");
 
-    // Create database pool if DATABASE_URL is set
-    let _pool = if let Some(url) = database_url {
-        match PgPoolOptions::new()
-            .max_connections(5)
-            .connect(&url)
-            .await
-        {
-            Ok(pool) => {
-                tracing::info!("Database connection established");
+    // Run migrations
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run migrations");
 
-                // Run migrations (handle gracefully if it fails)
-                if let Err(e) = sqlx::migrate!("./migrations").run(&pool).await {
-                    tracing::warn!("Failed to run migrations: {}. Continuing without migrations.", e);
-                }
+    // Create orchestrator (5 concurrent scans max)
+    let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), 5));
 
-                Some(pool)
-            }
-            Err(e) => {
-                tracing::warn!("Failed to connect to database: {}. Starting without database.", e);
-                None
-            }
-        }
-    } else {
-        tracing::warn!("DATABASE_URL not set. Starting without database.");
-        None
+    // App state
+    let state = AppState {
+        pool: pool.clone(),
+        orchestrator,
     };
 
-    // Build router
-    let app = Router::new().route("/health", get(health_check));
+    // Router
+    let app = Router::new()
+        .route("/health", get(|| async { "ok" }))
+        .route("/api/v1/scans", post(scans::create_scan))
+        .route("/api/v1/scans/{id}", get(scans::get_scan))
+        .with_state(state)
+        .into_make_service_with_connect_info::<SocketAddr>();
 
-    // Bind server
-    let addr = format!("0.0.0.0:{}", port);
-    tracing::info!("Starting server on {}", addr);
+    // Bind and serve
+    let port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| "3000".to_string())
+        .parse()
+        .expect("PORT must be a number");
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+    tracing::info!("TrustEdge Audit API listening on {}", addr);
 
-    let listener = tokio::net::TcpListener::bind(&addr)
+    let listener = TcpListener::bind(addr)
         .await
-        .expect("Failed to bind server");
-
-    axum::serve(listener, app)
-        .await
-        .expect("Server failed");
-}
-
-async fn health_check() -> &'static str {
-    "ok"
+        .expect("Failed to bind");
+    axum::serve(listener, app).await.expect("Server error");
 }

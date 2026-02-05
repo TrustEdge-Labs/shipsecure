@@ -17,12 +17,12 @@
 
 **Phase:** 2 of 4 (Free Tier MVP) — IN PROGRESS
 **Plan:** 3 of 6
-**Status:** Plan 02-03 complete
-**Last activity:** 2026-02-05 - Completed 02-03-PLAN.md (JavaScript secrets & container scanners)
+**Status:** Plan 02-02 complete
+**Last activity:** 2026-02-05 - Completed 02-02-PLAN.md (TLS and exposed files scanners)
 
-**Progress:** [█████░░░░░░░░] 54% (7/13 plans complete)
+**Progress:** [██████░░░░░░░] 62% (8/13 plans complete)
 
-**Active Work:** Phase 2 Plan 3 complete. JavaScript secrets scanner and containerized scanner execution wrapper built with Docker security hardening.
+**Active Work:** Phase 2 Plan 2 complete. TLS/SSL scanner with SSL Labs API and exposed files scanner with content validation built.
 
 ---
 
@@ -30,9 +30,9 @@
 
 **Velocity:**
 - Phases completed: 1/4 (Phase 2 in progress)
-- Plans completed: 7/13 (5 Phase 1, 2 Phase 2)
-- Requirements delivered: 9/23
-- Success criteria met: 9/21
+- Plans completed: 8/13 (5 Phase 1, 3 Phase 2)
+- Requirements delivered: 11/23
+- Success criteria met: 11/21
 
 **Quality:**
 - Requirement coverage: 23/23 (100%)
@@ -75,6 +75,10 @@
 | False positive filtering | Skip test keys, placeholders, and example values in secret detection | 02-03 | 2026-02-05 |
 | Docker CIS security hardening | All containers run with 8 mandatory security flags (read-only, cap-drop, non-root, resource limits) | 02-03 | 2026-02-05 |
 | Graceful Docker degradation | Return empty findings with warning log when Docker unavailable, not error | 02-03 | 2026-02-05 |
+| SSL Labs polling strategy | 10-second intervals with max 30 attempts (5 minutes total) balances completion time and API courtesy | 02-02 | 2026-02-05 |
+| Rate limit tracking via headers | Track X-Current-Assessments and X-Max-Assessments, add 30s delay at capacity, 60s on 429 | 02-02 | 2026-02-05 |
+| Content validation for false positives | .env files checked for env patterns, .git for config markers, reduces false positives | 02-02 | 2026-02-05 |
+| Concurrent path probing | Use tokio::spawn for parallel probes with individual 10-second timeouts | 02-02 | 2026-02-05 |
 
 ### Open Questions
 
@@ -86,8 +90,9 @@
 
 - [x] Phase 1: Foundation (COMPLETE - verified 2026-02-05)
 - [x] Phase 2 Plan 01: Database schema + frontend scaffold (COMPLETE - 2026-02-05)
+- [x] Phase 2 Plan 02: TLS and exposed files scanners (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 03: JavaScript secrets & container scanners (COMPLETE - 2026-02-05)
-- [ ] Phase 2 remaining plans (02-02, 02-04, 02-05, 02-06)
+- [ ] Phase 2 remaining plans (02-04, 02-05, 02-06)
 - [ ] Schedule legal review of TOS/consent flow before Phase 2
 - [ ] Research SSL Labs API documentation for Phase 2 planning
 
@@ -99,12 +104,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T14:07:44Z
-**Stopped at:** Completed 02-03-PLAN.md (JavaScript secrets & container scanners)
+**Last session:** 2026-02-05T14:14:55Z
+**Stopped at:** Completed 02-02-PLAN.md (TLS and exposed files scanners)
 **Resume file:** None
 
 **Starting next session:**
-1. Continue with Phase 2 remaining plans (02-02, 02-04, 02-05, 02-06)
+1. Continue with Phase 2 remaining plans (02-04, 02-05, 02-06)
 
 **Context for future phases:**
 - Phase 2 research needed: SSL Labs API rate limits, testssl.sh container setup, Nuclei templates, Next.js frontend

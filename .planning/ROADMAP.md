@@ -17,6 +17,15 @@ TrustEdge Audit's roadmap delivers a complete security scanning platform in 4 ph
 
 **Dependencies:** None (initial phase)
 
+**Plans:** 5 plans
+
+Plans:
+- [ ] 01-01-PLAN.md -- Rust project scaffold, dependencies, domain models, database migrations
+- [ ] 01-02-PLAN.md -- SSRF protection, security headers scanner, findings aggregator
+- [ ] 01-03-PLAN.md -- Scan orchestrator worker pool, database access layer
+- [ ] 01-04-PLAN.md -- API handlers, rate limiting, error handling, router wiring
+- [ ] 01-05-PLAN.md -- Docker infrastructure, end-to-end verification, human approval
+
 **Requirements:**
 - INFRA-01: Scan orchestrator manages concurrent scan jobs
 - INFRA-02: Findings aggregator normalizes scanner output
@@ -107,7 +116,7 @@ TrustEdge Audit's roadmap delivers a complete security scanning platform in 4 ph
 
 | Phase | Status | Requirements | Success Criteria | Completion |
 |-------|--------|--------------|------------------|------------|
-| 1 - Foundation | Pending | 6 | 5 | 0% |
+| 1 - Foundation | Planned | 6 | 5 | 0% |
 | 2 - Free Tier MVP | Pending | 11 | 6 | 0% |
 | 3 - Vibe-Code Intelligence | Pending | 3 | 5 | 0% |
 | 4 - Monetization | Pending | 3 | 5 | 0% |
@@ -118,13 +127,13 @@ TrustEdge Audit's roadmap delivers a complete security scanning platform in 4 ph
 
 ## Deferred to v2
 
-- PDF report generation (PDF-01, PDF-02) — moved to Phase 4 paid tier instead
-- Continuous monitoring (MON-01, MON-02, MON-03) — requires GitHub webhooks and cert monitoring
-- Repo scanning (REPO-01, REPO-02, REPO-03, REPO-04) — Semgrep, Gitleaks, dependency scanning
-- Subscription tiers (SUB-01, SUB-02) — Pro and Agency recurring billing
+- PDF report generation (PDF-01, PDF-02) -- moved to Phase 4 paid tier instead
+- Continuous monitoring (MON-01, MON-02, MON-03) -- requires GitHub webhooks and cert monitoring
+- Repo scanning (REPO-01, REPO-02, REPO-03, REPO-04) -- Semgrep, Gitleaks, dependency scanning
+- Subscription tiers (SUB-01, SUB-02) -- Pro and Agency recurring billing
 
 ---
 
 **Roadmap created:** 2026-02-04
 **Last updated:** 2026-02-04
-**Next step:** `/gsd:plan-phase 1`
+**Next step:** `/gsd:execute-phase 1`

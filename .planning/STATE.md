@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 1 of 4 (Foundation)
-**Plan:** 1 of 5
+**Plan:** 2 of 5
 **Status:** In progress
-**Last activity:** 2026-02-05 - Completed 01-01-PLAN.md
+**Last activity:** 2026-02-05 - Completed 01-02-PLAN.md
 
-**Progress:** [██░░░░░░░░] 20% (1/5 plans complete)
+**Progress:** [████░░░░░░] 40% (2/5 plans complete)
 
-**Active Work:** Plan 01-01 (Project Scaffold) complete. Ready for 01-02 (SSRF protection and security headers scanner)
+**Active Work:** Plans 01-01 and 01-02 complete. Ready for 01-04 (API handlers) and 01-05 (Docker infrastructure)
 
 ---
 
@@ -30,7 +30,7 @@
 
 **Velocity:**
 - Phases completed: 0/4
-- Plans completed: 1/5 (Phase 1)
+- Plans completed: 2/5 (Phase 1)
 - Requirements delivered: 0/23
 - Success criteria met: 0/21
 
@@ -59,6 +59,10 @@
 | Graceful startup without database | Server can start and compile without PostgreSQL for local development | 01-01 | 2026-02-05 |
 | Enum-backed database types | Use PostgreSQL enums for scan_status and finding_severity for type safety | 01-01 | 2026-02-05 |
 | NaiveDateTime for timestamps | Database stores TIMESTAMPTZ but app logic doesn't need timezone operations | 01-01 | 2026-02-05 |
+| SSRF cloud metadata checks first | Check specific cloud metadata IPs before general private IP checks for better error messages | 01-02 | 2026-02-05 |
+| Async DNS resolution | Use tokio::net::lookup_host for non-blocking DNS validation in SSRF protection | 01-02 | 2026-02-05 |
+| A-F scoring boundaries | 0=A+, 1-5=A, 6-10=B, 11-20=C, 21-40=D, 41+=F based on severity weights | 01-02 | 2026-02-05 |
+| Finding deduplication by title | Keep highest severity when multiple scanners find same issue | 01-02 | 2026-02-05 |
 
 ### Open Questions
 
@@ -70,8 +74,8 @@
 ### Active TODOs
 
 - [x] Plan 01-01: Project scaffold (COMPLETE)
-- [ ] Plan 01-02: SSRF protection and security headers scanner
-- [ ] Plan 01-03: Scan orchestrator worker pool
+- [x] Plan 01-02: SSRF protection and security headers scanner (COMPLETE)
+- [x] Plan 01-03: Scan orchestrator worker pool (COMPLETE - parallel execution)
 - [ ] Plan 01-04: API handlers and rate limiting
 - [ ] Plan 01-05: Docker infrastructure and deployment
 - [ ] Schedule legal review of TOS/consent flow before Phase 2
@@ -86,15 +90,13 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T03:01:05Z
-**Stopped at:** Completed 01-01-PLAN.md
+**Last session:** 2026-02-05T03:07:29Z
+**Stopped at:** Completed 01-02-PLAN.md (01-03 also completed in parallel)
 **Resume file:** None
 
 **Starting next session:**
-1. Execute Plan 01-02: SSRF protection and security headers scanner
-2. Execute Plan 01-03: Scan orchestrator worker pool
-3. Execute Plan 01-04: API handlers and rate limiting
-4. Execute Plan 01-05: Docker infrastructure and deployment
+1. Execute Plan 01-04: API handlers and rate limiting
+2. Execute Plan 01-05: Docker infrastructure and deployment
 
 **Context for future phases:**
 - Phase 2 research needed: SSL Labs API rate limits, testssl.sh container setup, Nuclei templates

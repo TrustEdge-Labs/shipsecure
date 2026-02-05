@@ -14,8 +14,9 @@ pub async fn create_scan(
     let scan = sqlx::query_as::<_, Scan>(
         "INSERT INTO scans (target_url, email, submitter_ip)
          VALUES ($1, $2, $3::inet)
-         RETURNING id, target_url, email, submitter_ip::text, status, score, error_message,
-                   started_at::timestamp, completed_at::timestamp, created_at::timestamp"
+         RETURNING id, target_url, email, submitter_ip::text, status, score, results_token,
+                   expires_at::timestamp, stage_headers, stage_tls, stage_files, stage_secrets,
+                   error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp"
     )
     .bind(target_url)
     .bind(email)
@@ -30,8 +31,9 @@ pub async fn create_scan(
 #[allow(dead_code)]
 pub async fn get_scan(pool: &PgPool, id: Uuid) -> Result<Option<Scan>, sqlx::Error> {
     let scan = sqlx::query_as::<_, Scan>(
-        "SELECT id, target_url, email, submitter_ip::text, status, score, error_message,
-                started_at::timestamp, completed_at::timestamp, created_at::timestamp
+        "SELECT id, target_url, email, submitter_ip::text, status, score, results_token,
+                expires_at::timestamp, stage_headers, stage_tls, stage_files, stage_secrets,
+                error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp
          FROM scans WHERE id = $1"
     )
     .bind(id)
@@ -55,8 +57,9 @@ pub async fn claim_pending_scan(pool: &PgPool) -> Result<Option<Scan>, sqlx::Err
              FOR UPDATE SKIP LOCKED
              LIMIT 1
          )
-         RETURNING id, target_url, email, submitter_ip::text, status, score, error_message,
-                   started_at::timestamp, completed_at::timestamp, created_at::timestamp"
+         RETURNING id, target_url, email, submitter_ip::text, status, score, results_token,
+                   expires_at::timestamp, stage_headers, stage_tls, stage_files, stage_secrets,
+                   error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp"
     )
     .fetch_optional(pool)
     .await?;
@@ -132,6 +135,84 @@ pub async fn count_scans_by_ip_today(pool: &PgPool, ip: &str) -> Result<i64, sql
          WHERE submitter_ip = $1::inet AND created_at >= CURRENT_DATE"
     )
     .bind(ip)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(count.0)
+}
+
+/// Get a scan by results token (checks expiry)
+#[allow(dead_code)]
+pub async fn get_scan_by_token(pool: &PgPool, token: &str) -> Result<Option<Scan>, sqlx::Error> {
+    let scan = sqlx::query_as::<_, Scan>(
+        "SELECT id, target_url, email, submitter_ip::text, status, score, results_token,
+                expires_at::timestamp, stage_headers, stage_tls, stage_files, stage_secrets,
+                error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp
+         FROM scans
+         WHERE results_token = $1 AND (expires_at IS NULL OR expires_at > NOW())"
+    )
+    .bind(token)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(scan)
+}
+
+/// Update a specific scan stage completion status
+#[allow(dead_code)]
+pub async fn update_scan_stage(
+    pool: &PgPool,
+    scan_id: Uuid,
+    stage_name: &str,
+    completed: bool,
+) -> Result<(), sqlx::Error> {
+    let query = match stage_name {
+        "headers" => "UPDATE scans SET stage_headers = $1 WHERE id = $2",
+        "tls" => "UPDATE scans SET stage_tls = $1 WHERE id = $2",
+        "files" => "UPDATE scans SET stage_files = $1 WHERE id = $2",
+        "secrets" => "UPDATE scans SET stage_secrets = $1 WHERE id = $2",
+        _ => return Err(sqlx::Error::RowNotFound),
+    };
+
+    sqlx::query(query)
+        .bind(completed)
+        .bind(scan_id)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
+
+/// Set the results token and expiry for a scan
+#[allow(dead_code)]
+pub async fn set_results_token(
+    pool: &PgPool,
+    scan_id: Uuid,
+    token: &str,
+    expires_at: chrono::NaiveDateTime,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE scans
+         SET results_token = $1, expires_at = $2
+         WHERE id = $3"
+    )
+    .bind(token)
+    .bind(expires_at)
+    .bind(scan_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+/// Count total completed scans (for social proof counter)
+#[allow(dead_code)]
+pub async fn count_completed_scans(pool: &PgPool) -> Result<i64, sqlx::Error> {
+    let count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*)
+         FROM scans
+         WHERE status = 'completed'"
+    )
     .fetch_one(pool)
     .await?;
 

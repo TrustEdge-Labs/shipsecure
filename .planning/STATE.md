@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 2 of 4 (Free Tier MVP) — IN PROGRESS
-**Plan:** 6 of 8
-**Status:** Plan 02-06 complete
-**Last activity:** 2026-02-05 - Completed 02-06-PLAN.md (Landing page with scan form)
+**Plan:** 7 of 8
+**Status:** Plan 02-07 complete
+**Last activity:** 2026-02-05 - Completed 02-07-PLAN.md (Scan progress and results dashboard)
 
-**Progress:** [███████████░░] 85% (11/13 plans complete)
+**Progress:** [████████████░] 92% (12/13 plans complete)
 
-**Active Work:** Phase 2 Plan 6 complete. Landing page with Server Action form submission, Zod validation, and scan counter social proof operational.
+**Active Work:** Phase 2 Plan 7 complete. Full user journey from landing → scan progress with live polling → results dashboard with grade, findings, and markdown download operational.
 
 ---
 
@@ -30,9 +30,9 @@
 
 **Velocity:**
 - Phases completed: 1/4 (Phase 2 in progress)
-- Plans completed: 11/13 (5 Phase 1, 6 Phase 2)
-- Requirements delivered: 16/23
-- Success criteria met: 16/21
+- Plans completed: 12/13 (5 Phase 1, 7 Phase 2)
+- Requirements delivered: 19/23
+- Success criteria met: 19/21
 
 **Quality:**
 - Requirement coverage: 23/23 (100%)
@@ -90,6 +90,12 @@
 | BACKEND_URL for Server Actions | Use BACKEND_URL env var (not NEXT_PUBLIC_) in Server Actions to keep API endpoint private from client | 02-06 | 2026-02-05 |
 | Client-side delayed redirect | Server Action returns scanId, client shows success 2.5s before redirect for better UX feedback | 02-06 | 2026-02-05 |
 | Scan counter graceful degradation | Server-side fetch with 60s revalidation, hidden if backend unreachable (no error to user) | 02-06 | 2026-02-05 |
+| Progress page as client component | Required for setInterval polling every 2 seconds with cleanup on unmount | 02-07 | 2026-02-05 |
+| Results page as server component | Server-side fetch for faster initial load, noindex metadata to prevent indexing results pages | 02-07 | 2026-02-05 |
+| Network error threshold | Show "Connection lost" warning after 3 consecutive poll failures but continue polling | 02-07 | 2026-02-05 |
+| Auto-redirect delay | 1-second delay after scan completion before redirect for user feedback | 02-07 | 2026-02-05 |
+| Grade circle size | 48px (visible but not dominant) per CONTEXT.md guidance | 02-07 | 2026-02-05 |
+| Default severity grouping | Critical > High > Medium > Low by default, toggle to category (scanner type) grouping | 02-07 | 2026-02-05 |
 
 ### Open Questions
 
@@ -106,7 +112,8 @@
 - [x] Phase 2 Plan 04: Scanner integration and email delivery (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 05: API endpoints for results, stages, and stats (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 06: Landing page with scan form (COMPLETE - 2026-02-05)
-- [ ] Phase 2 remaining plans (02-07, 02-08)
+- [x] Phase 2 Plan 07: Scan progress and results dashboard (COMPLETE - 2026-02-05)
+- [ ] Phase 2 remaining plans (02-08)
 - [ ] Schedule legal review of TOS/consent flow before Phase 2
 - [ ] Set up Resend account and configure RESEND_API_KEY
 
@@ -118,12 +125,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T14:20:15Z
-**Stopped at:** Completed 02-06-PLAN.md (Landing page with scan form)
+**Last session:** 2026-02-05T14:21:49Z
+**Stopped at:** Completed 02-07-PLAN.md (Scan progress and results dashboard)
 **Resume file:** None
 
 **Starting next session:**
-1. Continue with Phase 2 remaining plans (02-07, 02-08)
+1. Continue with Phase 2 final plan (02-08)
 
 **Context for future phases:**
 - Phase 2 research needed: SSL Labs API rate limits, testssl.sh container setup, Nuclei templates, Next.js frontend

@@ -3,11 +3,12 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Semaphore;
 use uuid::Uuid;
+use base64::Engine;
 
 use crate::db::{findings as findings_db, scans as scans_db};
 use crate::models::finding::Finding;
 use crate::models::scan::ScanStatus;
-use crate::scanners::security_headers;
+use crate::scanners::{security_headers, tls, exposed_files, js_secrets};
 
 #[derive(Debug)]
 pub enum OrchestratorError {
@@ -97,7 +98,7 @@ impl ScanOrchestrator {
         scans_db::update_scan_status(&pool, scan_id, ScanStatus::InProgress, None, None).await?;
 
         // Run scanners with timeout and retry
-        let scanner_results = Self::run_scanners(&target_url, timeout).await;
+        let scanner_results = Self::run_scanners(&pool, scan_id, &target_url, timeout).await;
 
         // Check if all scanners failed
         let all_failed = scanner_results.iter().all(|r| r.findings.is_none());
@@ -141,27 +142,216 @@ impl ScanOrchestrator {
             &pool,
             scan_id,
             ScanStatus::Completed,
-            Some(score),
+            Some(score.clone()),
             None,
+        ).await?;
+
+        // Generate results token
+        let token = Self::generate_results_token();
+        let expires_at = chrono::Utc::now().naive_utc() + chrono::Duration::days(3);
+        scans_db::set_results_token(&pool, scan_id, &token, expires_at).await?;
+
+        // Send email notification (don't fail scan if email fails)
+        if let Err(e) = Self::send_completion_email(&pool, scan_id, &target_url, &score, &all_findings, &token).await {
+            tracing::warn!("Failed to send completion email for scan {}: {}", scan_id, e);
+        }
+
+        Ok(())
+    }
+
+    fn generate_results_token() -> String {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        let bytes: [u8; 32] = rng.r#gen();
+        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&bytes)
+    }
+
+    async fn send_completion_email(
+        pool: &PgPool,
+        scan_id: Uuid,
+        target_url: &str,
+        grade: &str,
+        findings: &[Finding],
+        results_token: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Get scan record to retrieve email
+        let scan = scans_db::get_scan(pool, scan_id).await?
+            .ok_or("Scan not found")?;
+
+        // Compute findings summary
+        let summary = crate::email::FindingsSummary {
+            critical: findings.iter().filter(|f| f.severity == crate::models::Severity::Critical).count() as i64,
+            high: findings.iter().filter(|f| f.severity == crate::models::Severity::High).count() as i64,
+            medium: findings.iter().filter(|f| f.severity == crate::models::Severity::Medium).count() as i64,
+            low: findings.iter().filter(|f| f.severity == crate::models::Severity::Low).count() as i64,
+            total: findings.len() as i64,
+        };
+
+        // Get base URL from environment
+        let base_url = std::env::var("TRUSTEDGE_BASE_URL")
+            .unwrap_or_else(|_| "http://localhost:3001".to_string());
+
+        // Send email
+        crate::email::send_scan_complete_email(
+            &scan.email,
+            target_url,
+            grade,
+            &summary,
+            results_token,
+            &base_url,
         ).await?;
 
         Ok(())
     }
 
-    async fn run_scanners(target_url: &str, timeout: Duration) -> Vec<ScannerResult> {
-        let mut results = Vec::new();
+    async fn run_scanners(pool: &PgPool, scan_id: Uuid, target_url: &str, _timeout: Duration) -> Vec<ScannerResult> {
+        // Spawn each scanner independently so stage updates happen as each completes
+        let pool_clone1 = pool.clone();
+        let pool_clone2 = pool.clone();
+        let pool_clone3 = pool.clone();
+        let pool_clone4 = pool.clone();
+        let url1 = target_url.to_string();
+        let url2 = target_url.to_string();
+        let url3 = target_url.to_string();
+        let url4 = target_url.to_string();
 
-        // Run security_headers scanner with retry
-        let headers_result = Self::run_scanner_with_retry(
-            "security_headers",
-            || security_headers::scan_security_headers(target_url),
-            timeout,
-        ).await;
-        results.push(headers_result);
+        let headers_handle = tokio::spawn(async move {
+            let result = tokio::time::timeout(
+                Duration::from_secs(60),
+                security_headers::scan_security_headers(&url1)
+            ).await;
 
-        // Future scanners (testssl, nuclei) will be added here in later plans
+            // Update stage on completion (success or failure)
+            let _ = scans_db::update_scan_stage(&pool_clone1, scan_id, "headers", true).await;
 
-        results
+            match result {
+                Ok(Ok(findings)) => ScannerResult {
+                    scanner_name: "security_headers".to_string(),
+                    findings: Some(findings),
+                    error: None,
+                },
+                Ok(Err(e)) => ScannerResult {
+                    scanner_name: "security_headers".to_string(),
+                    findings: None,
+                    error: Some(e.to_string()),
+                },
+                Err(_) => ScannerResult {
+                    scanner_name: "security_headers".to_string(),
+                    findings: None,
+                    error: Some("Timeout".to_string()),
+                },
+            }
+        });
+
+        let tls_handle = tokio::spawn(async move {
+            let result = tokio::time::timeout(
+                Duration::from_secs(300), // SSL Labs can be slow
+                tls::scan_tls(&url2)
+            ).await;
+
+            // Update stage on completion
+            let _ = scans_db::update_scan_stage(&pool_clone2, scan_id, "tls", true).await;
+
+            match result {
+                Ok(Ok(findings)) => ScannerResult {
+                    scanner_name: "tls".to_string(),
+                    findings: Some(findings),
+                    error: None,
+                },
+                Ok(Err(e)) => ScannerResult {
+                    scanner_name: "tls".to_string(),
+                    findings: None,
+                    error: Some(e.to_string()),
+                },
+                Err(_) => ScannerResult {
+                    scanner_name: "tls".to_string(),
+                    findings: None,
+                    error: Some("Timeout".to_string()),
+                },
+            }
+        });
+
+        let files_handle = tokio::spawn(async move {
+            let result = tokio::time::timeout(
+                Duration::from_secs(60),
+                exposed_files::scan_exposed_files(&url3)
+            ).await;
+
+            // Update stage on completion
+            let _ = scans_db::update_scan_stage(&pool_clone3, scan_id, "files", true).await;
+
+            match result {
+                Ok(Ok(findings)) => ScannerResult {
+                    scanner_name: "exposed_files".to_string(),
+                    findings: Some(findings),
+                    error: None,
+                },
+                Ok(Err(e)) => ScannerResult {
+                    scanner_name: "exposed_files".to_string(),
+                    findings: None,
+                    error: Some(e.to_string()),
+                },
+                Err(_) => ScannerResult {
+                    scanner_name: "exposed_files".to_string(),
+                    findings: None,
+                    error: Some("Timeout".to_string()),
+                },
+            }
+        });
+
+        let secrets_handle = tokio::spawn(async move {
+            let result = tokio::time::timeout(
+                Duration::from_secs(60),
+                js_secrets::scan_js_secrets(&url4)
+            ).await;
+
+            // Update stage on completion
+            let _ = scans_db::update_scan_stage(&pool_clone4, scan_id, "secrets", true).await;
+
+            match result {
+                Ok(Ok(findings)) => ScannerResult {
+                    scanner_name: "js_secrets".to_string(),
+                    findings: Some(findings),
+                    error: None,
+                },
+                Ok(Err(e)) => ScannerResult {
+                    scanner_name: "js_secrets".to_string(),
+                    findings: None,
+                    error: Some(e.to_string()),
+                },
+                Err(_) => ScannerResult {
+                    scanner_name: "js_secrets".to_string(),
+                    findings: None,
+                    error: Some("Timeout".to_string()),
+                },
+            }
+        });
+
+        // Await all scanner tasks
+        let results = tokio::join!(headers_handle, tls_handle, files_handle, secrets_handle);
+
+        vec![
+            results.0.unwrap_or_else(|_| ScannerResult {
+                scanner_name: "security_headers".to_string(),
+                findings: None,
+                error: Some("Task panicked".to_string()),
+            }),
+            results.1.unwrap_or_else(|_| ScannerResult {
+                scanner_name: "tls".to_string(),
+                findings: None,
+                error: Some("Task panicked".to_string()),
+            }),
+            results.2.unwrap_or_else(|_| ScannerResult {
+                scanner_name: "exposed_files".to_string(),
+                findings: None,
+                error: Some("Task panicked".to_string()),
+            }),
+            results.3.unwrap_or_else(|_| ScannerResult {
+                scanner_name: "js_secrets".to_string(),
+                findings: None,
+                error: Some("Task panicked".to_string()),
+            }),
+        ]
     }
 
     async fn run_scanner_with_retry<F, Fut>(

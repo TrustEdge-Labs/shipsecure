@@ -1,5 +1,6 @@
 pub mod api;
 pub mod db;
+pub mod email;
 pub mod models;
 pub mod orchestrator;
 pub mod rate_limit;

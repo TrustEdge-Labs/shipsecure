@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/li
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && echo "fn main() {}" > src/main.rs && echo "" > src/lib.rs
 RUN cargo build --release 2>/dev/null || true
-RUN rm -rf src
+RUN rm -rf src target/release/.fingerprint/trustedge_audit-* target/release/deps/trustedge_audit-* target/release/deps/libtrustedge_audit-* target/release/trustedge_audit
 
 # Build application
 COPY . .

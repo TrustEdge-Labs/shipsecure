@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 1 of 4 (Foundation)
-**Plan:** 3 of 5
+**Plan:** 4 of 5
 **Status:** In progress
-**Last activity:** 2026-02-05 - Completed 01-03-PLAN.md
+**Last activity:** 2026-02-05 - Completed 01-04-PLAN.md
 
-**Progress:** [██████░░░░] 60% (3/5 plans complete)
+**Progress:** [████████░░] 80% (4/5 plans complete)
 
-**Active Work:** Plans 01-01, 01-02, and 01-03 complete. Ready for 01-04 (API handlers) and 01-05 (Docker infrastructure)
+**Active Work:** Plans 01-01 through 01-04 complete. Ready for 01-05 (Docker infrastructure and deployment)
 
 ---
 
@@ -30,7 +30,7 @@
 
 **Velocity:**
 - Phases completed: 0/4
-- Plans completed: 3/5 (Phase 1)
+- Plans completed: 4/5 (Phase 1)
 - Requirements delivered: 0/23
 - Success criteria met: 0/21
 
@@ -67,6 +67,10 @@
 | Semaphore concurrency control | 5 workers default for simple effective throttling of parallel scan execution | 01-03 | 2026-02-05 |
 | Scanner timeout and retry | 60s timeout with single retry balances completion time and preventing hangs | 01-03 | 2026-02-05 |
 | Allow partial scanner success | Provide value even if some scanners fail rather than total failure | 01-03 | 2026-02-05 |
+| RFC 7807 manually implemented | Full control over error response format, minimal dependencies | 01-04 | 2026-02-05 |
+| Rate limiting as handler function | Database-backed approach persists across restarts, simpler than Tower middleware | 01-04 | 2026-02-05 |
+| Email limit before IP limit | Check more restrictive limit first for better error messages | 01-04 | 2026-02-05 |
+| SSRF validator returns normalized URL | Store validated URL for consistency and deduplication | 01-04 | 2026-02-05 |
 
 ### Open Questions
 
@@ -79,8 +83,8 @@
 
 - [x] Plan 01-01: Project scaffold (COMPLETE)
 - [x] Plan 01-02: SSRF protection and security headers scanner (COMPLETE)
-- [x] Plan 01-03: Scan orchestrator worker pool (COMPLETE - parallel execution)
-- [ ] Plan 01-04: API handlers and rate limiting
+- [x] Plan 01-03: Scan orchestrator worker pool (COMPLETE)
+- [x] Plan 01-04: API handlers and rate limiting (COMPLETE)
 - [ ] Plan 01-05: Docker infrastructure and deployment
 - [ ] Schedule legal review of TOS/consent flow before Phase 2
 - [ ] Research SSL Labs API documentation for Phase 2 planning
@@ -94,13 +98,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05T03:08:01Z
-**Stopped at:** Completed 01-03-PLAN.md (parallel execution with 01-02)
+**Last session:** 2026-02-05T03:16:09Z
+**Stopped at:** Completed 01-04-PLAN.md
 **Resume file:** None
 
 **Starting next session:**
-1. Execute Plan 01-04: API handlers and rate limiting
-2. Execute Plan 01-05: Docker infrastructure and deployment
+1. Execute Plan 01-05: Docker infrastructure and deployment
 
 **Context for future phases:**
 - Phase 2 research needed: SSL Labs API rate limits, testssl.sh container setup, Nuclei templates

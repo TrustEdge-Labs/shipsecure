@@ -285,6 +285,7 @@ impl ScanOrchestrator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::Severity;
     use chrono::Utc;
 
     #[test]

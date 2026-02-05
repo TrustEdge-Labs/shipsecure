@@ -89,35 +89,41 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCAN-01 | — | Pending |
-| SCAN-02 | — | Pending |
-| SCAN-03 | — | Pending |
-| SCAN-04 | — | Pending |
-| SCAN-05 | — | Pending |
-| VIBE-01 | — | Pending |
-| VIBE-02 | — | Pending |
-| VIBE-03 | — | Pending |
-| DLVR-01 | — | Pending |
-| DLVR-02 | — | Pending |
-| DLVR-03 | — | Pending |
-| DLVR-04 | — | Pending |
-| PAY-01 | — | Pending |
-| PAY-02 | — | Pending |
-| PAY-03 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
-| INFRA-01 | — | Pending |
-| INFRA-02 | — | Pending |
-| INFRA-03 | — | Pending |
-| INFRA-04 | — | Pending |
-| INFRA-05 | — | Pending |
+| SCAN-01 | Phase 2 | Pending |
+| SCAN-02 | Phase 1 | Pending |
+| SCAN-03 | Phase 2 | Pending |
+| SCAN-04 | Phase 2 | Pending |
+| SCAN-05 | Phase 2 | Pending |
+| VIBE-01 | Phase 3 | Pending |
+| VIBE-02 | Phase 3 | Pending |
+| VIBE-03 | Phase 3 | Pending |
+| DLVR-01 | Phase 2 | Pending |
+| DLVR-02 | Phase 2 | Pending |
+| DLVR-03 | Phase 2 | Pending |
+| DLVR-04 | Phase 2 | Pending |
+| PAY-01 | Phase 4 | Pending |
+| PAY-02 | Phase 4 | Pending |
+| PAY-03 | Phase 4 | Pending |
+| UI-01 | Phase 2 | Pending |
+| UI-02 | Phase 2 | Pending |
+| UI-03 | Phase 2 | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Pending |
+| INFRA-04 | Phase 1 | Pending |
+| INFRA-05 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23 (pending roadmap creation)
+- Mapped to phases: 23
+- Unmapped: 0
+
+**Phase distribution:**
+- Phase 1 (Foundation): 6 requirements
+- Phase 2 (Free Tier MVP): 11 requirements
+- Phase 3 (Vibe-Code Intelligence): 3 requirements
+- Phase 4 (Monetization): 3 requirements
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after initial definition*
+*Last updated: 2026-02-04 after roadmap creation*

@@ -13,8 +13,9 @@ pub async fn create_scan(
 ) -> Result<Scan, sqlx::Error> {
     let scan = sqlx::query_as::<_, Scan>(
         "INSERT INTO scans (target_url, email, submitter_ip)
-         VALUES ($1, $2, $3)
-         RETURNING *"
+         VALUES ($1, $2, $3::inet)
+         RETURNING id, target_url, email, submitter_ip::text, status, score, error_message,
+                   started_at::timestamp, completed_at::timestamp, created_at::timestamp"
     )
     .bind(target_url)
     .bind(email)
@@ -29,7 +30,9 @@ pub async fn create_scan(
 #[allow(dead_code)]
 pub async fn get_scan(pool: &PgPool, id: Uuid) -> Result<Option<Scan>, sqlx::Error> {
     let scan = sqlx::query_as::<_, Scan>(
-        "SELECT * FROM scans WHERE id = $1"
+        "SELECT id, target_url, email, submitter_ip::text, status, score, error_message,
+                started_at::timestamp, completed_at::timestamp, created_at::timestamp
+         FROM scans WHERE id = $1"
     )
     .bind(id)
     .fetch_optional(pool)
@@ -52,7 +55,8 @@ pub async fn claim_pending_scan(pool: &PgPool) -> Result<Option<Scan>, sqlx::Err
              FOR UPDATE SKIP LOCKED
              LIMIT 1
          )
-         RETURNING *"
+         RETURNING id, target_url, email, submitter_ip::text, status, score, error_message,
+                   started_at::timestamp, completed_at::timestamp, created_at::timestamp"
     )
     .fetch_optional(pool)
     .await?;

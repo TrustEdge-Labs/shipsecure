@@ -39,7 +39,8 @@ pub async fn get_findings_by_scan(
     scan_id: Uuid,
 ) -> Result<Vec<Finding>, sqlx::Error> {
     let findings = sqlx::query_as::<_, Finding>(
-        "SELECT * FROM findings
+        "SELECT id, scan_id, scanner_name, title, description, severity, remediation, raw_evidence, created_at::timestamp
+         FROM findings
          WHERE scan_id = $1
          ORDER BY
              CASE severity

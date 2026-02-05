@@ -11,6 +11,12 @@ pub enum ApiError {
     RateLimited(String),
     NotFound,
     InternalError(String),
+    Custom {
+        status: StatusCode,
+        error_type: String,
+        title: String,
+        detail: String,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -59,6 +65,12 @@ impl IntoResponse for ApiError {
                     "An unexpected error occurred. Please try again later.".to_string(),
                 )
             }
+            ApiError::Custom {
+                status,
+                error_type,
+                title,
+                detail,
+            } => (error_type, title, status, detail),
         };
 
         let problem = ProblemDetails {

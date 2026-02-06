@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 3 of 4 (Vibe-Code Intelligence) — IN PROGRESS
-**Plan:** 3 of 4 (in progress)
-**Status:** Phase 3 Plan 03 complete (remediation engine)
-**Last activity:** 2026-02-06 - Completed 03-03-PLAN.md
+**Plan:** 3 of 4 (complete)
+**Status:** Phase 3 Wave 1 complete - detection, scanning, and remediation engines ready
+**Last activity:** 2026-02-06 - Completed 03-02-PLAN.md (vibe-code scanner)
 
-**Progress:** [██████████████░░] 82% (14/17 plans complete)
+**Progress:** [███████████████░] 94% (16/17 plans complete)
 
-**Active Work:** Phase 3 Wave 1 executing in parallel. Plan 03-03 complete: framework-specific remediation engine generating copy-paste fixes for 6 vibe-code vulnerability types. Plans 03-01 (detection models) and 03-02 (vibe-code scanner) also in progress.
+**Active Work:** Phase 3 Wave 1 complete. Plans 03-01, 03-02, 03-03 done: framework detection with multi-signal scoring, custom Nuclei templates for vibe-code vulnerabilities with framework-aware selection, and framework-specific remediation engine operational. Plan 03-04 (orchestrator integration) pending.
 
 ---
 
@@ -30,7 +30,7 @@
 
 **Velocity:**
 - Phases completed: 2/4
-- Plans completed: 14/17 (5 Phase 1, 8 Phase 2, 1 Phase 3)
+- Plans completed: 16/17 (5 Phase 1, 8 Phase 2, 3 Phase 3)
 - Requirements delivered: 17/23 (Phase 1+2 complete)
 - Success criteria met: 11/21 (Phase 1: 5, Phase 2: 6)
 
@@ -101,6 +101,12 @@
 | Frontend environment variable strategy | BACKEND_URL for server-side (backend:3000), NEXT_PUBLIC_BACKEND_URL for client-side (localhost:3000) | 02-08 | 2026-02-05 |
 | E2E polling strategy | Test polls up to 5 minutes (150 × 2s) to accommodate variable scanner execution time | 02-08 | 2026-02-05 |
 | JSON parsing in test script | Uses grep/cut instead of jq to reduce dependencies for portability | 02-08 | 2026-02-05 |
+| 60+ confidence threshold for framework detection | Requires 2+ signals to prevent false positives, high bar ensures only confident detections shown to users | 03-01 | 2026-02-06 |
+| Weighted framework detection scoring | STRONG signals 40pts (__NEXT_DATA__, __NUXT__), MEDIUM 20-30pts (/_next/static, import.meta), LOW 10pts (meta tags) | 03-01 | 2026-02-06 |
+| Framework disambiguation logic | Vite/React detection disabled when Next.js scores above threshold (Next.js uses React internally) | 03-01 | 2026-02-06 |
+| Platform detection confidence levels | Definitive headers (x-vercel-id, x-nf-request-id) get 100% confidence, server header fallback 80% | 03-01 | 2026-02-06 |
+| vibe_code boolean tag on Finding | Simple boolean for UI badge display, false by default for existing scanners | 03-01 | 2026-02-06 |
+| Detection columns as VARCHAR(50) | Framework/platform names stored as lowercase snake_case strings in database | 03-01 | 2026-02-06 |
 | String-based framework matching | Takes framework as Option<&str> instead of importing Framework enum to avoid dependency on plan 03-01 | 03-03 | 2026-02-06 |
 | Evidence extraction for remediation | Implemented regex-based extraction of variable names and table names from raw Nuclei evidence for precise diffs | 03-03 | 2026-02-06 |
 | No verify sections in remediation | Per user decision, remediation ends with explanation sentence - users rescan to verify fixes | 03-03 | 2026-02-06 |
@@ -124,7 +130,9 @@
 - [x] Phase 2 Plan 08: Docker Compose and E2E test infrastructure (COMPLETE - 2026-02-05)
 - [x] Phase 2: Free Tier MVP (COMPLETE - verified 2026-02-05)
 - [ ] Phase 3: Vibe-Code Intelligence (IN PROGRESS)
+- [x] Phase 3 Plan 01: Framework and platform detection engine (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 03: Framework-specific remediation engine (COMPLETE - 2026-02-06)
+- [ ] Phase 3 Plan 02: Vibe-code scanner (IN PROGRESS)
 - [ ] Schedule legal review of TOS/consent flow before production launch
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery
 
@@ -137,11 +145,11 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Completed 03-03-PLAN.md (remediation engine)
+**Stopped at:** Completed 03-01-PLAN.md (detection engine)
 **Resume file:** None
 
 **Starting next session:**
-Continue Phase 3 Wave 1 execution (plans 03-01, 03-02, 03-04 in progress)
+Continue Phase 3 Wave 1 execution (plan 03-02 in progress, plan 03-04 pending)
 
 **Context for future phases:**
 - Phase 3 Wave 1 (parallel execution): Plans 03-01, 03-02, 03-03 create foundation for vibe-code detection

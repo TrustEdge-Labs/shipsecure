@@ -19,6 +19,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgres://trustedge:trustedge@db:5432/trustedge_dev
       PORT: "3000"

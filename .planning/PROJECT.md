@@ -30,7 +30,13 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 ### Active
 
-(Requirements for next milestone — define with `/gsd:new-milestone`)
+- [ ] Single-droplet DigitalOcean deployment with Docker, PostgreSQL, Nginx, and SSL
+- [ ] Remove all Render references from codebase and config
+- [ ] Production-ready Nginx reverse proxy with Let's Encrypt SSL
+- [ ] Systemd service management for auto-start and process supervision
+- [ ] Firewall hardening (UFW) for production security
+- [ ] Production environment configuration and secrets management
+- [ ] Nuclei running natively as subprocess (no Docker-in-Docker)
 
 ### Out of Scope
 
@@ -58,7 +64,7 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 ## Constraints
 
 - **Tech Stack**: Rust backend (Axum), Next.js frontend, PostgreSQL
-- **Hosting**: Render — existing account and deployment experience
+- **Hosting**: DigitalOcean — single droplet with Docker, full control over infrastructure
 - **Scanning Tools**: Containerized (Nuclei, testssl.sh, custom probes) — isolation and portability
 - **Payments**: Stripe — standard, reliable
 - **Free Tier**: No signup required — URL + email only, maximum conversion
@@ -72,11 +78,24 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Next.js over HTMX for frontend | Richer interactivity for results dashboard, broader ecosystem | Good — polling, conditional rendering, client components work well |
 | URL scanning before repo scanning | Faster to ship, lower friction for users, no GitHub auth complexity | Good — shipped in 3 days |
 | One-time audit before subscriptions | Validate willingness to pay before building recurring billing | Pending — needs production deployment to validate |
-| Containerized scanners | Isolation, reproducibility, easier deployment on Render | Good — Docker CIS hardened with 8 security flags |
+| Containerized scanners | Isolation, reproducibility, portable across hosts | Good — Docker CIS hardened with 8 security flags |
+| DigitalOcean over Render | Full Docker access on droplet, no Docker-in-Docker limitation | Pending — v1.1 milestone |
 | No signup for free tier | Maximize conversion, capture email for follow-up | Good — zero friction to first scan |
 | Capability URL for results | Unguessable token, no auth needed, shareable | Good — simple, enables sharing |
 | Database-as-queue for scans | Simple, no Redis/RabbitMQ dependency for MVP | Good — sufficient for MVP scale |
 | In-memory PDF generation | No filesystem I/O, efficient for email attachment | Good — genpdf produces Vec<u8> directly |
 
+## Current Milestone: v1.1 DigitalOcean Deployment
+
+**Goal:** Deploy the existing v1.0 application to a single DigitalOcean droplet with production-ready infrastructure (Nginx, SSL, systemd, firewall). Remove all Render references. Zero changes to scanning architecture.
+
+**Target features:**
+- Single-droplet deployment (Ubuntu, Docker, PostgreSQL, Nginx, Let's Encrypt)
+- Production Nginx reverse proxy with SSL termination
+- Systemd service management for backend and frontend
+- UFW firewall hardening
+- Remove Render config and references from codebase
+- Production environment configuration
+
 ---
-*Last updated: 2026-02-06 after v1.0 milestone*
+*Last updated: 2026-02-06 after v1.1 milestone start*

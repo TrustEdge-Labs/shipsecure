@@ -136,6 +136,13 @@
 | Vibecode timeout 600s paid vs 180s free | Longer timeout for 12 templates (7 base + 5 paid) prevents false timeouts on deep scans | 04-03 | 2026-02-06 |
 | spawn_paid_scan clears findings first | Uses clear_findings_by_scan to prevent duplicate findings on paid rescans | 04-03 | 2026-02-06 |
 | Paid templates in separate directory | templates/nuclei/paid/ isolates paid-only active probing templates from free tier passive recon | 04-03 | 2026-02-06 |
+| In-memory PDF generation | Returns Vec<u8> for efficient email attachment without filesystem I/O | 04-04 | 2026-02-06 |
+| Liberation fonts requirement | Graceful PdfError if fonts/ directory doesn't have Liberation Sans fonts at runtime | 04-04 | 2026-02-06 |
+| Severity-based PDF organization | Critical > High > Medium > Low with automatic skip for empty severity levels | 04-04 | 2026-02-06 |
+| [VIBE-CODE] prefix in PDF | Visual distinction for AI-generated code vulnerabilities in report | 04-04 | 2026-02-06 |
+| Base64 encoding for attachments | Standard base64 for Resend API attachment content format | 04-04 | 2026-02-06 |
+| Separate paid audit email function | Preserves existing send_scan_complete_email, no changes to free tier flow | 04-04 | 2026-02-06 |
+| Short scan ID in PDF filename | First 8 chars of scan UUID for readable filenames (trustedge-deep-audit-{id}.pdf) | 04-04 | 2026-02-06 |
 
 ### Open Questions
 
@@ -164,6 +171,8 @@
 - [x] Phase 4 Plan 01: Database foundation for paid audits (COMPLETE - 2026-02-06)
 - [x] Phase 4 Plan 02: Stripe Checkout and webhooks (COMPLETE - 2026-02-06)
 - [x] Phase 4 Plan 03: Tier-aware scanning (COMPLETE - 2026-02-06)
+- [x] Phase 4 Plan 04: PDF reports and email delivery (COMPLETE - 2026-02-06)
+- [ ] Download and install Liberation Sans fonts in fonts/ directory
 - [ ] Schedule legal review of TOS/consent flow before production launch
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery
 - [ ] Set up Stripe account (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) - see 04-USER-SETUP.md
@@ -177,20 +186,22 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Completed 04-03-PLAN.md (Tier-aware scanning)
+**Stopped at:** Completed 04-04-PLAN.md (PDF reports and email delivery)
 **Resume file:** None
 
 **Starting next session:**
-Phase 4 Plan 3 complete. Ready for Plan 04-04 (PDF report generation).
+Phase 4 Plan 4 complete. Ready for Plan 04-05 (Paid audit completion flow - final plan).
 
 **Context for future plans:**
-- Phase 4 Plans 1-3 complete: Database, payment backend, and tier-aware scanning operational
+- Phase 4 Plans 1-4 complete: Database, payment backend, tier-aware scanning, and PDF reports operational
 - Payment flow: POST /api/v1/checkout → Stripe session → webhook → paid_audit status + scan tier update → spawn_paid_scan
 - Tier-aware scanning: spawn_paid_scan clears findings, runs with 50 JS files, extended probes, 5 paid Nuclei templates, 600s timeout
-- Paid scans deliver 5-10x more findings than free tier for comprehensive PDF reports
+- PDF reports: pdf::generate_report produces Vec<u8> with executive summary, severity-organized findings, remediation roadmap
+- Email delivery: email::send_paid_audit_email sends base64-encoded PDF attachment via Resend API
+- Liberation fonts required: Place Liberation Sans .ttf files in fonts/ directory for PDF generation
 - Scanner functions accept tier parameters: max_files (js_secrets), extended (exposed_files), tier (vibecode)
-- Free tier unchanged - spawn_scan behavior identical to pre-04-03
-- User setup required: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET env vars - see 04-USER-SETUP.md
+- Free tier unchanged - spawn_scan and send_scan_complete_email behavior identical
+- User setup required: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, Liberation fonts - see 04-USER-SETUP.md and 04-04-SUMMARY.md
 
 ---
 

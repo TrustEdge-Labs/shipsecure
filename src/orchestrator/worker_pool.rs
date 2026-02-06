@@ -8,7 +8,7 @@ use base64::Engine;
 use crate::db::{findings as findings_db, scans as scans_db};
 use crate::models::finding::Finding;
 use crate::models::scan::ScanStatus;
-use crate::scanners::{security_headers, tls, exposed_files, js_secrets};
+use crate::scanners::{security_headers, tls, exposed_files, js_secrets, detector, vibecode, remediation};
 
 #[derive(Debug)]
 pub enum OrchestratorError {
@@ -97,8 +97,36 @@ impl ScanOrchestrator {
         // Update scan to InProgress
         scans_db::update_scan_status(&pool, scan_id, ScanStatus::InProgress, None, None).await?;
 
+        // Stage 1: Framework/Platform Detection (runs first, feeds downstream)
+        let detection = match detector::detect_stack(&target_url).await {
+            Ok(result) => {
+                // Store detection results in database
+                if let Some(ref fw) = result.framework {
+                    scans_db::update_detected_framework(&pool, scan_id, fw.to_db()).await.ok();
+                }
+                if let Some(ref pl) = result.platform {
+                    scans_db::update_detected_platform(&pool, scan_id, pl.to_db()).await.ok();
+                }
+                scans_db::update_scan_stage(&pool, scan_id, "detection", true).await.ok();
+                Some(result)
+            }
+            Err(e) => {
+                tracing::warn!("Framework detection failed for scan {}: {}", scan_id, e);
+                scans_db::update_scan_stage(&pool, scan_id, "detection", true).await.ok();
+                None // Detection failure does NOT fail the scan
+            }
+        };
+
+        // Extract framework/platform strings for downstream use
+        let framework_str = detection.as_ref()
+            .and_then(|d| d.framework.as_ref())
+            .map(|f| f.to_db().to_string());
+        let platform_str = detection.as_ref()
+            .and_then(|d| d.platform.as_ref())
+            .map(|p| p.to_db().to_string());
+
         // Run scanners with timeout and retry
-        let scanner_results = Self::run_scanners(&pool, scan_id, &target_url, timeout).await;
+        let scanner_results = Self::run_scanners(&pool, scan_id, &target_url, timeout, framework_str, platform_str).await;
 
         // Check if all scanners failed
         let all_failed = scanner_results.iter().all(|r| r.findings.is_none());
@@ -204,16 +232,27 @@ impl ScanOrchestrator {
         Ok(())
     }
 
-    async fn run_scanners(pool: &PgPool, scan_id: Uuid, target_url: &str, _timeout: Duration) -> Vec<ScannerResult> {
+    async fn run_scanners(
+        pool: &PgPool,
+        scan_id: Uuid,
+        target_url: &str,
+        _timeout: Duration,
+        framework: Option<String>,
+        platform: Option<String>,
+    ) -> Vec<ScannerResult> {
         // Spawn each scanner independently so stage updates happen as each completes
         let pool_clone1 = pool.clone();
         let pool_clone2 = pool.clone();
         let pool_clone3 = pool.clone();
         let pool_clone4 = pool.clone();
+        let pool_clone5 = pool.clone();
         let url1 = target_url.to_string();
         let url2 = target_url.to_string();
         let url3 = target_url.to_string();
         let url4 = target_url.to_string();
+        let url5 = target_url.to_string();
+        let framework_str_clone = framework.clone();
+        let platform_str_clone = platform.clone();
 
         let headers_handle = tokio::spawn(async move {
             let result = tokio::time::timeout(
@@ -327,8 +366,49 @@ impl ScanOrchestrator {
             }
         });
 
+        let vibecode_handle = tokio::spawn(async move {
+            let fw_ref = framework_str_clone.as_deref();
+            let pl_ref = platform_str_clone.as_deref();
+
+            let result = tokio::time::timeout(
+                Duration::from_secs(180), // Nuclei can be slow
+                vibecode::scan_vibecode(&url5, fw_ref, pl_ref)
+            ).await;
+
+            let _ = scans_db::update_scan_stage(&pool_clone5, scan_id, "vibecode", true).await;
+
+            match result {
+                Ok(Ok(mut findings)) => {
+                    // Apply framework-specific remediation to vibe-code findings
+                    for finding in &mut findings {
+                        finding.remediation = remediation::generate_remediation(
+                            finding.raw_evidence.as_deref().unwrap_or(""),
+                            &finding.title,
+                            fw_ref,
+                            finding.raw_evidence.as_deref(),
+                        );
+                    }
+                    ScannerResult {
+                        scanner_name: "vibecode".to_string(),
+                        findings: Some(findings),
+                        error: None,
+                    }
+                }
+                Ok(Err(e)) => ScannerResult {
+                    scanner_name: "vibecode".to_string(),
+                    findings: None,
+                    error: Some(e.to_string()),
+                },
+                Err(_) => ScannerResult {
+                    scanner_name: "vibecode".to_string(),
+                    findings: None,
+                    error: Some("Timeout".to_string()),
+                },
+            }
+        });
+
         // Await all scanner tasks
-        let results = tokio::join!(headers_handle, tls_handle, files_handle, secrets_handle);
+        let results = tokio::join!(headers_handle, tls_handle, files_handle, secrets_handle, vibecode_handle);
 
         vec![
             results.0.unwrap_or_else(|_| ScannerResult {
@@ -348,6 +428,11 @@ impl ScanOrchestrator {
             }),
             results.3.unwrap_or_else(|_| ScannerResult {
                 scanner_name: "js_secrets".to_string(),
+                findings: None,
+                error: Some("Task panicked".to_string()),
+            }),
+            results.4.unwrap_or_else(|_| ScannerResult {
+                scanner_name: "vibecode".to_string(),
                 findings: None,
                 error: Some("Task panicked".to_string()),
             }),

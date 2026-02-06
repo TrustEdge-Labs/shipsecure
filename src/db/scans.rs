@@ -224,3 +224,35 @@ pub async fn count_completed_scans(pool: &PgPool) -> Result<i64, sqlx::Error> {
 
     Ok(count.0)
 }
+
+/// Update detected framework for a scan
+#[allow(dead_code)]
+pub async fn update_detected_framework(pool: &PgPool, scan_id: Uuid, framework: &str) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE scans
+         SET detected_framework = $1
+         WHERE id = $2"
+    )
+    .bind(framework)
+    .bind(scan_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+/// Update detected platform for a scan
+#[allow(dead_code)]
+pub async fn update_detected_platform(pool: &PgPool, scan_id: Uuid, platform: &str) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE scans
+         SET detected_platform = $1
+         WHERE id = $2"
+    )
+    .bind(platform)
+    .bind(scan_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}

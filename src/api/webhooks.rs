@@ -322,10 +322,22 @@ async fn handle_checkout_completed(
             &summary,
             results_token,
             &base_url,
-            pdf_bytes,
+            pdf_bytes.clone(),
             short_scan_id,
         ).await {
             tracing::error!("Failed to send paid audit email for scan {}: {:?}", scan_id, e);
+
+            // Fallback: save PDF to disk when email delivery fails
+            let reports_dir = std::path::PathBuf::from("reports");
+            if let Err(e) = tokio::fs::create_dir_all(&reports_dir).await {
+                tracing::error!("Failed to create reports directory: {:?}", e);
+                return;
+            }
+            let pdf_path = reports_dir.join(format!("trustedge-deep-audit-{}.pdf", short_scan_id));
+            match tokio::fs::write(&pdf_path, &pdf_bytes).await {
+                Ok(_) => tracing::info!("PDF saved to {} (email delivery failed)", pdf_path.display()),
+                Err(e) => tracing::error!("Failed to save PDF to disk: {:?}", e),
+            }
             return;
         }
 

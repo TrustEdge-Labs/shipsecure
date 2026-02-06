@@ -30,6 +30,7 @@ pub struct Scan {
     pub stage_secrets: bool,
     pub stage_detection: bool,
     pub stage_vibecode: bool,
+    pub tier: String,
     pub error_message: Option<String>,
     pub started_at: Option<NaiveDateTime>,
     pub completed_at: Option<NaiveDateTime>,

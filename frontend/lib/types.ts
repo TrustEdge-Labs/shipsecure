@@ -35,6 +35,7 @@ export interface ScanResponse {
   target_url: string
   status: string
   score: string | null
+  tier: string
   results_token: string | null
   expires_at: string | null
   stage_detection: boolean

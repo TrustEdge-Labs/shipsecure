@@ -15,14 +15,14 @@
 
 ## Current Position
 
-**Phase:** 3 of 4 (Vibe-Code Intelligence) — IN PROGRESS
-**Plan:** 4 of 4 (complete)
-**Status:** Phase 3 Wave 2 complete - orchestrator integration done
-**Last activity:** 2026-02-06 - Completed 03-04-PLAN.md (orchestrator wiring)
+**Phase:** 3 of 4 (Vibe-Code Intelligence) — COMPLETE
+**Plan:** 5 of 5 (complete)
+**Status:** Phase 3 complete - all vibe-code intelligence features operational
+**Last activity:** 2026-02-06 - Completed 03-05-PLAN.md (API extensions + frontend)
 
-**Progress:** [████████████████] 100% (17/17 plans complete)
+**Progress:** [████████████████] 100% (18/18 plans complete)
 
-**Active Work:** Phase 3 complete. All 4 plans done: framework detection (03-01), vibe-code scanner (03-02), remediation engine (03-03), and orchestrator integration (03-04). 6-stage scan pipeline operational with detection feeding downstream scanners.
+**Active Work:** Phase 3 complete. All 5 plans done: framework detection (03-01), vibe-code scanner (03-02), remediation engine (03-03), orchestrator integration (03-04), and API/frontend extensions (03-05). Full vibe-code intelligence pipeline operational with detection, scanning, remediation, and user-facing badges/tags.
 
 ---
 
@@ -30,7 +30,7 @@
 
 **Velocity:**
 - Phases completed: 3/4
-- Plans completed: 17/17 (5 Phase 1, 8 Phase 2, 4 Phase 3, 0 Phase 4)
+- Plans completed: 18/18 (5 Phase 1, 8 Phase 2, 5 Phase 3, 0 Phase 4)
 - Requirements delivered: 20/23 (Phase 1+2+3 complete)
 - Success criteria met: 14/21 (Phase 1: 5, Phase 2: 6, Phase 3: 3)
 
@@ -119,6 +119,9 @@
 | Detection failure is graceful | Detection errors logged as warnings, scan continues with all scanners (vibecode gets framework=None) | 03-04 | 2026-02-06 |
 | Remediation applied in orchestrator | Framework-specific remediation generated inline in vibecode scanner task before findings persisted | 03-04 | 2026-02-06 |
 | VibCode timeout increased to 180s | Nuclei scans can be slow, especially with multiple templates - allow 3 minutes vs 60s for other scanners | 03-04 | 2026-02-06 |
+| Framework badge inline with grade | Display framework/platform inline after grade circle (e.g., "B -- Next.js on Vercel") for compact layout | 03-05 | 2026-02-06 |
+| No vibe-code filter toggle | Purple tag badge sufficient for identifying vibe-code findings, no additional filtering UI needed | 03-05 | 2026-02-06 |
+| 6-stage progress checklist | Detection first, vibecode last to reflect actual execution order in orchestrator | 03-05 | 2026-02-06 |
 
 ### Open Questions
 
@@ -138,12 +141,12 @@
 - [x] Phase 2 Plan 07: Scan progress and results dashboard (COMPLETE - 2026-02-05)
 - [x] Phase 2 Plan 08: Docker Compose and E2E test infrastructure (COMPLETE - 2026-02-05)
 - [x] Phase 2: Free Tier MVP (COMPLETE - verified 2026-02-05)
-- [ ] Phase 3: Vibe-Code Intelligence (IN PROGRESS)
+- [x] Phase 3: Vibe-Code Intelligence (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 01: Framework and platform detection engine (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 03: Framework-specific remediation engine (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 02: Vibe-code scanner (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 04: Orchestrator wiring (COMPLETE - 2026-02-06)
-- [x] Phase 3: Vibe-Code Intelligence (COMPLETE - 2026-02-06)
+- [x] Phase 3 Plan 05: API extensions + frontend (COMPLETE - 2026-02-06)
 - [ ] Schedule legal review of TOS/consent flow before production launch
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery
 
@@ -156,17 +159,18 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Completed 03-04-PLAN.md (orchestrator wiring)
+**Stopped at:** Completed 03-05-PLAN.md (API extensions + frontend)
 **Resume file:** None
 
 **Starting next session:**
 Phase 3 complete. Ready for Phase 4 (Monetization) execution.
 
 **Context for future phases:**
-- Phase 3 complete: Detection, scanning, remediation, and orchestrator integration operational
+- Phase 3 complete: Detection, scanning, remediation, orchestrator integration, and frontend display operational
 - 6-stage scan pipeline: Detection (stage 1) → Headers+TLS+Files+Secrets+VibCode (stages 2-6)
 - Framework/platform detection feeds vibecode scanner for framework-aware vulnerability checks
 - Remediation engine provides copy-paste fixes tailored to detected framework
+- Frontend displays framework badges, vibe-code tags, and 6-stage progress
 - Phase 4 follows standard Stripe patterns (no research needed)
 
 ---

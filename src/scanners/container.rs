@@ -317,7 +317,7 @@ mod tests {
 
         let finding = parse_nuclei_finding(&json, "https://example.com").unwrap();
         assert_eq!(finding.scanner_name, "nuclei");
-        assert_eq!(finding.severity, "High");
+        assert_eq!(finding.severity, Severity::High);
         assert_eq!(finding.title, "SSL Certificate Expired");
     }
 
@@ -330,7 +330,7 @@ mod tests {
         });
 
         let finding = parse_testssl_finding(&json, "example.com:443").unwrap();
-        assert_eq!(finding.severity, "High");
+        assert_eq!(finding.severity, Severity::High);
         assert!(finding.title.contains("TLS1"));
     }
 }

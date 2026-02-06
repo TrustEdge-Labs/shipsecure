@@ -139,14 +139,18 @@ lazy_static::lazy_static! {
 }
 
 /// Scan a target URL for hardcoded secrets in JavaScript bundles
-pub async fn scan_js_secrets(url: &str) -> Result<Vec<Finding>, ScannerError> {
+///
+/// # Arguments
+/// * `url` - The target URL to scan
+/// * `max_files` - Maximum number of JS files to scan (e.g., 20 for free, 50 for paid)
+pub async fn scan_js_secrets(url: &str, max_files: usize) -> Result<Vec<Finding>, ScannerError> {
     let mut findings = Vec::new();
 
     // Discover JavaScript URLs
     let js_urls = discover_js_urls(url).await?;
 
-    // Limit to 20 files
-    let js_urls: Vec<String> = js_urls.into_iter().take(20).collect();
+    // Limit to max_files
+    let js_urls: Vec<String> = js_urls.into_iter().take(max_files).collect();
 
     // Fetch and scan each JS file concurrently
     let scan_tasks: Vec<_> = js_urls.iter()

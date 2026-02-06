@@ -64,6 +64,7 @@ impl ScanOrchestrator {
     ///
     /// The scan will acquire a semaphore permit, run scanners, and update the database.
     /// Errors are logged but not propagated.
+    /// This spawns a FREE tier scan.
     pub fn spawn_scan(&self, scan_id: Uuid, target_url: String) {
         let pool = self.pool.clone();
         let semaphore = self.semaphore.clone();
@@ -73,8 +74,45 @@ impl ScanOrchestrator {
             // Acquire permit inside the task to avoid blocking the API
             let _permit = semaphore.acquire().await.expect("Semaphore closed");
 
-            if let Err(e) = Self::execute_scan_internal(pool, scan_id, target_url, timeout).await {
+            if let Err(e) = Self::execute_scan_internal(pool, scan_id, target_url, timeout, "free").await {
                 tracing::error!("Scan {} failed: {}", scan_id, e);
+            }
+        });
+    }
+
+    /// Spawn a PAID tier scan task in the background
+    ///
+    /// This clears existing findings, resets the scan to pending, and runs with paid tier configuration:
+    /// - 50 JS files scanned (vs 20 for free)
+    /// - Extended exposed file paths
+    /// - Additional Nuclei templates from templates/nuclei/paid/
+    /// - 600s timeout for vibecode scanner (vs 180s)
+    ///
+    /// Errors are logged but not propagated.
+    pub fn spawn_paid_scan(&self, scan_id: Uuid, target_url: String) {
+        let pool = self.pool.clone();
+        let semaphore = self.semaphore.clone();
+        let timeout = self.max_scanner_timeout;
+
+        tokio::spawn(async move {
+            // Acquire permit inside the task to avoid blocking the API
+            let _permit = semaphore.acquire().await.expect("Semaphore closed");
+
+            // Clear existing findings before paid rescan
+            if let Err(e) = crate::db::paid_audits::clear_findings_by_scan(&pool, scan_id).await {
+                tracing::error!("Failed to clear findings for paid scan {}: {}", scan_id, e);
+                return;
+            }
+
+            // Reset scan status to pending
+            if let Err(e) = scans_db::update_scan_status(&pool, scan_id, ScanStatus::Pending, None, None).await {
+                tracing::error!("Failed to reset scan status for paid scan {}: {}", scan_id, e);
+                return;
+            }
+
+            // Execute with paid tier configuration
+            if let Err(e) = Self::execute_scan_internal(pool, scan_id, target_url, timeout, "paid").await {
+                tracing::error!("Paid scan {} failed: {}", scan_id, e);
             }
         });
     }
@@ -82,10 +120,11 @@ impl ScanOrchestrator {
     /// Execute a scan synchronously (for testing or controlled execution)
     ///
     /// This acquires a semaphore permit and runs the scan to completion.
+    /// This executes a FREE tier scan.
     #[allow(dead_code)]
     pub async fn execute_scan(&self, scan_id: Uuid, target_url: String) -> Result<(), OrchestratorError> {
         let _permit = self.semaphore.acquire().await.expect("Semaphore closed");
-        Self::execute_scan_internal(self.pool.clone(), scan_id, target_url, self.max_scanner_timeout).await
+        Self::execute_scan_internal(self.pool.clone(), scan_id, target_url, self.max_scanner_timeout, "free").await
     }
 
     async fn execute_scan_internal(
@@ -93,6 +132,7 @@ impl ScanOrchestrator {
         scan_id: Uuid,
         target_url: String,
         timeout: Duration,
+        tier: &str,
     ) -> Result<(), OrchestratorError> {
         // Update scan to InProgress
         scans_db::update_scan_status(&pool, scan_id, ScanStatus::InProgress, None, None).await?;
@@ -126,7 +166,7 @@ impl ScanOrchestrator {
             .map(|p| p.to_db().to_string());
 
         // Run scanners with timeout and retry
-        let scanner_results = Self::run_scanners(&pool, scan_id, &target_url, timeout, framework_str, platform_str).await;
+        let scanner_results = Self::run_scanners(&pool, scan_id, &target_url, timeout, framework_str, platform_str, tier).await;
 
         // Check if all scanners failed
         let all_failed = scanner_results.iter().all(|r| r.findings.is_none());
@@ -239,7 +279,13 @@ impl ScanOrchestrator {
         _timeout: Duration,
         framework: Option<String>,
         platform: Option<String>,
+        tier: &str,
     ) -> Vec<ScannerResult> {
+        // Tier-specific configuration
+        let (max_js_files, extended_files, vibecode_timeout, other_timeout) = match tier {
+            "paid" => (50, true, Duration::from_secs(600), Duration::from_secs(60)),
+            _ => (20, false, Duration::from_secs(180), Duration::from_secs(60)),
+        };
         // Spawn each scanner independently so stage updates happen as each completes
         let pool_clone1 = pool.clone();
         let pool_clone2 = pool.clone();
@@ -253,10 +299,11 @@ impl ScanOrchestrator {
         let url5 = target_url.to_string();
         let framework_str_clone = framework.clone();
         let platform_str_clone = platform.clone();
+        let tier_clone = tier.to_string();
 
         let headers_handle = tokio::spawn(async move {
             let result = tokio::time::timeout(
-                Duration::from_secs(60),
+                other_timeout,
                 security_headers::scan_security_headers(&url1)
             ).await;
 
@@ -312,8 +359,8 @@ impl ScanOrchestrator {
 
         let files_handle = tokio::spawn(async move {
             let result = tokio::time::timeout(
-                Duration::from_secs(60),
-                exposed_files::scan_exposed_files(&url3)
+                other_timeout,
+                exposed_files::scan_exposed_files(&url3, extended_files)
             ).await;
 
             // Update stage on completion
@@ -340,8 +387,8 @@ impl ScanOrchestrator {
 
         let secrets_handle = tokio::spawn(async move {
             let result = tokio::time::timeout(
-                Duration::from_secs(60),
-                js_secrets::scan_js_secrets(&url4)
+                other_timeout,
+                js_secrets::scan_js_secrets(&url4, max_js_files)
             ).await;
 
             // Update stage on completion
@@ -371,8 +418,8 @@ impl ScanOrchestrator {
             let pl_ref = platform_str_clone.as_deref();
 
             let result = tokio::time::timeout(
-                Duration::from_secs(180), // Nuclei can be slow
-                vibecode::scan_vibecode(&url5, fw_ref, pl_ref)
+                vibecode_timeout,
+                vibecode::scan_vibecode(&url5, fw_ref, pl_ref, &tier_clone)
             ).await;
 
             let _ = scans_db::update_scan_stage(&pool_clone5, scan_id, "vibecode", true).await;

@@ -15,6 +15,7 @@ use uuid::Uuid;
 /// * `target_url` - The URL to scan
 /// * `framework` - Optional framework detected (e.g., "nextjs", "react")
 /// * `platform` - Optional deployment platform detected (e.g., "vercel", "netlify")
+/// * `tier` - Scan tier ("free" or "paid") - paid tier includes additional templates
 ///
 /// # Returns
 /// Vec of findings with `vibe_code: true` set on all results
@@ -22,6 +23,7 @@ pub async fn scan_vibecode(
     target_url: &str,
     framework: Option<&str>,
     platform: Option<&str>,
+    tier: &str,
 ) -> Result<Vec<Finding>, ScannerError> {
     // Check Docker availability
     if !is_docker_available().await {
@@ -42,13 +44,14 @@ pub async fn scan_vibecode(
     }
 
     // Select which templates to run based on framework/platform
-    let template_paths = select_templates(framework, platform);
+    let template_paths = select_templates(framework, platform, tier);
 
     tracing::info!(
-        "Running vibe-code scan with {} templates (framework={:?}, platform={:?})",
+        "Running vibe-code scan with {} templates (framework={:?}, platform={:?}, tier={})",
         template_paths.len(),
         framework,
-        platform
+        platform,
+        tier
     );
 
     // Build Docker command to run Nuclei with custom templates
@@ -127,7 +130,7 @@ fn get_templates_dir() -> PathBuf {
 }
 
 /// Select which templates to run based on detected framework and platform
-fn select_templates(framework: Option<&str>, platform: Option<&str>) -> Vec<String> {
+fn select_templates(framework: Option<&str>, platform: Option<&str>, tier: &str) -> Vec<String> {
     let mut templates = Vec::new();
 
     // Universal checks (always run)
@@ -166,6 +169,15 @@ fn select_templates(framework: Option<&str>, platform: Option<&str>) -> Vec<Stri
             // Unknown platform already handled above in framework=None case
         }
         _ => {}
+    }
+
+    // Add paid-tier templates for deeper scanning
+    if tier == "paid" {
+        templates.push("/templates/paid/advanced-env-leak.yaml".to_string());
+        templates.push("/templates/paid/api-auth-bypass.yaml".to_string());
+        templates.push("/templates/paid/debug-endpoints.yaml".to_string());
+        templates.push("/templates/paid/database-exposure.yaml".to_string());
+        templates.push("/templates/paid/admin-panel-detection.yaml".to_string());
     }
 
     // Remove duplicates
@@ -329,7 +341,7 @@ mod tests {
 
     #[test]
     fn test_template_selection_nextjs() {
-        let templates = select_templates(Some("nextjs"), None);
+        let templates = select_templates(Some("nextjs"), None, "free");
 
         // Should include universal + nextjs-specific
         assert!(templates.contains(&"/templates/supabase-rls.yaml".to_string()));
@@ -339,7 +351,7 @@ mod tests {
 
     #[test]
     fn test_template_selection_none() {
-        let templates = select_templates(None, None);
+        let templates = select_templates(None, None, "free");
 
         // Should include everything when unknown
         assert!(templates.len() >= 7);
@@ -349,7 +361,7 @@ mod tests {
 
     #[test]
     fn test_template_selection_vercel() {
-        let templates = select_templates(Some("nextjs"), Some("vercel"));
+        let templates = select_templates(Some("nextjs"), Some("vercel"), "free");
 
         // Should include vercel-specific
         assert!(templates.contains(&"/templates/vercel-env-leak.yaml".to_string()));
@@ -357,10 +369,23 @@ mod tests {
 
     #[test]
     fn test_template_selection_netlify() {
-        let templates = select_templates(None, Some("netlify"));
+        let templates = select_templates(None, Some("netlify"), "free");
 
         // Should include netlify-specific
         assert!(templates.contains(&"/templates/netlify-function-exposure.yaml".to_string()));
+    }
+
+    #[test]
+    fn test_template_selection_paid_tier() {
+        let templates = select_templates(Some("nextjs"), None, "paid");
+
+        // Should include base templates + paid templates
+        assert!(templates.contains(&"/templates/supabase-rls.yaml".to_string()));
+        assert!(templates.contains(&"/templates/paid/advanced-env-leak.yaml".to_string()));
+        assert!(templates.contains(&"/templates/paid/api-auth-bypass.yaml".to_string()));
+        assert!(templates.contains(&"/templates/paid/debug-endpoints.yaml".to_string()));
+        assert!(templates.contains(&"/templates/paid/database-exposure.yaml".to_string()));
+        assert!(templates.contains(&"/templates/paid/admin-panel-detection.yaml".to_string()));
     }
 
     #[test]

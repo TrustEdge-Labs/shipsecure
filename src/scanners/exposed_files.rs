@@ -52,7 +52,11 @@ struct ProbeResult {
 }
 
 /// Scan a URL for exposed files and directories
-pub async fn scan_exposed_files(url: &str) -> Result<Vec<Finding>, ScannerError> {
+///
+/// # Arguments
+/// * `url` - The target URL to scan
+/// * `extended` - If true, includes additional probe paths for paid tier
+pub async fn scan_exposed_files(url: &str, extended: bool) -> Result<Vec<Finding>, ScannerError> {
     // Parse and normalize base URL
     let parsed_url = Url::parse(url).map_err(|e| {
         ScannerError::Other(format!("Invalid URL: {}", e))
@@ -79,8 +83,8 @@ pub async fn scan_exposed_files(url: &str) -> Result<Vec<Finding>, ScannerError>
         .build()
         .map_err(|e| ScannerError::Other(format!("Failed to build client: {}", e)))?;
 
-    // Define probe targets
-    let targets = vec![
+    // Define probe targets - base targets always scanned
+    let mut targets = vec![
         ProbeTarget {
             path: "/.env",
             title: "Exposed Environment File",
@@ -218,6 +222,76 @@ pub async fn scan_exposed_files(url: &str) -> Result<Vec<Finding>, ScannerError>
             validator: is_accessible,
         },
     ];
+
+    // Add extended probe paths for paid tier
+    if extended {
+        targets.extend(vec![
+            ProbeTarget {
+                path: "/backup",
+                title: "Exposed Backup Directory",
+                severity: Severity::High,
+                description: "A backup directory is accessible, potentially exposing sensitive files.",
+                remediation: "Remove backup files from the web root or block access via web server configuration.",
+                validator: is_accessible,
+            },
+            ProbeTarget {
+                path: "/backup.zip",
+                title: "Exposed Backup Archive",
+                severity: Severity::High,
+                description: "A backup archive is accessible, potentially exposing sensitive data.",
+                remediation: "Remove backup files from the web root immediately.",
+                validator: is_accessible,
+            },
+            ProbeTarget {
+                path: "/dump.sql",
+                title: "Exposed Database Dump",
+                severity: Severity::Critical,
+                description: "A database dump file is publicly accessible.",
+                remediation: "Delete this file immediately and never store database dumps in the web root.",
+                validator: is_accessible,
+            },
+            ProbeTarget {
+                path: "/database.sql",
+                title: "Exposed Database Dump",
+                severity: Severity::Critical,
+                description: "A database dump file is publicly accessible.",
+                remediation: "Delete this file immediately and never store database dumps in the web root.",
+                validator: is_accessible,
+            },
+            ProbeTarget {
+                path: "/.svn/entries",
+                title: "Exposed SVN Repository",
+                severity: Severity::Critical,
+                description: "The .svn directory is accessible, exposing source code and history.",
+                remediation: "Block access to .svn directory in your web server configuration.",
+                validator: is_accessible,
+            },
+            ProbeTarget {
+                path: "/.DS_Store",
+                title: "Exposed macOS Metadata File",
+                severity: Severity::Low,
+                description: "macOS .DS_Store file is accessible, revealing directory structure.",
+                remediation: "Block access to .DS_Store files in your web server configuration.",
+                validator: is_accessible,
+            },
+            ProbeTarget {
+                path: "/config.php",
+                title: "Exposed Configuration File",
+                severity: Severity::High,
+                description: "A PHP configuration file may be accessible.",
+                remediation: "Ensure PHP configuration files are outside the web root or properly protected.",
+                validator: is_accessible,
+            },
+            ProbeTarget {
+                path: "/wp-config.php.bak",
+                title: "Exposed WordPress Configuration Backup",
+                severity: Severity::Critical,
+                description: "A WordPress configuration backup file is accessible, potentially exposing database credentials.",
+                remediation: "Delete all .bak files from the web root immediately.",
+                validator: is_accessible,
+            },
+        ]);
+    }
 
     // Probe all targets concurrently
     let mut probe_tasks = Vec::new();

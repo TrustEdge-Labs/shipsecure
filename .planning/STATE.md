@@ -110,6 +110,11 @@
 | String-based framework matching | Takes framework as Option<&str> instead of importing Framework enum to avoid dependency on plan 03-01 | 03-03 | 2026-02-06 |
 | Evidence extraction for remediation | Implemented regex-based extraction of variable names and table names from raw Nuclei evidence for precise diffs | 03-03 | 2026-02-06 |
 | No verify sections in remediation | Per user decision, remediation ends with explanation sentence - users rescan to verify fixes | 03-03 | 2026-02-06 |
+| Custom Nuclei templates over community | Created 7 custom templates instead of relying on community templates for vibe-code specific vulnerabilities | 03-02 | 2026-02-06 |
+| Framework-aware template selection | Select Nuclei templates based on detected framework/platform to reduce noise and scan time | 03-02 | 2026-02-06 |
+| vibe_code tagging for UI | Tag all findings from vibecode scanner with vibe_code=true to highlight AI-specific vulnerabilities | 03-02 | 2026-02-06 |
+| Safe publishable key whitelist | Filter NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY from env leak findings per Supabase docs | 03-02 | 2026-02-06 |
+| Read-only template volume mount | Mount templates directory as read-only Docker volume for security and version control flexibility | 03-02 | 2026-02-06 |
 
 ### Open Questions
 
@@ -132,7 +137,7 @@
 - [ ] Phase 3: Vibe-Code Intelligence (IN PROGRESS)
 - [x] Phase 3 Plan 01: Framework and platform detection engine (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 03: Framework-specific remediation engine (COMPLETE - 2026-02-06)
-- [ ] Phase 3 Plan 02: Vibe-code scanner (IN PROGRESS)
+- [x] Phase 3 Plan 02: Vibe-code scanner (COMPLETE - 2026-02-06)
 - [ ] Schedule legal review of TOS/consent flow before production launch
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery
 
@@ -145,11 +150,11 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Completed 03-01-PLAN.md (detection engine)
+**Stopped at:** Completed 03-02-PLAN.md (vibe-code scanner)
 **Resume file:** None
 
 **Starting next session:**
-Continue Phase 3 Wave 1 execution (plan 03-02 in progress, plan 03-04 pending)
+Continue Phase 3 execution - Wave 1 complete (detection, scanning, remediation), plan 03-04 (orchestrator integration) pending
 
 **Context for future phases:**
 - Phase 3 Wave 1 (parallel execution): Plans 03-01, 03-02, 03-03 create foundation for vibe-code detection

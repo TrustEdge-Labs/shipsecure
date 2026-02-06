@@ -3,6 +3,7 @@ pub mod db;
 pub mod email;
 pub mod models;
 pub mod orchestrator;
+pub mod pdf;
 pub mod rate_limit;
 pub mod scanners;
 pub mod ssrf;

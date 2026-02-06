@@ -16,23 +16,23 @@
 ## Current Position
 
 **Phase:** 3 of 4 (Vibe-Code Intelligence) — IN PROGRESS
-**Plan:** 3 of 4 (complete)
-**Status:** Phase 3 Wave 1 complete - detection, scanning, and remediation engines ready
-**Last activity:** 2026-02-06 - Completed 03-02-PLAN.md (vibe-code scanner)
+**Plan:** 4 of 4 (complete)
+**Status:** Phase 3 Wave 2 complete - orchestrator integration done
+**Last activity:** 2026-02-06 - Completed 03-04-PLAN.md (orchestrator wiring)
 
-**Progress:** [███████████████░] 94% (16/17 plans complete)
+**Progress:** [████████████████] 100% (17/17 plans complete)
 
-**Active Work:** Phase 3 Wave 1 complete. Plans 03-01, 03-02, 03-03 done: framework detection with multi-signal scoring, custom Nuclei templates for vibe-code vulnerabilities with framework-aware selection, and framework-specific remediation engine operational. Plan 03-04 (orchestrator integration) pending.
+**Active Work:** Phase 3 complete. All 4 plans done: framework detection (03-01), vibe-code scanner (03-02), remediation engine (03-03), and orchestrator integration (03-04). 6-stage scan pipeline operational with detection feeding downstream scanners.
 
 ---
 
 ## Performance Metrics
 
 **Velocity:**
-- Phases completed: 2/4
-- Plans completed: 16/17 (5 Phase 1, 8 Phase 2, 3 Phase 3)
-- Requirements delivered: 17/23 (Phase 1+2 complete)
-- Success criteria met: 11/21 (Phase 1: 5, Phase 2: 6)
+- Phases completed: 3/4
+- Plans completed: 17/17 (5 Phase 1, 8 Phase 2, 4 Phase 3, 0 Phase 4)
+- Requirements delivered: 20/23 (Phase 1+2+3 complete)
+- Success criteria met: 14/21 (Phase 1: 5, Phase 2: 6, Phase 3: 3)
 
 **Quality:**
 - Requirement coverage: 23/23 (100%)
@@ -115,6 +115,10 @@
 | vibe_code tagging for UI | Tag all findings from vibecode scanner with vibe_code=true to highlight AI-specific vulnerabilities | 03-02 | 2026-02-06 |
 | Safe publishable key whitelist | Filter NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY from env leak findings per Supabase docs | 03-02 | 2026-02-06 |
 | Read-only template volume mount | Mount templates directory as read-only Docker volume for security and version control flexibility | 03-02 | 2026-02-06 |
+| Detection as first sequential stage | Framework/platform detection runs before parallel scanners to feed results to vibecode scanner | 03-04 | 2026-02-06 |
+| Detection failure is graceful | Detection errors logged as warnings, scan continues with all scanners (vibecode gets framework=None) | 03-04 | 2026-02-06 |
+| Remediation applied in orchestrator | Framework-specific remediation generated inline in vibecode scanner task before findings persisted | 03-04 | 2026-02-06 |
+| VibCode timeout increased to 180s | Nuclei scans can be slow, especially with multiple templates - allow 3 minutes vs 60s for other scanners | 03-04 | 2026-02-06 |
 
 ### Open Questions
 
@@ -138,6 +142,8 @@
 - [x] Phase 3 Plan 01: Framework and platform detection engine (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 03: Framework-specific remediation engine (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 02: Vibe-code scanner (COMPLETE - 2026-02-06)
+- [x] Phase 3 Plan 04: Orchestrator wiring (COMPLETE - 2026-02-06)
+- [x] Phase 3: Vibe-Code Intelligence (COMPLETE - 2026-02-06)
 - [ ] Schedule legal review of TOS/consent flow before production launch
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery
 
@@ -150,15 +156,17 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Completed 03-02-PLAN.md (vibe-code scanner)
+**Stopped at:** Completed 03-04-PLAN.md (orchestrator wiring)
 **Resume file:** None
 
 **Starting next session:**
-Continue Phase 3 execution - Wave 1 complete (detection, scanning, remediation), plan 03-04 (orchestrator integration) pending
+Phase 3 complete. Ready for Phase 4 (Monetization) execution.
 
 **Context for future phases:**
-- Phase 3 Wave 1 (parallel execution): Plans 03-01, 03-02, 03-03 create foundation for vibe-code detection
-- Phase 3 Wave 2: Plan 03-04 integrates detection, scanning, and remediation
+- Phase 3 complete: Detection, scanning, remediation, and orchestrator integration operational
+- 6-stage scan pipeline: Detection (stage 1) → Headers+TLS+Files+Secrets+VibCode (stages 2-6)
+- Framework/platform detection feeds vibecode scanner for framework-aware vulnerability checks
+- Remediation engine provides copy-paste fixes tailored to detected framework
 - Phase 4 follows standard Stripe patterns (no research needed)
 
 ---

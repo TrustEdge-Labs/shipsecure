@@ -307,6 +307,11 @@ This prevents direct access to internal Netlify function endpoints and configura
         (VulnType::VercelEnvLeak, _) => {
             r#"**Review your environment variable configuration in Vercel Dashboard.**
 
+```diff
+- NEXT_PUBLIC_VERCEL_URL=...
++ # Remove NEXT_PUBLIC_ prefix or move to server-side only
+```
+
 Deployment metadata variables (VERCEL_ENV, VERCEL_URL) are low-risk info disclosure, but avoid exposing them in client bundles. Use server-side only access or remove NEXT_PUBLIC_ prefix if present."#.to_string()
         }
 

@@ -1,0 +1,52 @@
+id: trustedge-paid-database-exposure
+
+info:
+  name: Exposed Database Admin Interfaces
+  author: TrustEdge
+  severity: critical
+  description: Detects publicly accessible database administration interfaces that should be protected
+  tags: paid,trustedge,vibe-code,database
+  remediation: Remove public access to database admin panels. Use IP allowlisting, VPN access, or SSH tunneling for database administration. Never expose these interfaces to the public internet.
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/phpmyadmin"
+      - "{{BaseURL}}/adminer"
+      - "{{BaseURL}}/pgadmin"
+      - "{{BaseURL}}/supabase"
+      - "{{BaseURL}}/_prisma"
+      - "{{BaseURL}}/drizzle-studio"
+      - "{{BaseURL}}/phpmyadmin/"
+      - "{{BaseURL}}/adminer.php"
+      - "{{BaseURL}}/pgadmin4"
+      - "{{BaseURL}}/studio"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+          - 401
+          - 403
+
+      - type: word
+        words:
+          - "phpMyAdmin"
+          - "Adminer"
+          - "pgAdmin"
+          - "Supabase"
+          - "Prisma Studio"
+          - "Drizzle Studio"
+          - "Database"
+          - "MySQL"
+          - "PostgreSQL"
+        condition: or
+        case-insensitive: true
+
+    extractors:
+      - type: regex
+        part: body
+        regex:
+          - '<title>([^<]*(?:phpMyAdmin|Adminer|pgAdmin|Database|Studio)[^<]*)</title>'
+        case-insensitive: true

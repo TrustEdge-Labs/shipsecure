@@ -1,0 +1,49 @@
+id: trustedge-paid-api-auth-bypass
+
+info:
+  name: API Authentication Bypass Detection
+  author: TrustEdge
+  severity: critical
+  description: Detects API endpoints that should require authentication but are accessible without credentials
+  tags: paid,trustedge,vibe-code,auth-bypass
+  remediation: Implement proper authentication checks on all API endpoints. Use middleware or decorators to enforce authentication before processing requests.
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/api/users"
+      - "{{BaseURL}}/api/admin"
+      - "{{BaseURL}}/api/config"
+      - "{{BaseURL}}/graphql"
+      - "{{BaseURL}}/api/v1/debug"
+      - "{{BaseURL}}/api/internal"
+      - "{{BaseURL}}/api/admin/users"
+      - "{{BaseURL}}/api/settings"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: word
+        words:
+          - '"users"'
+          - '"admin"'
+          - '"config"'
+          - '"data"'
+          - '"__schema"'
+          - '"settings"'
+        condition: or
+
+      - type: word
+        words:
+          - "application/json"
+        part: header
+
+    extractors:
+      - type: regex
+        part: body
+        group: 1
+        regex:
+          - '"(users?|admin|email|password|config|settings)":\s*(\[|\{)'

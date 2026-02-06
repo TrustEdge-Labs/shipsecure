@@ -1,0 +1,61 @@
+id: trustedge-paid-admin-panel
+
+info:
+  name: Exposed Admin Panel Detection
+  author: TrustEdge
+  severity: medium
+  description: Detects admin panels and CMS administration interfaces exposed to the public internet
+  tags: paid,trustedge,vibe-code,admin
+  remediation: Protect admin panels with IP allowlisting, HTTP authentication, or VPN access. Consider using a non-standard URL path and implement rate limiting on login attempts.
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/admin"
+      - "{{BaseURL}}/dashboard"
+      - "{{BaseURL}}/wp-admin"
+      - "{{BaseURL}}/admin.html"
+      - "{{BaseURL}}/strapi/admin"
+      - "{{BaseURL}}/keystonejs"
+      - "{{BaseURL}}/sanity/desk"
+      - "{{BaseURL}}/admin/"
+      - "{{BaseURL}}/administrator"
+      - "{{BaseURL}}/backend"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+          - 401
+          - 403
+
+      - type: word
+        words:
+          - "admin"
+          - "dashboard"
+          - "login"
+          - "username"
+          - "password"
+          - "sign in"
+          - "administration"
+          - "strapi"
+          - "keystone"
+          - "sanity"
+        condition: or
+        case-insensitive: true
+
+      - type: word
+        words:
+          - "<form"
+          - "type=\"password\""
+          - "admin"
+        condition: or
+        case-insensitive: true
+
+    extractors:
+      - type: regex
+        part: body
+        regex:
+          - '<title>([^<]*(?:Admin|Dashboard|Login)[^<]*)</title>'
+        case-insensitive: true

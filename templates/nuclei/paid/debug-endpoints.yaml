@@ -1,0 +1,49 @@
+id: trustedge-paid-debug-endpoints
+
+info:
+  name: Exposed Debug and Profiling Endpoints
+  author: TrustEdge
+  severity: medium
+  description: Detects debug and profiling endpoints that are often left enabled in production environments
+  tags: paid,trustedge,vibe-code,debug
+  remediation: Disable debug endpoints in production. Use environment-specific configuration to ensure debug features are only available in development.
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/__debug"
+      - "{{BaseURL}}/_debug"
+      - "{{BaseURL}}/debug"
+      - "{{BaseURL}}/_profiler"
+      - "{{BaseURL}}/profiler"
+      - "{{BaseURL}}/phpinfo.php"
+      - "{{BaseURL}}/server-info"
+      - "{{BaseURL}}/server-status"
+      - "{{BaseURL}}/_next/data"
+      - "{{BaseURL}}/api/__nextauth"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: word
+        words:
+          - "debug"
+          - "profiler"
+          - "phpinfo"
+          - "server-status"
+          - "Apache Server Status"
+          - "__debug_toolbar"
+          - "Django Debug"
+          - "Symfony Profiler"
+        condition: or
+        case-insensitive: true
+
+    extractors:
+      - type: regex
+        part: body
+        regex:
+          - "(debug|profiler|trace|stack)"
+        case-insensitive: true

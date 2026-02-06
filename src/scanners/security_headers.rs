@@ -149,6 +149,7 @@ fn check_header(
             severity,
             remediation: remediation.to_string(),
             raw_evidence: Some(raw_evidence.to_string()),
+            vibe_code: false,
             created_at: Utc::now().naive_utc(),
         });
     }

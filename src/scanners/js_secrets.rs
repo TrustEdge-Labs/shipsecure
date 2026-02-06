@@ -285,6 +285,7 @@ async fn scan_single_js_file(js_url: String) -> Result<Vec<Finding>, ScannerErro
                     pattern.advice
                 ),
                 raw_evidence: Some(format!("Found in {}: {}\nContext: {}", js_url, redacted, evidence)),
+                vibe_code: false,
                 created_at: Utc::now().naive_utc(),
             });
         }

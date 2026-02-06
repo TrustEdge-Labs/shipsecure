@@ -74,6 +74,7 @@ mod tests {
             severity,
             remediation: "Test remediation".to_string(),
             raw_evidence: Some("Test evidence".to_string()),
+            vibe_code: false,
             created_at: Utc::now().naive_utc(),
         }
     }

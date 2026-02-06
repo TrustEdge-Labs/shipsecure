@@ -264,6 +264,7 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                         severity: Severity::Critical,
                         remediation: "Review SSL Labs detailed report and update your TLS configuration. Disable weak ciphers and outdated protocols. Ensure your certificate is valid and properly configured.".to_string(),
                         raw_evidence: Some(format!("SSL Labs Grade: {}", grade_upper)),
+                        vibe_code: false,
                         created_at: now,
                     });
                 }
@@ -280,6 +281,7 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                         severity: Severity::High,
                         remediation: "Update your TLS configuration to use only TLS 1.2 and 1.3 with strong cipher suites. For Nginx: ssl_protocols TLSv1.2 TLSv1.3; ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384';".to_string(),
                         raw_evidence: Some(format!("SSL Labs Grade: {}", grade_upper)),
+                        vibe_code: false,
                         created_at: now,
                     });
                 }
@@ -296,6 +298,7 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                         severity: Severity::Medium,
                         remediation: "Review SSL Labs recommendations and update your TLS configuration to achieve an A grade. This typically involves enabling TLS 1.3, using strong cipher suites, and enabling features like HSTS.".to_string(),
                         raw_evidence: Some(format!("SSL Labs Grade: {}", grade_upper)),
+                        vibe_code: false,
                         created_at: now,
                     });
                 }
@@ -325,6 +328,7 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                         severity: Severity::Critical,
                         remediation: "Disable all SSL protocols in your server configuration. For Nginx: ssl_protocols TLSv1.2 TLSv1.3; For Apache: SSLProtocol -all +TLSv1.2 +TLSv1.3".to_string(),
                         raw_evidence: Some(format!("Supported protocol: {}", proto_name)),
+                        vibe_code: false,
                         created_at: now,
                     });
                 } else if protocol.name.eq_ignore_ascii_case("TLS")
@@ -341,6 +345,7 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                         severity: Severity::High,
                         remediation: "Disable TLS 1.0 and 1.1 in your server configuration. For Nginx: ssl_protocols TLSv1.2 TLSv1.3; For Apache: SSLProtocol -all +TLSv1.2 +TLSv1.3".to_string(),
                         raw_evidence: Some(format!("Supported protocol: TLS {}", protocol.version)),
+                        vibe_code: false,
                         created_at: now,
                     });
                 }
@@ -366,6 +371,7 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                             severity: Severity::Critical,
                             remediation: "Renew your TLS certificate immediately. If using Let's Encrypt, run: certbot renew. If using a commercial CA, purchase and install a new certificate.".to_string(),
                             raw_evidence: Some(format!("Certificate expired {} days ago", -days_until_expiry)),
+                            vibe_code: false,
                             created_at: now,
                         });
                     } else if days_until_expiry < 30 {
@@ -381,6 +387,7 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                             severity: Severity::High,
                             remediation: "Renew your TLS certificate before it expires. If using Let's Encrypt, run: certbot renew. Set up automatic renewal to prevent future expirations.".to_string(),
                             raw_evidence: Some(format!("Certificate expires in {} days", days_until_expiry)),
+                            vibe_code: false,
                             created_at: now,
                         });
                     }
@@ -401,6 +408,7 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                     severity: Severity::Critical,
                     remediation: "Update OpenSSL to version 1.0.1g or later immediately. After updating, regenerate all private keys and certificates, and force users to reset passwords.".to_string(),
                     raw_evidence: Some("Heartbleed vulnerability: true".to_string()),
+                    vibe_code: false,
                     created_at: now,
                 });
             }
@@ -419,6 +427,7 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                     severity: Severity::High,
                     remediation: "Disable SSL 3.0 and TLS 1.0 in your server configuration. For Nginx: ssl_protocols TLSv1.2 TLSv1.3; For Apache: SSLProtocol -all +TLSv1.2 +TLSv1.3".to_string(),
                     raw_evidence: Some("POODLE vulnerability: true".to_string()),
+                    vibe_code: false,
                     created_at: now,
                 });
             }
@@ -438,6 +447,7 @@ fn create_informational_finding(message: &str) -> Finding {
         severity: Severity::Low,
         remediation: "No action required. This is an informational message about the TLS scan.".to_string(),
         raw_evidence: None,
+        vibe_code: false,
         created_at: Utc::now().naive_utc(),
     }
 }

@@ -335,6 +335,7 @@ async fn probe_path(
                 status_code,
                 probe_result.content_type.as_deref().unwrap_or("unknown")
             )),
+            vibe_code: false,
             created_at: now,
         })
     } else {
@@ -357,6 +358,7 @@ async fn check_security_txt(client: &Client, url: &str) -> Option<Finding> {
                 severity: Severity::Low,
                 remediation: "Create a security.txt file at /.well-known/security.txt following RFC 9116. Include Contact, Expires, and optionally Acknowledgments and Preferred-Languages fields. Example: Contact: mailto:security@example.com\\nExpires: 2025-12-31T23:59:59z".to_string(),
                 raw_evidence: Some(format!("URL: {}\nStatus: 404 Not Found", url)),
+                vibe_code: false,
                 created_at: now,
             })
         }

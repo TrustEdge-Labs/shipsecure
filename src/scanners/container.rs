@@ -201,6 +201,7 @@ fn parse_nuclei_finding(json: &serde_json::Value, target: &str) -> Option<Findin
             matched_at,
             serde_json::to_string_pretty(json).unwrap_or_else(|_| "{}".to_string())
         )),
+        vibe_code: false,
         created_at: Utc::now().naive_utc(),
     })
 }
@@ -271,6 +272,7 @@ fn parse_testssl_finding(json: &serde_json::Value, target: &str) -> Option<Findi
         remediation: get_testssl_remediation(id),
         raw_evidence: Some(serde_json::to_string_pretty(json)
             .unwrap_or_else(|_| "{}".to_string())),
+        vibe_code: false,
         created_at: Utc::now().naive_utc(),
     })
 }

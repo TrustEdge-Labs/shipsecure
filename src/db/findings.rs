@@ -14,8 +14,8 @@ pub async fn insert_findings(
 
     for finding in findings {
         sqlx::query(
-            "INSERT INTO findings (scan_id, scanner_name, title, description, severity, remediation, raw_evidence)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)"
+            "INSERT INTO findings (scan_id, scanner_name, title, description, severity, remediation, raw_evidence, vibe_code)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
         )
         .bind(scan_id)
         .bind(&finding.scanner_name)
@@ -24,6 +24,7 @@ pub async fn insert_findings(
         .bind(&finding.severity)
         .bind(&finding.remediation)
         .bind(&finding.raw_evidence)
+        .bind(&finding.vibe_code)
         .execute(&mut *tx)
         .await?;
     }
@@ -39,7 +40,7 @@ pub async fn get_findings_by_scan(
     scan_id: Uuid,
 ) -> Result<Vec<Finding>, sqlx::Error> {
     let findings = sqlx::query_as::<_, Finding>(
-        "SELECT id, scan_id, scanner_name, title, description, severity, remediation, raw_evidence, created_at::timestamp
+        "SELECT id, scan_id, scanner_name, title, description, severity, remediation, raw_evidence, vibe_code, created_at::timestamp
          FROM findings
          WHERE scan_id = $1
          ORDER BY

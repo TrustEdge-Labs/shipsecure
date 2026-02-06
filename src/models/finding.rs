@@ -34,5 +34,6 @@ pub struct Finding {
     pub severity: Severity,
     pub remediation: String,
     pub raw_evidence: Option<String>,
+    pub vibe_code: bool,
     pub created_at: NaiveDateTime,
 }

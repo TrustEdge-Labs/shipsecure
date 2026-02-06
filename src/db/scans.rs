@@ -15,7 +15,8 @@ pub async fn create_scan(
         "INSERT INTO scans (target_url, email, submitter_ip)
          VALUES ($1, $2, $3::inet)
          RETURNING id, target_url, email, submitter_ip::text, status, score, results_token,
-                   expires_at::timestamp, stage_headers, stage_tls, stage_files, stage_secrets,
+                   expires_at::timestamp, detected_framework, detected_platform,
+                   stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                    error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp"
     )
     .bind(target_url)
@@ -32,7 +33,8 @@ pub async fn create_scan(
 pub async fn get_scan(pool: &PgPool, id: Uuid) -> Result<Option<Scan>, sqlx::Error> {
     let scan = sqlx::query_as::<_, Scan>(
         "SELECT id, target_url, email, submitter_ip::text, status, score, results_token,
-                expires_at::timestamp, stage_headers, stage_tls, stage_files, stage_secrets,
+                expires_at::timestamp, detected_framework, detected_platform,
+                stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                 error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp
          FROM scans WHERE id = $1"
     )
@@ -58,7 +60,8 @@ pub async fn claim_pending_scan(pool: &PgPool) -> Result<Option<Scan>, sqlx::Err
              LIMIT 1
          )
          RETURNING id, target_url, email, submitter_ip::text, status, score, results_token,
-                   expires_at::timestamp, stage_headers, stage_tls, stage_files, stage_secrets,
+                   expires_at::timestamp, detected_framework, detected_platform,
+                   stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                    error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp"
     )
     .fetch_optional(pool)
@@ -146,7 +149,8 @@ pub async fn count_scans_by_ip_today(pool: &PgPool, ip: &str) -> Result<i64, sql
 pub async fn get_scan_by_token(pool: &PgPool, token: &str) -> Result<Option<Scan>, sqlx::Error> {
     let scan = sqlx::query_as::<_, Scan>(
         "SELECT id, target_url, email, submitter_ip::text, status, score, results_token,
-                expires_at::timestamp, stage_headers, stage_tls, stage_files, stage_secrets,
+                expires_at::timestamp, detected_framework, detected_platform,
+                stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                 error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp
          FROM scans
          WHERE results_token = $1 AND (expires_at IS NULL OR expires_at > NOW())"
@@ -171,6 +175,8 @@ pub async fn update_scan_stage(
         "tls" => "UPDATE scans SET stage_tls = $1 WHERE id = $2",
         "files" => "UPDATE scans SET stage_files = $1 WHERE id = $2",
         "secrets" => "UPDATE scans SET stage_secrets = $1 WHERE id = $2",
+        "detection" => "UPDATE scans SET stage_detection = $1 WHERE id = $2",
+        "vibecode" => "UPDATE scans SET stage_vibecode = $1 WHERE id = $2",
         _ => return Err(sqlx::Error::RowNotFound),
     };
 

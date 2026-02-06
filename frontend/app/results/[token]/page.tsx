@@ -151,6 +151,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           <GradeSummary
             grade={data.score || 'N/A'}
             summary={data.summary}
+            framework={data.detected_framework}
+            platform={data.detected_platform}
           />
         </div>
 

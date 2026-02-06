@@ -9,9 +9,11 @@ interface GradeSummaryProps {
     low: number
     total: number
   }
+  framework?: string | null
+  platform?: string | null
 }
 
-export function GradeSummary({ grade, summary }: GradeSummaryProps) {
+export function GradeSummary({ grade, summary, framework, platform }: GradeSummaryProps) {
   const getGradeColor = (grade: string) => {
     const normalized = grade.toUpperCase()
     if (normalized === 'A+' || normalized === 'A') return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900'
@@ -20,11 +22,48 @@ export function GradeSummary({ grade, summary }: GradeSummaryProps) {
     return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900' // D or F
   }
 
+  const formatFramework = (fw: string): string => {
+    const mapping: Record<string, string> = {
+      nextjs: 'Next.js',
+      vite_react: 'Vite/React',
+      sveltekit: 'SvelteKit',
+      nuxt: 'Nuxt',
+    }
+    return mapping[fw] || fw
+  }
+
+  const formatPlatform = (pl: string): string => {
+    const mapping: Record<string, string> = {
+      vercel: 'Vercel',
+      netlify: 'Netlify',
+      railway: 'Railway',
+    }
+    return mapping[pl] || pl
+  }
+
   return (
     <div className="flex items-center gap-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       {/* Grade Circle */}
       <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${getGradeColor(grade)}`}>
         {grade}
+      </div>
+
+      {/* Framework + Platform Badge */}
+      <div className="flex flex-col">
+        <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+          {(framework || platform) && (
+            <span className="text-base font-normal text-gray-600 dark:text-gray-400">
+              {framework ? formatFramework(framework) : ''}
+              {framework && platform ? ' on ' : ''}
+              {platform ? formatPlatform(platform) : ''}
+            </span>
+          )}
+        </span>
+        {!framework && (
+          <span className="text-xs text-gray-500 dark:text-gray-500">
+            Framework: Not detected
+          </span>
+        )}
       </div>
 
       {/* Finding Counts */}

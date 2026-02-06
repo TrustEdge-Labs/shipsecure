@@ -6,10 +6,14 @@ export interface Scan {
   score: string | null
   results_token: string | null
   expires_at: string | null
+  stage_detection: boolean
   stage_headers: boolean
   stage_tls: boolean
   stage_files: boolean
   stage_secrets: boolean
+  stage_vibecode: boolean
+  detected_framework: string | null
+  detected_platform: string | null
   created_at: string
   started_at: string | null
   completed_at: string | null
@@ -23,6 +27,7 @@ export interface Finding {
   severity: 'critical' | 'high' | 'medium' | 'low'
   remediation: string
   scanner_name: string
+  vibe_code: boolean
 }
 
 export interface ScanResponse {
@@ -32,10 +37,14 @@ export interface ScanResponse {
   score: string | null
   results_token: string | null
   expires_at: string | null
+  stage_detection: boolean
   stage_headers: boolean
   stage_tls: boolean
   stage_files: boolean
   stage_secrets: boolean
+  stage_vibecode: boolean
+  detected_framework: string | null
+  detected_platform: string | null
   created_at: string
   started_at: string | null
   completed_at: string | null

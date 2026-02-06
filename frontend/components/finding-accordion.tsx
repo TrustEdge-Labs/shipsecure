@@ -32,6 +32,7 @@ export function FindingAccordion({ finding, defaultExpanded = false }: FindingAc
       tls: 'TLS',
       exposed_files: 'Exposed Files',
       js_secrets: 'JavaScript Secrets',
+      vibecode: 'Vibe-Code',
     }
     return mapping[scannerName] || scannerName
   }
@@ -46,6 +47,11 @@ export function FindingAccordion({ finding, defaultExpanded = false }: FindingAc
         <span className={`px-2 py-1 text-xs font-medium rounded uppercase ${getSeverityStyles(finding.severity)}`}>
           {finding.severity}
         </span>
+        {finding.vibe_code && (
+          <span className="px-2 py-0.5 text-xs font-medium rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
+            Vibe-Code
+          </span>
+        )}
         <span className="flex-1 font-medium text-gray-900 dark:text-gray-100">
           {finding.title}
         </span>

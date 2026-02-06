@@ -2,20 +2,24 @@
 
 interface ProgressChecklistProps {
   stages: {
+    detection: boolean
     headers: boolean
     tls: boolean
     files: boolean
     secrets: boolean
+    vibecode: boolean
   }
   status: string
 }
 
 export function ProgressChecklist({ stages, status }: ProgressChecklistProps) {
   const items = [
+    { key: 'detection', label: 'Detecting Framework', done: stages.detection },
     { key: 'headers', label: 'Security Headers', done: stages.headers },
     { key: 'tls', label: 'TLS Configuration', done: stages.tls },
     { key: 'files', label: 'Exposed Files', done: stages.files },
     { key: 'secrets', label: 'JavaScript Secrets', done: stages.secrets },
+    { key: 'vibecode', label: 'Vibe-Code Scan', done: stages.vibecode },
   ]
 
   return (

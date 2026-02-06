@@ -9,10 +9,12 @@ interface ScanStatus {
   target_url: string
   status: string
   results_token: string | null
+  stage_detection: boolean
   stage_headers: boolean
   stage_tls: boolean
   stage_files: boolean
   stage_secrets: boolean
+  stage_vibecode: boolean
   error_message: string | null
 }
 
@@ -152,10 +154,12 @@ export default function ScanProgressPage() {
         <div className="mb-8">
           <ProgressChecklist
             stages={{
+              detection: scan.stage_detection,
               headers: scan.stage_headers,
               tls: scan.stage_tls,
               files: scan.stage_files,
               secrets: scan.stage_secrets,
+              vibecode: scan.stage_vibecode,
             }}
             status={scan.status}
           />

@@ -35,6 +35,7 @@ export function ResultsDashboard({ findings }: ResultsDashboardProps) {
       tls: 'TLS',
       exposed_files: 'Exposed Files',
       js_secrets: 'JavaScript Secrets',
+      vibecode: 'Vibe-Code',
     }
     return mapping[scannerName] || scannerName
   }

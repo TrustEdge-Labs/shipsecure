@@ -15,14 +15,14 @@
 
 ## Current Position
 
-**Phase:** 3 of 4 (Vibe-Code Intelligence) — COMPLETE
-**Plan:** 5 of 5 (complete)
-**Status:** Phase 3 complete - all vibe-code intelligence features operational
-**Last activity:** 2026-02-06 - Completed 03-05-PLAN.md (API extensions + frontend)
+**Phase:** 4 of 4 (Monetization) — IN PROGRESS
+**Plan:** 1 of 5 (in progress)
+**Status:** Phase 4 started - paid audit database foundation complete
+**Last activity:** 2026-02-06 - Completed 04-01-PLAN.md (Database foundation for paid audits)
 
-**Progress:** [████████████████] 100% (18/18 plans complete)
+**Progress:** [█████████████████] 83% (19/23 plans complete)
 
-**Active Work:** Phase 3 complete. All 5 plans done: framework detection (03-01), vibe-code scanner (03-02), remediation engine (03-03), orchestrator integration (03-04), and API/frontend extensions (03-05). Full vibe-code intelligence pipeline operational with detection, scanning, remediation, and user-facing badges/tags.
+**Active Work:** Phase 4 Plan 1 complete. Database schema for paid_audits, stripe_events, and tier column on scans now in place. Models and CRUD operations ready for Stripe integration (04-02), tier-aware scanning (04-03), and PDF reports (04-04).
 
 ---
 
@@ -30,8 +30,8 @@
 
 **Velocity:**
 - Phases completed: 3/4
-- Plans completed: 18/18 (5 Phase 1, 8 Phase 2, 5 Phase 3, 0 Phase 4)
-- Requirements delivered: 20/23 (Phase 1+2+3 complete)
+- Plans completed: 19/23 (5 Phase 1, 8 Phase 2, 5 Phase 3, 1 Phase 4)
+- Requirements delivered: 20/23 (Phase 1+2+3 complete, Phase 4 in progress)
 - Success criteria met: 16/21 (Phase 1: 5, Phase 2: 6, Phase 3: 5)
 
 **Quality:**
@@ -123,6 +123,10 @@
 | Framework badge inline with grade | Display framework/platform inline after grade circle (e.g., "B -- Next.js on Vercel") for compact layout | 03-05 | 2026-02-06 |
 | No vibe-code filter toggle | Purple tag badge sufficient for identifying vibe-code findings, no additional filtering UI needed | 03-05 | 2026-02-06 |
 | 6-stage progress checklist | Detection first, vibecode last to reflect actual execution order in orchestrator | 03-05 | 2026-02-06 |
+| VARCHAR status not enum for paid_audits | More flexible for future status additions without migrations | 04-01 | 2026-02-06 |
+| Separate stripe_events table | Webhook idempotency via INSERT ON CONFLICT DO NOTHING, cleaner separation | 04-01 | 2026-02-06 |
+| Tier column on scans table | Denormalized for read performance, supports future tiers beyond free/paid | 04-01 | 2026-02-06 |
+| clear_findings_by_scan function | Delete existing findings before paid rescan to prevent duplicates | 04-01 | 2026-02-06 |
 
 ### Open Questions
 
@@ -148,8 +152,10 @@
 - [x] Phase 3 Plan 02: Vibe-code scanner (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 04: Orchestrator wiring (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 05: API extensions + frontend (COMPLETE - 2026-02-06)
+- [x] Phase 4 Plan 01: Database foundation for paid audits (COMPLETE - 2026-02-06)
 - [ ] Schedule legal review of TOS/consent flow before production launch
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery
+- [ ] Set up Stripe account and configure STRIPE_API_KEY for payment processing
 
 ### Blockers
 
@@ -160,19 +166,18 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Completed 03-05-PLAN.md (API extensions + frontend)
+**Stopped at:** Completed 04-01-PLAN.md (Database foundation for paid audits)
 **Resume file:** None
 
 **Starting next session:**
-Phase 3 complete. Ready for Phase 4 (Monetization) execution.
+Phase 4 Plan 1 complete. Ready for Plan 04-02 (Stripe Checkout and webhooks).
 
-**Context for future phases:**
-- Phase 3 complete: Detection, scanning, remediation, orchestrator integration, and frontend display operational
-- 6-stage scan pipeline: Detection (stage 1) → Headers+TLS+Files+Secrets+VibCode (stages 2-6)
-- Framework/platform detection feeds vibecode scanner for framework-aware vulnerability checks
-- Remediation engine provides copy-paste fixes tailored to detected framework
-- Frontend displays framework badges, vibe-code tags, and 6-stage progress
-- Phase 4 follows standard Stripe patterns (no research needed)
+**Context for future plans:**
+- Phase 4 Plan 1 complete: paid_audits, stripe_events tables, tier column on scans, CRUD operations ready
+- Database foundation supports full paid audit lifecycle: checkout → webhook → status update → PDF generation
+- Webhook idempotency via check_and_mark_event ensures duplicate events are safely ignored
+- clear_findings_by_scan function ready for paid tier rescans with extended scanner parameters
+- All scan queries updated to include tier column for free/paid differentiation
 
 ---
 

@@ -184,13 +184,152 @@ async fn handle_checkout_completed(
             ApiError::InternalError("Failed to update scan tier".to_string())
         })?;
 
-    // Spawn paid scan asynchronously (placeholder for Plan 03)
-    // This will be wired to the orchestrator's paid scan method in Plan 03
-    let _pool = state.pool.clone();
+    // Spawn paid scan pipeline asynchronously
+    let pool = state.pool.clone();
+    let orchestrator = state.orchestrator.clone();
     tokio::spawn(async move {
-        tracing::info!("Paid scan triggered for scan_id={}", scan_id);
-        // TODO (Plan 03): Call orchestrator.spawn_paid_scan(scan_id, _pool)
-        // For now, just log as placeholder
+        tracing::info!("Starting paid scan pipeline for scan_id={}", scan_id);
+
+        // Get scan from database
+        let scan = match crate::db::scans::get_scan(&pool, scan_id).await {
+            Ok(Some(s)) => s,
+            Ok(None) => {
+                tracing::error!("Scan {} not found for paid audit", scan_id);
+                return;
+            }
+            Err(e) => {
+                tracing::error!("Failed to fetch scan {}: {:?}", scan_id, e);
+                return;
+            }
+        };
+
+        let target_url = scan.target_url.clone();
+        let email = scan.email.clone();
+
+        // Trigger paid scan via orchestrator
+        tracing::info!("Spawning paid scan for scan_id={}, url={}", scan_id, target_url);
+        orchestrator.spawn_paid_scan(scan_id, target_url.clone());
+
+        // Poll database for completion (max 15 minutes)
+        let max_attempts = 180; // 15 min / 5s = 180 attempts
+        let mut completed = false;
+
+        for attempt in 1..=max_attempts {
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+            match crate::db::scans::get_scan(&pool, scan_id).await {
+                Ok(Some(updated_scan)) => {
+                    if updated_scan.status == crate::models::scan::ScanStatus::Completed {
+                        tracing::info!("Paid scan {} completed after {} attempts", scan_id, attempt);
+                        completed = true;
+                        break;
+                    } else if updated_scan.status == crate::models::scan::ScanStatus::Failed {
+                        tracing::error!("Paid scan {} failed", scan_id);
+                        return;
+                    }
+                }
+                Ok(None) => {
+                    tracing::error!("Scan {} disappeared during polling", scan_id);
+                    return;
+                }
+                Err(e) => {
+                    tracing::warn!("Poll attempt {} for scan {} failed: {:?}", attempt, scan_id, e);
+                }
+            }
+        }
+
+        if !completed {
+            tracing::error!("Paid scan {} timed out after 15 minutes", scan_id);
+            return;
+        }
+
+        // Fetch completed scan and findings
+        let scan = match crate::db::scans::get_scan(&pool, scan_id).await {
+            Ok(Some(s)) => s,
+            Ok(None) => {
+                tracing::error!("Scan {} not found after completion", scan_id);
+                return;
+            }
+            Err(e) => {
+                tracing::error!("Failed to fetch completed scan {}: {:?}", scan_id, e);
+                return;
+            }
+        };
+
+        let findings = match crate::db::findings::get_findings_by_scan(&pool, scan_id).await {
+            Ok(f) => f,
+            Err(e) => {
+                tracing::error!("Failed to fetch findings for scan {}: {:?}", scan_id, e);
+                return;
+            }
+        };
+
+        // Generate PDF report
+        let grade = scan.score.as_deref().unwrap_or("N/A");
+        let scan_date = scan.completed_at
+            .map(|dt| dt.format("%Y-%m-%d").to_string())
+            .unwrap_or_else(|| "Unknown".to_string());
+        let framework = scan.detected_framework.as_deref();
+        let platform = scan.detected_platform.as_deref();
+
+        let pdf_bytes = match crate::pdf::generate_report(
+            &target_url,
+            grade,
+            &scan_date,
+            framework,
+            platform,
+            &findings,
+        ) {
+            Ok(bytes) => bytes,
+            Err(e) => {
+                tracing::error!("Failed to generate PDF for scan {}: {:?}", scan_id, e);
+                return;
+            }
+        };
+
+        // Mark PDF generated
+        if let Err(e) = crate::db::paid_audits::mark_pdf_generated(&pool, scan_id).await {
+            tracing::warn!("Failed to mark PDF generated for scan {}: {:?}", scan_id, e);
+        }
+
+        // Compute findings summary
+        let summary = crate::email::FindingsSummary {
+            critical: findings.iter().filter(|f| f.severity == crate::models::Severity::Critical).count() as i64,
+            high: findings.iter().filter(|f| f.severity == crate::models::Severity::High).count() as i64,
+            medium: findings.iter().filter(|f| f.severity == crate::models::Severity::Medium).count() as i64,
+            low: findings.iter().filter(|f| f.severity == crate::models::Severity::Low).count() as i64,
+            total: findings.len() as i64,
+        };
+
+        // Get results token and base URL
+        let results_token = scan.results_token.as_deref().unwrap_or("");
+        let base_url = std::env::var("TRUSTEDGE_BASE_URL")
+            .unwrap_or_else(|_| "http://localhost:3001".to_string());
+
+        // Format scan_id for filename (first 8 chars)
+        let scan_id_str = scan_id.to_string();
+        let short_scan_id = if scan_id_str.len() >= 8 {
+            &scan_id_str[..8]
+        } else {
+            &scan_id_str
+        };
+
+        // Send paid audit email with PDF attachment
+        if let Err(e) = crate::email::send_paid_audit_email(
+            &email,
+            &target_url,
+            grade,
+            &summary,
+            results_token,
+            &base_url,
+            pdf_bytes,
+            short_scan_id,
+        ).await {
+            tracing::error!("Failed to send paid audit email for scan {}: {:?}", scan_id, e);
+            return;
+        }
+
+        tracing::info!("Paid scan pipeline completed successfully for scan_id={}", scan_id);
     });
 
     Ok(())

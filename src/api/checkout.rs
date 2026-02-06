@@ -3,7 +3,6 @@ use axum::http::StatusCode;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use uuid::Uuid;
 
 use crate::api::errors::ApiError;
 use crate::api::scans::AppState;
@@ -11,7 +10,7 @@ use crate::db;
 
 #[derive(Debug, Deserialize)]
 pub struct CreateCheckoutRequest {
-    pub scan_id: Uuid,
+    pub scan_id: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -24,8 +23,8 @@ pub async fn create_checkout(
     State(state): State<AppState>,
     Json(req): Json<CreateCheckoutRequest>,
 ) -> Result<(StatusCode, Json<CreateCheckoutResponse>), ApiError> {
-    // 1. Load scan from database
-    let scan = db::scans::get_scan(&state.pool, req.scan_id)
+    // 1. Load scan from database (scan_id is the results_token from the frontend)
+    let scan = db::scans::get_scan_by_token(&state.pool, &req.scan_id)
         .await?
         .ok_or_else(|| {
             ApiError::ValidationError(format!("Scan {} not found", req.scan_id))
@@ -39,7 +38,7 @@ pub async fn create_checkout(
     }
 
     // 3. Check if paid audit already exists
-    if let Some(paid_audit) = db::paid_audits::get_paid_audit_by_scan_id(&state.pool, req.scan_id).await? {
+    if let Some(paid_audit) = db::paid_audits::get_paid_audit_by_scan_id(&state.pool, scan.id).await? {
         if paid_audit.status == "completed" {
             return Err(ApiError::Custom {
                 status: StatusCode::CONFLICT,
@@ -98,7 +97,7 @@ pub async fn create_checkout(
 
     // Set metadata
     let mut metadata = HashMap::new();
-    metadata.insert("scan_id".to_string(), req.scan_id.to_string());
+    metadata.insert("scan_id".to_string(), scan.id.to_string());
     metadata.insert("email".to_string(), scan.email.clone());
     params.metadata = Some(metadata);
 
@@ -112,7 +111,7 @@ pub async fn create_checkout(
     // 7. Create paid_audit record with pending status
     db::paid_audits::create_paid_audit(
         &state.pool,
-        req.scan_id,
+        scan.id,
         &session.id.to_string(),
         4900,
         &scan.email,

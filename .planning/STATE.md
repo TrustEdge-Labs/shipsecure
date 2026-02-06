@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 4 of 4 (Monetization) — IN PROGRESS
-**Plan:** 1 of 5 (in progress)
-**Status:** Phase 4 started - paid audit database foundation complete
-**Last activity:** 2026-02-06 - Completed 04-01-PLAN.md (Database foundation for paid audits)
+**Plan:** 2 of 5 (complete)
+**Status:** Stripe integration complete - payment backend operational
+**Last activity:** 2026-02-06 - Completed 04-02-PLAN.md (Stripe Checkout and webhooks)
 
-**Progress:** [█████████████████] 83% (19/23 plans complete)
+**Progress:** [█████████████████] 87% (20/23 plans complete)
 
-**Active Work:** Phase 4 Plan 1 complete. Database schema for paid_audits, stripe_events, and tier column on scans now in place. Models and CRUD operations ready for Stripe integration (04-02), tier-aware scanning (04-03), and PDF reports (04-04).
+**Active Work:** Phase 4 Plan 2 complete. Payment flow operational: POST /api/v1/checkout creates Stripe sessions, POST /api/v1/webhooks/stripe processes payments with HMAC verification, updates paid_audit status and scan tier. Ready for tier-aware scanning (04-03) and PDF reports (04-04).
 
 ---
 
@@ -30,7 +30,7 @@
 
 **Velocity:**
 - Phases completed: 3/4
-- Plans completed: 19/23 (5 Phase 1, 8 Phase 2, 5 Phase 3, 1 Phase 4)
+- Plans completed: 20/23 (5 Phase 1, 8 Phase 2, 5 Phase 3, 2 Phase 4)
 - Requirements delivered: 20/23 (Phase 1+2+3 complete, Phase 4 in progress)
 - Success criteria met: 16/21 (Phase 1: 5, Phase 2: 6, Phase 3: 5)
 
@@ -127,6 +127,10 @@
 | Separate stripe_events table | Webhook idempotency via INSERT ON CONFLICT DO NOTHING, cleaner separation | 04-01 | 2026-02-06 |
 | Tier column on scans table | Denormalized for read performance, supports future tiers beyond free/paid | 04-01 | 2026-02-06 |
 | clear_findings_by_scan function | Delete existing findings before paid rescan to prevent duplicates | 04-01 | 2026-02-06 |
+| Manual HMAC signature verification | Use hmac/sha2/hex crates directly instead of async-stripe built-in for transparent control | 04-02 | 2026-02-06 |
+| 5-minute webhook timestamp window | Replay protection per Stripe recommendation, reject timestamps older than 300 seconds | 04-02 | 2026-02-06 |
+| Owned strings for Stripe URLs | success_url and cancel_url need owned Strings to satisfy Stripe API lifetime requirements | 04-02 | 2026-02-06 |
+| Async paid scan trigger | tokio::spawn for non-blocking webhook response, returns 200 OK immediately per Stripe best practice | 04-02 | 2026-02-06 |
 
 ### Open Questions
 
@@ -153,9 +157,10 @@
 - [x] Phase 3 Plan 04: Orchestrator wiring (COMPLETE - 2026-02-06)
 - [x] Phase 3 Plan 05: API extensions + frontend (COMPLETE - 2026-02-06)
 - [x] Phase 4 Plan 01: Database foundation for paid audits (COMPLETE - 2026-02-06)
+- [x] Phase 4 Plan 02: Stripe Checkout and webhooks (COMPLETE - 2026-02-06)
 - [ ] Schedule legal review of TOS/consent flow before production launch
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery
-- [ ] Set up Stripe account and configure STRIPE_API_KEY for payment processing
+- [ ] Set up Stripe account (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) - see 04-USER-SETUP.md
 
 ### Blockers
 
@@ -166,18 +171,19 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Completed 04-01-PLAN.md (Database foundation for paid audits)
+**Stopped at:** Completed 04-02-PLAN.md (Stripe Checkout and webhooks)
 **Resume file:** None
 
 **Starting next session:**
-Phase 4 Plan 1 complete. Ready for Plan 04-02 (Stripe Checkout and webhooks).
+Phase 4 Plan 2 complete. Ready for Plan 04-03 (Tier-aware scanning).
 
 **Context for future plans:**
-- Phase 4 Plan 1 complete: paid_audits, stripe_events tables, tier column on scans, CRUD operations ready
-- Database foundation supports full paid audit lifecycle: checkout → webhook → status update → PDF generation
-- Webhook idempotency via check_and_mark_event ensures duplicate events are safely ignored
-- clear_findings_by_scan function ready for paid tier rescans with extended scanner parameters
-- All scan queries updated to include tier column for free/paid differentiation
+- Phase 4 Plans 1-2 complete: Database + payment backend operational
+- Payment flow: POST /api/v1/checkout → Stripe session → webhook → paid_audit status update → scan tier update
+- Webhook handler uses HMAC-SHA256 signature verification with 5-minute replay protection
+- Idempotency via stripe_events table (INSERT ON CONFLICT DO NOTHING pattern)
+- Async paid scan trigger placeholder logs "Paid scan triggered" - needs orchestrator.spawn_paid_scan wiring in 04-03
+- User setup required: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET env vars - see 04-USER-SETUP.md
 
 ---
 

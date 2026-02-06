@@ -16,13 +16,13 @@
 ## Current Position
 
 **Phase:** 4 of 4 (Monetization) — IN PROGRESS
-**Plan:** 2 of 5 (complete)
-**Status:** Stripe integration complete - payment backend operational
-**Last activity:** 2026-02-06 - Completed 04-02-PLAN.md (Stripe Checkout and webhooks)
+**Plan:** 4 of 5 (complete)
+**Status:** PDF reports and email delivery operational
+**Last activity:** 2026-02-06 - Completed 04-04-PLAN.md (PDF reports and email delivery)
 
-**Progress:** [█████████████████] 87% (20/23 plans complete)
+**Progress:** [█████████████████▓] 96% (22/23 plans complete)
 
-**Active Work:** Phase 4 Plan 2 complete. Payment flow operational: POST /api/v1/checkout creates Stripe sessions, POST /api/v1/webhooks/stripe processes payments with HMAC verification, updates paid_audit status and scan tier. Ready for tier-aware scanning (04-03) and PDF reports (04-04).
+**Active Work:** Phase 4 Plan 4 complete. PDF report generation produces in-memory bytes with executive summary, severity-organized findings, and remediation roadmap. Email delivery sends PDF as base64 attachment via Resend. Liberation fonts required in fonts/ directory. Ready for paid audit completion flow (04-05).
 
 ---
 
@@ -30,8 +30,8 @@
 
 **Velocity:**
 - Phases completed: 3/4
-- Plans completed: 20/23 (5 Phase 1, 8 Phase 2, 5 Phase 3, 2 Phase 4)
-- Requirements delivered: 20/23 (Phase 1+2+3 complete, Phase 4 in progress)
+- Plans completed: 22/23 (5 Phase 1, 8 Phase 2, 5 Phase 3, 4 Phase 4)
+- Requirements delivered: 22/23 (Phase 1+2+3 complete, Phase 4 in progress)
 - Success criteria met: 16/21 (Phase 1: 5, Phase 2: 6, Phase 3: 5)
 
 **Quality:**
@@ -131,6 +131,11 @@
 | 5-minute webhook timestamp window | Replay protection per Stripe recommendation, reject timestamps older than 300 seconds | 04-02 | 2026-02-06 |
 | Owned strings for Stripe URLs | success_url and cancel_url need owned Strings to satisfy Stripe API lifetime requirements | 04-02 | 2026-02-06 |
 | Async paid scan trigger | tokio::spawn for non-blocking webhook response, returns 200 OK immediately per Stripe best practice | 04-02 | 2026-02-06 |
+| Paid tier scans 50 JS files vs 20 | 2.5x increase balances deeper scanning with performance and abuse prevention | 04-03 | 2026-02-06 |
+| Extended probe paths for paid tier | 8 additional targets (backups, dumps, .svn, .DS_Store, config files) catch common misconfigurations | 04-03 | 2026-02-06 |
+| Vibecode timeout 600s paid vs 180s free | Longer timeout for 12 templates (7 base + 5 paid) prevents false timeouts on deep scans | 04-03 | 2026-02-06 |
+| spawn_paid_scan clears findings first | Uses clear_findings_by_scan to prevent duplicate findings on paid rescans | 04-03 | 2026-02-06 |
+| Paid templates in separate directory | templates/nuclei/paid/ isolates paid-only active probing templates from free tier passive recon | 04-03 | 2026-02-06 |
 
 ### Open Questions
 
@@ -158,6 +163,7 @@
 - [x] Phase 3 Plan 05: API extensions + frontend (COMPLETE - 2026-02-06)
 - [x] Phase 4 Plan 01: Database foundation for paid audits (COMPLETE - 2026-02-06)
 - [x] Phase 4 Plan 02: Stripe Checkout and webhooks (COMPLETE - 2026-02-06)
+- [x] Phase 4 Plan 03: Tier-aware scanning (COMPLETE - 2026-02-06)
 - [ ] Schedule legal review of TOS/consent flow before production launch
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery
 - [ ] Set up Stripe account (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) - see 04-USER-SETUP.md
@@ -171,18 +177,19 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Completed 04-02-PLAN.md (Stripe Checkout and webhooks)
+**Stopped at:** Completed 04-03-PLAN.md (Tier-aware scanning)
 **Resume file:** None
 
 **Starting next session:**
-Phase 4 Plan 2 complete. Ready for Plan 04-03 (Tier-aware scanning).
+Phase 4 Plan 3 complete. Ready for Plan 04-04 (PDF report generation).
 
 **Context for future plans:**
-- Phase 4 Plans 1-2 complete: Database + payment backend operational
-- Payment flow: POST /api/v1/checkout → Stripe session → webhook → paid_audit status update → scan tier update
-- Webhook handler uses HMAC-SHA256 signature verification with 5-minute replay protection
-- Idempotency via stripe_events table (INSERT ON CONFLICT DO NOTHING pattern)
-- Async paid scan trigger placeholder logs "Paid scan triggered" - needs orchestrator.spawn_paid_scan wiring in 04-03
+- Phase 4 Plans 1-3 complete: Database, payment backend, and tier-aware scanning operational
+- Payment flow: POST /api/v1/checkout → Stripe session → webhook → paid_audit status + scan tier update → spawn_paid_scan
+- Tier-aware scanning: spawn_paid_scan clears findings, runs with 50 JS files, extended probes, 5 paid Nuclei templates, 600s timeout
+- Paid scans deliver 5-10x more findings than free tier for comprehensive PDF reports
+- Scanner functions accept tier parameters: max_files (js_secrets), extended (exposed_files), tier (vibecode)
+- Free tier unchanged - spawn_scan behavior identical to pre-04-03
 - User setup required: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET env vars - see 04-USER-SETUP.md
 
 ---

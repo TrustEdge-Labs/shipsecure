@@ -1,0 +1,60 @@
+id: firebase-permissive-rules
+
+info:
+  name: Firebase Permissive Security Rules
+  author: trustedge-audit
+  severity: critical
+  description: |
+    Detects Firebase Realtime Database instances with overly permissive security rules
+    that allow unauthenticated read or write access to database contents.
+  reference:
+    - https://firebase.google.com/docs/database/security
+    - https://firebase.google.com/docs/rules
+  tags: vibe-code,firebase,baas
+  classification:
+    cve-id:
+    cwe-id: CWE-732
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+
+    extractors:
+      - type: regex
+        name: firebase_project
+        group: 1
+        internal: true
+        regex:
+          - "https://([a-z0-9-]+)\\.firebaseio\\.com"
+          - "databaseURL.*https://([a-z0-9-]+)\\.firebaseio\\.com"
+
+    req-condition: true
+
+  - method: GET
+    path:
+      - "https://{{firebase_project}}.firebaseio.com/.json"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: word
+        negative: true
+        words:
+          - "Permission denied"
+          - "null"
+        part: body
+
+      - type: regex
+        regex:
+          - '\\{"'
+        part: body
+
+    extractors:
+      - type: json
+        part: body
+        json:
+          - '.'

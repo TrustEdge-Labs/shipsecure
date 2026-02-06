@@ -1,0 +1,52 @@
+id: nextjs-env-secret-leak
+
+info:
+  name: Next.js NEXT_PUBLIC_ Secret Exposure
+  author: trustedge-audit
+  severity: high
+  description: |
+    Detects Next.js applications that expose sensitive secrets through NEXT_PUBLIC_ environment
+    variables in the client-side bundle. These variables are embedded in JavaScript and publicly accessible.
+    Safe publishable keys (Supabase URL/anon key) are whitelisted.
+  reference:
+    - https://nextjs.org/docs/basic-features/environment-variables
+    - https://supabase.com/docs/guides/api/api-keys
+  tags: vibe-code,nextjs,env-leak
+  classification:
+    cve-id:
+    cwe-id: CWE-200
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+      - "{{BaseURL}}/_next/static/chunks/main.js"
+      - "{{BaseURL}}/_next/static/chunks/pages/_app.js"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: regex
+        regex:
+          - "NEXT_PUBLIC_.*SECRET"
+          - "NEXT_PUBLIC_.*PRIVATE"
+          - "NEXT_PUBLIC_.*SERVICE_ROLE"
+          - "NEXT_PUBLIC_.*API_KEY"
+        part: body
+        condition: or
+
+      - type: regex
+        negative: true
+        regex:
+          - 'NEXT_PUBLIC_SUPABASE_URL'
+          - 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+        part: body
+
+    extractors:
+      - type: regex
+        regex:
+          - "NEXT_PUBLIC_[A-Z0-9_]+"
+        part: body

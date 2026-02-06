@@ -1,0 +1,61 @@
+id: unprotected-api-routes
+
+info:
+  name: Unprotected API Routes
+  author: trustedge-audit
+  severity: high
+  description: |
+    Detects Next.js and other framework API routes that return data without authentication.
+    Tests common API endpoints for sensitive operations that should require auth.
+  reference:
+    - https://nextjs.org/docs/api-routes/introduction
+    - https://nextjs.org/docs/app/building-your-application/routing/router-handlers
+  tags: vibe-code,api,auth
+  classification:
+    cve-id:
+    cwe-id: CWE-306
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/api/users"
+      - "{{BaseURL}}/api/user"
+      - "{{BaseURL}}/api/admin"
+      - "{{BaseURL}}/api/auth/user"
+      - "{{BaseURL}}/api/settings"
+      - "{{BaseURL}}/api/profile"
+      - "{{BaseURL}}/api/user/route"
+      - "{{BaseURL}}/api/admin/route"
+
+    stop-at-first-match: true
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: word
+        words:
+          - "application/json"
+        part: header
+
+      - type: regex
+        regex:
+          - '\{[^}]*"(id|email|user|name|data|token|role|admin)"'
+        part: body
+
+      - type: word
+        negative: true
+        words:
+          - "401"
+          - "403"
+          - "Unauthorized"
+          - "Forbidden"
+        part: body
+
+    extractors:
+      - type: json
+        part: body
+        json:
+          - '.'

@@ -1,0 +1,69 @@
+id: supabase-rls-misconfiguration
+
+info:
+  name: Supabase Row Level Security Misconfiguration
+  author: trustedge-audit
+  severity: critical
+  description: |
+    Detects Supabase databases with missing or misconfigured Row Level Security (RLS) policies.
+    Tests whether the public anon key can access user data without authentication.
+  reference:
+    - https://supabase.com/docs/guides/auth/row-level-security
+    - https://supabase.com/docs/guides/api/api-keys
+  tags: vibe-code,supabase,rls,baas
+  classification:
+    cve-id:
+    cwe-id: CWE-284
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+
+    extractors:
+      - type: regex
+        name: supabase_url
+        group: 1
+        internal: true
+        regex:
+          - 'https://([a-z0-9-]+\.supabase\.co)'
+
+      - type: regex
+        name: anon_key
+        group: 1
+        internal: true
+        regex:
+          - '(eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)'
+
+    req-condition: true
+
+  - method: GET
+    path:
+      - "https://{{supabase_url}}/rest/v1/users?select=*&limit=1"
+
+    headers:
+      apikey: "{{anon_key}}"
+      Authorization: "Bearer {{anon_key}}"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: regex
+        regex:
+          - '"(email|password|user_id|auth_uid|private_|secret_|password_hash)"'
+        part: body
+
+      - type: regex
+        negative: true
+        regex:
+          - '\[\s*\]'
+        part: body
+
+    extractors:
+      - type: kval
+        part: header
+        kval:
+          - content_range

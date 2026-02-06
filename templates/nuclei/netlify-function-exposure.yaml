@@ -1,0 +1,55 @@
+id: netlify-function-exposure
+
+info:
+  name: Netlify Function Exposure
+  author: trustedge-audit
+  severity: medium
+  description: |
+    Detects exposed Netlify function directories or debug endpoints that reveal
+    function names, internal paths, or configuration details.
+  reference:
+    - https://docs.netlify.com/functions/overview/
+  tags: vibe-code,netlify,functions
+  classification:
+    cve-id:
+    cwe-id: CWE-200
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/.netlify/functions/"
+      - "{{BaseURL}}/.netlify/functions"
+      - "{{BaseURL}}/.netlify/functions-internal/"
+      - "{{BaseURL}}/.netlify/functions-serve/"
+
+    stop-at-first-match: true
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: word
+        words:
+          - "directory"
+          - "index"
+          - "listing"
+          - "function"
+          - ".js"
+          - ".ts"
+        part: body
+        condition: or
+
+      - type: word
+        negative: true
+        words:
+          - "404"
+          - "Not Found"
+        part: body
+
+    extractors:
+      - type: regex
+        regex:
+          - "/.netlify/functions/[a-zA-Z0-9_-]+"
+        part: body

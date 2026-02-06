@@ -1,0 +1,56 @@
+id: env-file-in-build-output
+
+info:
+  name: Environment File Exposed in Build Output
+  author: trustedge-audit
+  severity: critical
+  description: |
+    Detects .env files that are accidentally included in build output and served publicly.
+    This exposes all secrets, API keys, and database credentials.
+  reference:
+    - https://cwe.mitre.org/data/definitions/540.html
+  tags: vibe-code,env-leak,misconfiguration
+  classification:
+    cve-id:
+    cwe-id: CWE-540
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/.env"
+      - "{{BaseURL}}/.env.local"
+      - "{{BaseURL}}/.env.production"
+      - "{{BaseURL}}/.env.development"
+      - "{{BaseURL}}/out/.env"
+      - "{{BaseURL}}/dist/.env"
+      - "{{BaseURL}}/build/.env"
+
+    stop-at-first-match: true
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: regex
+        regex:
+          - '^[A-Z_][A-Z0-9_]*\s*=\s*.+'
+        part: body
+
+      - type: word
+        words:
+          - "API_KEY"
+          - "SECRET"
+          - "PASSWORD"
+          - "DATABASE_URL"
+          - "PRIVATE_KEY"
+          - "TOKEN"
+        part: body
+        condition: or
+
+    extractors:
+      - type: regex
+        regex:
+          - '^([A-Z_][A-Z0-9_]*)\s*='
+        part: body

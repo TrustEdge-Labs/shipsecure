@@ -67,6 +67,7 @@ pub async fn get_results_by_token(
                 "severity": format!("{:?}", f.severity).to_lowercase(),
                 "remediation": f.remediation,
                 "scanner_name": f.scanner_name,
+                "vibe_code": f.vibe_code,
             })
         })
         .collect();
@@ -80,6 +81,10 @@ pub async fn get_results_by_token(
         "expires_at": scan.expires_at,
         "created_at": scan.created_at,
         "completed_at": scan.completed_at,
+        "detected_framework": scan.detected_framework,
+        "detected_platform": scan.detected_platform,
+        "stage_detection": scan.stage_detection,
+        "stage_vibecode": scan.stage_vibecode,
         "findings": findings_json,
         "summary": summary,
     });
@@ -130,10 +135,15 @@ pub async fn download_results_markdown(
     let generated_time = Utc::now().format("%Y-%m-%d %H:%M UTC").to_string();
 
     // 5. Build markdown report
+    let detected_framework = scan.detected_framework.as_deref().unwrap_or("Not detected");
+    let detected_platform = scan.detected_platform.as_deref().unwrap_or("Not detected");
+
     let mut markdown = format!(
         "# Security Scan Report\n\n\
          **Target:** {}\n\
          **Grade:** {}\n\
+         **Framework:** {}\n\
+         **Platform:** {}\n\
          **Scanned:** {}\n\
          **Report generated:** {}\n\n\
          ---\n\n\
@@ -149,6 +159,8 @@ pub async fn download_results_markdown(
          ## Findings\n\n",
         scan.target_url,
         scan.score.unwrap_or_else(|| "N/A".to_string()),
+        detected_framework,
+        detected_platform,
         scanned_time,
         generated_time,
         critical_findings.len(),
@@ -163,6 +175,12 @@ pub async fn download_results_markdown(
         if !findings_list.is_empty() {
             md.push_str(&format!("### {}\n\n", severity));
             for (i, finding) in findings_list.iter().enumerate() {
+                let severity_label = if finding.vibe_code {
+                    format!("[Vibe-Code] {}", severity)
+                } else {
+                    severity.to_string()
+                };
+
                 md.push_str(&format!(
                     "#### {}. {}\n\n\
                      **Severity:** {}\n\
@@ -173,7 +191,7 @@ pub async fn download_results_markdown(
                      ---\n\n",
                     i + 1,
                     finding.title,
-                    severity,
+                    severity_label,
                     finding.scanner_name,
                     finding.description,
                     finding.remediation

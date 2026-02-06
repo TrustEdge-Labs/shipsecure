@@ -116,6 +116,7 @@ pub async fn get_scan(
                 "severity": format!("{:?}", f.severity).to_lowercase(),
                 "remediation": f.remediation,
                 "scanner_name": f.scanner_name,
+                "vibe_code": f.vibe_code,
             })
         })
         .collect();
@@ -127,10 +128,14 @@ pub async fn get_scan(
         "status": format!("{:?}", scan.status).to_lowercase(),
         "score": scan.score,
         "results_token": scan.results_token,
+        "stage_detection": scan.stage_detection,
         "stage_headers": scan.stage_headers,
         "stage_tls": scan.stage_tls,
         "stage_files": scan.stage_files,
         "stage_secrets": scan.stage_secrets,
+        "stage_vibecode": scan.stage_vibecode,
+        "detected_framework": scan.detected_framework,
+        "detected_platform": scan.detected_platform,
         "created_at": scan.created_at,
         "started_at": scan.started_at,
         "completed_at": scan.completed_at,

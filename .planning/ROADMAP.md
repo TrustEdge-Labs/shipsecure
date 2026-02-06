@@ -90,6 +90,15 @@ Plans:
 
 **Dependencies:** Phase 2 (requires scan results to test detection patterns)
 
+**Plans:** 5 plans
+
+Plans:
+- [ ] 03-01-PLAN.md -- Detection models, database migration, multi-signal framework/platform detector
+- [ ] 03-02-PLAN.md -- Custom Nuclei templates + vibe-code scanner module
+- [ ] 03-03-PLAN.md -- Framework-specific remediation engine with copy-paste code fixes
+- [ ] 03-04-PLAN.md -- Orchestrator wiring: detection-first pipeline + vibe-code scanner integration
+- [ ] 03-05-PLAN.md -- API extensions + frontend: framework badges, vibe-code tags, 6-stage progress
+
 **Requirements:**
 - VIBE-01: Custom Nuclei templates detect vibe-code vulnerabilities
 - VIBE-02: Auto-detect framework and platform from HTML/JS patterns
@@ -130,7 +139,7 @@ Plans:
 |-------|--------|--------------|------------------|------------|
 | 1 - Foundation | Complete | 5 | 5/5 | 100% |
 | 2 - Free Tier MVP | Complete | 12 | 6/6 | 100% |
-| 3 - Vibe-Code Intelligence | Pending | 3 | 5 | 0% |
+| 3 - Vibe-Code Intelligence | In Progress | 3 | 5 | 0% |
 | 4 - Monetization | Pending | 3 | 5 | 0% |
 
 **Total:** 23/23 requirements mapped, 21 success criteria defined
@@ -150,4 +159,4 @@ Plans:
 
 **Roadmap created:** 2026-02-04
 **Last updated:** 2026-02-05
-**Next step:** `/gsd:plan-phase 3`
+**Next step:** `/gsd:execute-phase 3`

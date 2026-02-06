@@ -4,4 +4,6 @@ pub mod tls;
 pub mod js_secrets;
 pub mod container;
 pub mod exposed_files;
+pub mod detector;
 pub mod remediation;
+pub mod vibecode;

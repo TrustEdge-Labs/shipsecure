@@ -493,6 +493,7 @@ mod tests {
             severity: Severity::Low,
             remediation: "Test".to_string(),
             raw_evidence: None,
+            vibe_code: false,
             created_at: Utc::now().naive_utc(),
         }];
         assert_eq!(ScanOrchestrator::compute_score(&findings), "A");
@@ -507,6 +508,7 @@ mod tests {
             severity: Severity::Critical,
             remediation: "Test".to_string(),
             raw_evidence: None,
+            vibe_code: false,
             created_at: Utc::now().naive_utc(),
         }];
         assert_eq!(ScanOrchestrator::compute_score(&findings), "C");
@@ -524,6 +526,7 @@ mod tests {
                 severity: Severity::High,
                 remediation: "Fix".to_string(),
                 raw_evidence: None,
+                vibe_code: false,
                 created_at: Utc::now().naive_utc(),
             },
             Finding {
@@ -535,6 +538,7 @@ mod tests {
                 severity: Severity::High,
                 remediation: "Fix".to_string(),
                 raw_evidence: None,
+                vibe_code: false,
                 created_at: Utc::now().naive_utc(),
             },
             Finding {
@@ -546,6 +550,7 @@ mod tests {
                 severity: Severity::Medium,
                 remediation: "Fix".to_string(),
                 raw_evidence: None,
+                vibe_code: false,
                 created_at: Utc::now().naive_utc(),
             },
         ];

@@ -7,11 +7,11 @@
 
 ### Scanning
 
-- [ ] **SCAN-01**: User can submit a URL and email to start a free security scan (no signup required)
-- [ ] **SCAN-02**: Scanner checks security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
-- [ ] **SCAN-03**: Scanner analyzes TLS/certificate configuration via SSL Labs API (grade, protocol versions, cert expiry, cipher suites)
-- [ ] **SCAN-04**: Scanner probes for exposed files and directories (/.env, /.git/config, /debug, /admin, source maps, robots.txt, sitemap.xml)
-- [ ] **SCAN-05**: Scanner fetches and scans JavaScript bundles for hardcoded secrets (API keys, Stripe keys, Supabase anon keys, Firebase configs)
+- [x] **SCAN-01**: User can submit a URL and email to start a free security scan (no signup required)
+- [x] **SCAN-02**: Scanner checks security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
+- [x] **SCAN-03**: Scanner analyzes TLS/certificate configuration via SSL Labs API (grade, protocol versions, cert expiry, cipher suites)
+- [x] **SCAN-04**: Scanner probes for exposed files and directories (/.env, /.git/config, /debug, /admin, source maps, robots.txt, sitemap.xml)
+- [x] **SCAN-05**: Scanner fetches and scans JavaScript bundles for hardcoded secrets (API keys, Stripe keys, Supabase anon keys, Firebase configs)
 
 ### Vibe-Code Detection
 
@@ -21,10 +21,10 @@
 
 ### Results & Delivery
 
-- [ ] **DLVR-01**: User sees a web results page with findings grouped by severity (Critical/High/Medium/Low/Info)
-- [ ] **DLVR-02**: Each finding shows plain-language explanation, risk context, and actionable remediation steps
-- [ ] **DLVR-03**: Results page displays an overall security score (A-F letter grade)
-- [ ] **DLVR-04**: User receives email with scan summary and link to full results when scan completes
+- [x] **DLVR-01**: User sees a web results page with findings grouped by severity (Critical/High/Medium/Low/Info)
+- [x] **DLVR-02**: Each finding shows plain-language explanation, risk context, and actionable remediation steps
+- [x] **DLVR-03**: Results page displays an overall security score (A-F letter grade)
+- [x] **DLVR-04**: User receives email with scan summary and link to full results when scan completes
 
 ### Payments & Upsell
 
@@ -34,17 +34,17 @@
 
 ### Frontend
 
-- [ ] **UI-01**: Landing page with URL input form, email field, and clear value proposition
-- [ ] **UI-02**: Scan status page with progress indicator while scan runs (polling-based)
-- [ ] **UI-03**: Results dashboard with severity badges, expandable findings, and remediation sections
+- [x] **UI-01**: Landing page with URL input form, email field, and clear value proposition
+- [x] **UI-02**: Scan status page with progress indicator while scan runs (polling-based)
+- [x] **UI-03**: Results dashboard with severity badges, expandable findings, and remediation sections
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Scan orchestrator manages concurrent scan jobs with parallel scanner execution and per-scanner timeouts
-- [ ] **INFRA-02**: Findings aggregator normalizes output from multiple scanners, deduplicates, and maps severity scores
-- [ ] **INFRA-03**: Rate limiting restricts free tier scans per email and per domain per day
-- [ ] **INFRA-04**: SSRF protection blocks scanning of localhost, internal IPs, and cloud metadata endpoints
-- [ ] **INFRA-05**: Containerized scanner execution (Nuclei, testssl.sh) with non-root user, resource limits, and read-only filesystems
+- [x] **INFRA-01**: Scan orchestrator manages concurrent scan jobs with parallel scanner execution and per-scanner timeouts
+- [x] **INFRA-02**: Findings aggregator normalizes output from multiple scanners, deduplicates, and maps severity scores
+- [x] **INFRA-03**: Rate limiting restricts free tier scans per email and per domain per day
+- [x] **INFRA-04**: SSRF protection blocks scanning of localhost, internal IPs, and cloud metadata endpoints
+- [x] **INFRA-05**: Containerized scanner execution (Nuclei, testssl.sh) with non-root user, resource limits, and read-only filesystems
 
 ## v2 Requirements
 
@@ -89,29 +89,29 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCAN-01 | Phase 2 | Pending |
-| SCAN-02 | Phase 1 | Pending |
-| SCAN-03 | Phase 2 | Pending |
-| SCAN-04 | Phase 2 | Pending |
-| SCAN-05 | Phase 2 | Pending |
+| SCAN-01 | Phase 2 | Complete |
+| SCAN-02 | Phase 1 | Complete |
+| SCAN-03 | Phase 2 | Complete |
+| SCAN-04 | Phase 2 | Complete |
+| SCAN-05 | Phase 2 | Complete |
 | VIBE-01 | Phase 3 | Pending |
 | VIBE-02 | Phase 3 | Pending |
 | VIBE-03 | Phase 3 | Pending |
-| DLVR-01 | Phase 2 | Pending |
-| DLVR-02 | Phase 2 | Pending |
-| DLVR-03 | Phase 2 | Pending |
-| DLVR-04 | Phase 2 | Pending |
+| DLVR-01 | Phase 2 | Complete |
+| DLVR-02 | Phase 2 | Complete |
+| DLVR-03 | Phase 2 | Complete |
+| DLVR-04 | Phase 2 | Complete |
 | PAY-01 | Phase 4 | Pending |
 | PAY-02 | Phase 4 | Pending |
 | PAY-03 | Phase 4 | Pending |
-| UI-01 | Phase 2 | Pending |
-| UI-02 | Phase 2 | Pending |
-| UI-03 | Phase 2 | Pending |
-| INFRA-01 | Phase 1 | Pending |
-| INFRA-02 | Phase 1 | Pending |
-| INFRA-03 | Phase 1 | Pending |
-| INFRA-04 | Phase 1 | Pending |
-| INFRA-05 | Phase 1 | Pending |
+| UI-01 | Phase 2 | Complete |
+| UI-02 | Phase 2 | Complete |
+| UI-03 | Phase 2 | Complete |
+| INFRA-01 | Phase 1 | Complete |
+| INFRA-02 | Phase 1 | Complete |
+| INFRA-03 | Phase 1 | Complete |
+| INFRA-04 | Phase 1 | Complete |
+| INFRA-05 | Phase 2 | Complete |
 
 **Coverage:**
 - v1 requirements: 23 total
@@ -126,4 +126,4 @@
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after roadmap creation*
+*Last updated: 2026-02-05 after Phase 2 completion*

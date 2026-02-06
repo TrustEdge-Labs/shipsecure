@@ -2,7 +2,6 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -91,9 +90,11 @@ pub async fn create_checkout(
 
     params.line_items = Some(vec![line_item]);
 
-    // Set redirect URLs
-    params.success_url = Some(&format!("{}/payment/success?session_id={{CHECKOUT_SESSION_ID}}", frontend_url));
-    params.cancel_url = Some(&format!("{}/results/{}", frontend_url, scan.results_token.as_deref().unwrap_or("")));
+    // Set redirect URLs (need owned strings for lifetime)
+    let success_url = format!("{}/payment/success?session_id={{CHECKOUT_SESSION_ID}}", frontend_url);
+    let cancel_url = format!("{}/results/{}", frontend_url, scan.results_token.as_deref().unwrap_or(""));
+    params.success_url = Some(&success_url);
+    params.cancel_url = Some(&cancel_url);
 
     // Set metadata
     let mut metadata = HashMap::new();

@@ -10,7 +10,7 @@ use tracing_subscriber::EnvFilter;
 
 // Import from lib
 use trustedge_audit::api::scans::{self, AppState};
-use trustedge_audit::api::{results, stats};
+use trustedge_audit::api::{checkout, results, stats, webhooks};
 use trustedge_audit::orchestrator::ScanOrchestrator;
 
 #[tokio::main]
@@ -67,6 +67,8 @@ async fn main() {
             get(results::download_results_markdown),
         )
         .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
+        .route("/api/v1/checkout", post(checkout::create_checkout))
+        .route("/api/v1/webhooks/stripe", post(webhooks::handle_stripe_webhook))
         .layer(cors)
         .with_state(state)
         .into_make_service_with_connect_info::<SocketAddr>();

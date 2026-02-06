@@ -119,6 +119,15 @@ Plans:
 
 **Dependencies:** Phase 3 (paid tier requires all free features operational)
 
+**Plans:** 5 plans
+
+Plans:
+- [ ] 04-01-PLAN.md -- Database schema, models, and data access for paid audits and Stripe tracking
+- [ ] 04-02-PLAN.md -- Stripe Checkout Session creation and webhook handler
+- [ ] 04-03-PLAN.md -- Tier-aware orchestrator with paid Nuclei templates and extended scanning
+- [ ] 04-04-PLAN.md -- PDF report generator and email with PDF attachment
+- [ ] 04-05-PLAN.md -- Frontend upgrade CTA, payment success page, and full pipeline wiring
+
 **Requirements:**
 - PAY-01: One-time paid audit via Stripe Checkout
 - PAY-02: Paid audit runs deeper scanning beyond free tier
@@ -140,7 +149,7 @@ Plans:
 | 1 - Foundation | Complete | 5 | 5/5 | 100% |
 | 2 - Free Tier MVP | Complete | 12 | 6/6 | 100% |
 | 3 - Vibe-Code Intelligence | Complete | 3 | 5/5 | 100% |
-| 4 - Monetization | Pending | 3 | 5 | 0% |
+| 4 - Monetization | In Progress | 3 | 5 | 0% |
 
 **Total:** 23/23 requirements mapped, 21 success criteria defined
 **Phase 1:** Verified 2026-02-05 — all 5 success criteria passed
@@ -151,7 +160,6 @@ Plans:
 
 ## Deferred to v2
 
-- PDF report generation (PDF-01, PDF-02) -- moved to Phase 4 paid tier instead
 - Continuous monitoring (MON-01, MON-02, MON-03) -- requires GitHub webhooks and cert monitoring
 - Repo scanning (REPO-01, REPO-02, REPO-03, REPO-04) -- Semgrep, Gitleaks, dependency scanning
 - Subscription tiers (SUB-01, SUB-02) -- Pro and Agency recurring billing

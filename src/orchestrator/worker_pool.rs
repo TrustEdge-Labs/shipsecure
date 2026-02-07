@@ -257,7 +257,7 @@ impl ScanOrchestrator {
 
         // Get base URL from environment
         let base_url = std::env::var("TRUSTEDGE_BASE_URL")
-            .unwrap_or_else(|_| "http://localhost:3001".to_string());
+            .expect("TRUSTEDGE_BASE_URL must be set");
 
         // Send email
         crate::email::send_scan_complete_email(

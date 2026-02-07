@@ -13,16 +13,42 @@ use trustedge_audit::api::scans::{self, AppState};
 use trustedge_audit::api::{checkout, results, stats, webhooks};
 use trustedge_audit::orchestrator::ScanOrchestrator;
 
+fn validate_required_env_vars(vars: &[&str]) -> Result<(), String> {
+    let mut missing = Vec::new();
+    for var in vars {
+        if std::env::var(var).is_err() {
+            missing.push(*var);
+        }
+    }
+    if !missing.is_empty() {
+        return Err(format!(
+            "Missing required environment variables:\n  - {}\n\nSee .env.example for configuration.",
+            missing.join("\n  - ")
+        ));
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() {
     // Load .env
     dotenvy::dotenv().ok();
 
+    // Validate required env vars before anything else
+    validate_required_env_vars(&[
+        "DATABASE_URL",
+        "PORT",
+        "RUST_LOG",
+        "TRUSTEDGE_BASE_URL",
+        "FRONTEND_URL",
+        "MAX_CONCURRENT_SCANS",
+    ]).expect("Configuration error");
+
     // Init tracing
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info")),
+                .expect("RUST_LOG must be set to a valid filter (e.g., info,trustedge_audit=debug)"),
         )
         .init();
 
@@ -41,8 +67,14 @@ async fn main() {
         .await
         .expect("Failed to run migrations");
 
-    // Create orchestrator (5 concurrent scans max)
-    let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), 5));
+    // Parse max concurrent scans from env var
+    let max_concurrent: usize = std::env::var("MAX_CONCURRENT_SCANS")
+        .expect("MAX_CONCURRENT_SCANS must be set")
+        .parse()
+        .expect("MAX_CONCURRENT_SCANS must be a valid number");
+
+    // Create orchestrator with configurable concurrency
+    let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), max_concurrent));
 
     // App state
     let state = AppState {
@@ -75,9 +107,9 @@ async fn main() {
 
     // Bind and serve
     let port: u16 = std::env::var("PORT")
-        .unwrap_or_else(|_| "3000".to_string())
+        .expect("PORT must be set")
         .parse()
-        .expect("PORT must be a number");
+        .expect("PORT must be a valid number");
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("TrustEdge Audit API listening on {}", addr);
 

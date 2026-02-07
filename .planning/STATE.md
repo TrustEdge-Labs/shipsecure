@@ -18,15 +18,15 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Milestone:** v1.1 DigitalOcean Deployment
 **Phase:** Phase 05 - Codebase Preparation
-**Plan:** 2 of 4 complete
+**Plan:** 1 of 4 complete
 **Status:** In progress
 
 **Progress:**
 ```
-[████                ] 17% (Phase 05/07, Plan 02/04 in phase)
+[███                 ] 8% (Phase 05/07, Plan 01/04 in phase)
 ```
 
-**Last activity:** 2026-02-07 — Completed 05-02-PLAN.md (Environment Configuration)
+**Last activity:** 2026-02-07 — Completed 05-01-PLAN.md (Scanner Native Binary Execution)
 
 ---
 
@@ -39,7 +39,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 **v1.1 (active):**
 - Phases completed: 0/3
-- Plans completed: 2/12 (17%)
+- Plans completed: 1/12 (8%)
+- Requirements delivered: 1/8 (INFRA-02 complete)
 - Requirements mapped: 8/8 (100%)
 
 ---
@@ -50,9 +51,9 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 | Decision | Rationale | Phase | Date |
 |----------|-----------|-------|------|
-| All required env vars must be explicitly set | No hidden defaults - application crashes at startup with clear error listing missing vars | 05-02 | 2026-02-07 |
-| Scanner binaries and third-party services optional | RESEND_API_KEY, STRIPE_SECRET_KEY, scanner paths have graceful degradation already implemented | 05-02 | 2026-02-07 |
-| validate_required_env_vars() called immediately after dotenvy | Ensures configuration errors surface before any application logic runs | 05-02 | 2026-02-07 |
+| Binary path resolution via env vars with PATH fallback | Allows explicit override for production while still working in dev environments via PATH | 05-01 | 2026-02-07 |
+| Temp file output capture instead of stdout | Avoids stdout buffering deadlocks for large JSON output (Nuclei can produce >64KB) | 05-01 | 2026-02-07 |
+| Graceful degradation when scanner binaries not found | Dev environments may not have scanners installed, app should still start and serve other features | 05-01 | 2026-02-07 |
 | DigitalOcean over Render | Full Docker access on droplet, no Docker-in-Docker limitation for Nuclei | v1.1 | 2026-02-06 |
 | Single droplet architecture | Sufficient for MVP scale (hundreds of scans/day), split to worker later if needed | v1.1 | 2026-02-06 |
 | Nuclei as subprocess | Install Nuclei binary directly, execute as subprocess (not Docker container) | v1.1 Phase 05 | 2026-02-06 |
@@ -68,7 +69,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 ### Active TODOs
 
-- [x] Complete 05-02 (Environment Configuration) - DONE 2026-02-07
+- [x] Complete 05-01 (Scanner Native Binary Execution) - DONE 2026-02-07
+- [ ] Complete remaining Phase 05 plans (05-02, 05-03, 05-04)
 - [ ] Download and install Liberation Sans fonts in fonts/ directory (pre-launch)
 - [ ] Schedule legal review of TOS/consent flow before production launch (pre-launch)
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery (pre-launch)
@@ -83,11 +85,11 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-07
-**Stopped at:** Completed 05-02-PLAN.md (Environment Configuration)
-**Resume file:** .planning/phases/05-codebase-preparation/05-02-SUMMARY.md
+**Stopped at:** Completed 05-01-PLAN.md (Scanner Native Binary Execution)
+**Resume file:** .planning/phases/05-codebase-preparation/05-01-SUMMARY.md
 
 **Starting next session:**
-Plan 05-02 complete. Continue with 05-03 or next phase plan.
+Plan 05-01 complete. Continue with 05-02 (Environment Configuration).
 
 ---
 

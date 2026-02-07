@@ -17,9 +17,16 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ## Current Position
 
 **Milestone:** v1.1 DigitalOcean Deployment
-**Phase:** Not started (defining requirements)
-**Status:** Defining requirements
-**Last activity:** 2026-02-06 — Milestone v1.1 started
+**Phase:** Phase 05 - Codebase Preparation
+**Plan:** None (roadmap just created)
+**Status:** Ready to plan Phase 05
+
+**Progress:**
+```
+[                    ] 0% (Phase 05/07)
+```
+
+**Last activity:** 2026-02-06 — Roadmap created for v1.1 milestone
 
 ---
 
@@ -30,9 +37,10 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 - Plans completed: 23/23
 - Requirements delivered: 23/23 (100%)
 
-**v1.1:**
-- Phases completed: 0
+**v1.1 (active):**
+- Phases completed: 0/3
 - Plans completed: 0
+- Requirements mapped: 8/8 (100%)
 
 ---
 
@@ -44,7 +52,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 |----------|-----------|-------|------|
 | DigitalOcean over Render | Full Docker access on droplet, no Docker-in-Docker limitation for Nuclei | v1.1 | 2026-02-06 |
 | Single droplet architecture | Sufficient for MVP scale (hundreds of scans/day), split to worker later if needed | v1.1 | 2026-02-06 |
-| Nuclei as subprocess option | Install Nuclei binary directly in Dockerfile, avoids Docker-in-Docker complexity | v1.1 | 2026-02-06 |
+| Nuclei as subprocess | Install Nuclei binary directly, execute as subprocess (not Docker container) | v1.1 Phase 05 | 2026-02-06 |
+| 3-phase roadmap structure | Preparation → Infrastructure → Validation naturally groups 8 deployment requirements | v1.1 | 2026-02-06 |
 | claim_pending_scan already built | db/scans.rs has SELECT FOR UPDATE SKIP LOCKED — escape hatch for future worker split | v1.0 | 2026-02-05 |
 
 ### Open Questions
@@ -52,11 +61,11 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 1. **Legal review timing:** When to conduct CFAA compliance review (before production launch)?
 2. **SSL Labs API:** Current rate limits and caching strategy?
 3. **Domain name:** What domain to point at the droplet?
+4. **Droplet sizing:** What DigitalOcean droplet size (CPU/RAM) for initial production launch?
 
 ### Active TODOs
 
-- [ ] Define v1.1 requirements
-- [ ] Create v1.1 roadmap
+- [ ] Plan Phase 05 (Codebase Preparation)
 - [ ] Download and install Liberation Sans fonts in fonts/ directory (pre-launch)
 - [ ] Schedule legal review of TOS/consent flow before production launch (pre-launch)
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery (pre-launch)
@@ -71,13 +80,13 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Starting v1.1 milestone — defining requirements
-**Resume file:** None
+**Stopped at:** Roadmap creation complete, ready to plan Phase 05
+**Resume file:** .planning/ROADMAP.md
 
 **Starting next session:**
-v1.1 milestone initialized. Need to define requirements and create roadmap.
+Roadmap created with 3 phases (05-07). Next: `/gsd:plan-phase 5`
 
 ---
 
 **State initialized:** 2026-02-04
-**Next action:** Define requirements and create roadmap
+**Next action:** Plan Phase 05 - Codebase Preparation

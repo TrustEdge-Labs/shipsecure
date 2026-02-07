@@ -24,6 +24,14 @@
 
 **Dependencies:** None (can start immediately)
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Refactor scanners from Docker to native binary subprocess execution
+- [ ] 05-02-PLAN.md — Externalize configuration with fail-fast validation and comprehensive .env.example
+- [ ] 05-03-PLAN.md — Update Docker Compose and Dockerfiles for full-stack dev/prod deployment
+- [ ] 05-04-PLAN.md — Update README and clean up Render hosting references in documentation
+
 **Phase directory:** `.planning/phases/05-codebase-preparation/`
 
 ---
@@ -76,7 +84,7 @@ None (validation phase - verifies all previous requirements work together)
 
 | Phase | Status | Plans | Requirements |
 |-------|--------|-------|--------------|
-| 05 - Codebase Preparation | Pending | 0/0 | CLEAN-01, INFRA-02, INFRA-03 |
+| 05 - Codebase Preparation | Planned | 0/4 | CLEAN-01, INFRA-02, INFRA-03 |
 | 06 - Deployment Infrastructure | Pending | 0/0 | INFRA-01, PROXY-01, PROXY-02, PROC-01, SEC-01 |
 | 07 - Production Validation | Pending | 0/0 | (verification phase) |
 

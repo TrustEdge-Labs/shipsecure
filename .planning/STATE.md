@@ -18,12 +18,12 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Milestone:** v1.1 DigitalOcean Deployment
 **Phase:** Phase 05 - Codebase Preparation
-**Plan:** 1 of 4 complete
+**Plan:** 2 of 4 complete
 **Status:** In progress
 
 **Progress:**
 ```
-[███                 ] 8% (Phase 05/07, Plan 01/04 in phase)
+[████                ] 17% (Phase 05/07, Plan 02/04 in phase)
 ```
 
 **Last activity:** 2026-02-07 — Completed 05-01-PLAN.md (Scanner Native Binary Execution)
@@ -39,8 +39,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 **v1.1 (active):**
 - Phases completed: 0/3
-- Plans completed: 1/12 (8%)
-- Requirements delivered: 1/8 (INFRA-02 complete)
+- Plans completed: 2/12 (17%)
+- Requirements delivered: 2/8 (INFRA-02, CONFIG-01 complete)
 - Requirements mapped: 8/8 (100%)
 
 ---
@@ -70,7 +70,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ### Active TODOs
 
 - [x] Complete 05-01 (Scanner Native Binary Execution) - DONE 2026-02-07
-- [ ] Complete remaining Phase 05 plans (05-02, 05-03, 05-04)
+- [x] Complete 05-02 (Environment Configuration) - DONE 2026-02-07
+- [ ] Complete remaining Phase 05 plans (05-03, 05-04)
 - [ ] Download and install Liberation Sans fonts in fonts/ directory (pre-launch)
 - [ ] Schedule legal review of TOS/consent flow before production launch (pre-launch)
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery (pre-launch)
@@ -89,7 +90,7 @@ None currently.
 **Resume file:** .planning/phases/05-codebase-preparation/05-01-SUMMARY.md
 
 **Starting next session:**
-Plan 05-01 complete. Continue with 05-02 (Environment Configuration).
+Plans 05-01 and 05-02 complete. Continue with 05-03 (Render Cleanup) or 05-04 (Docker Compose Setup).
 
 ---
 

@@ -18,15 +18,15 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Milestone:** v1.1 DigitalOcean Deployment
 **Phase:** Phase 05 - Codebase Preparation
-**Plan:** 3 of 4 complete
-**Status:** In progress
+**Plan:** 4 of 4 complete
+**Status:** Phase complete
 
 **Progress:**
 ```
-[█████               ] 25% (Phase 05/07, Plan 03/04 in phase)
+[██████              ] 33% (Phase 05/07, Plan 04/04 in phase)
 ```
 
-**Last activity:** 2026-02-07 — Completed 05-03-PLAN.md (Docker Configuration)
+**Last activity:** 2026-02-07 — Completed 05-04-PLAN.md (Documentation Cleanup)
 
 ---
 
@@ -38,9 +38,9 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 - Requirements delivered: 23/23 (100%)
 
 **v1.1 (active):**
-- Phases completed: 0/3
-- Plans completed: 3/12 (25%)
-- Requirements delivered: 3/8 (INFRA-02, CONFIG-01, DEPLOY-03 complete)
+- Phases completed: 1/3
+- Plans completed: 4/12 (33%)
+- Requirements delivered: 4/8 (INFRA-02, CONFIG-01, DEPLOY-03, CLEAN-01 complete)
 - Requirements mapped: 8/8 (100%)
 
 ---
@@ -51,6 +51,9 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 | Decision | Rationale | Phase | Date |
 |----------|-----------|-------|------|
+| Complete configuration table in README | Document all 12 environment variables with required/optional designation for single-source reference | 05-04 | 2026-02-07 |
+| Migration context notes for historical research | Add notes to research docs instead of rewriting to preserve historical context while preventing confusion | 05-04 | 2026-02-07 |
+| Preserve Render as scan target platform | TrustEdge scans apps hosted on Render - legitimate feature, only cleanup is TrustEdge's own hosting | 05-04 | 2026-02-07 |
 | Docker Compose override pattern for production | docker-compose.prod.yml overrides base config with environment-specific settings (remove ports, add restart policies, resource limits) | 05-03 | 2026-02-07 |
 | Dynamic Nuclei version from GitHub API | Build-time resolution ensures latest scanner without manual updates | 05-03 | 2026-02-07 |
 | Template hot-reload in dev only | Development mounts templates as volume, production uses baked-in templates | 05-03 | 2026-02-07 |
@@ -76,7 +79,7 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 - [x] Complete 05-01 (Scanner Native Binary Execution) - DONE 2026-02-07
 - [x] Complete 05-02 (Environment Configuration) - DONE 2026-02-07
 - [x] Complete 05-03 (Docker Configuration) - DONE 2026-02-07
-- [ ] Complete remaining Phase 05 plans (05-04)
+- [x] Complete 05-04 (Documentation Cleanup) - DONE 2026-02-07
 - [ ] Download and install Liberation Sans fonts in fonts/ directory (pre-launch)
 - [ ] Schedule legal review of TOS/consent flow before production launch (pre-launch)
 - [ ] Set up Resend account and configure RESEND_API_KEY for email delivery (pre-launch)
@@ -91,11 +94,11 @@ None currently.
 ## Session Continuity
 
 **Last session:** 2026-02-07
-**Stopped at:** Completed 05-03-PLAN.md (Docker Configuration)
-**Resume file:** .planning/phases/05-codebase-preparation/05-03-SUMMARY.md
+**Stopped at:** Completed 05-04-PLAN.md (Documentation Cleanup)
+**Resume file:** .planning/phases/05-codebase-preparation/05-04-SUMMARY.md
 
 **Starting next session:**
-Plans 05-01, 05-02, and 05-03 complete. Continue with 05-04 (final plan in Phase 05).
+Phase 05 (Codebase Preparation) complete. Begin Phase 06 (Infrastructure Setup).
 
 ---
 

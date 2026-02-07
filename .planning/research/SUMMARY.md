@@ -1,5 +1,7 @@
 # Project Research Summary
 
+**Note:** This research was conducted for the original v1.0 Render deployment. As of v1.1, TrustEdge deploys to DigitalOcean. See .planning/phases/05-codebase-preparation/ for migration context.
+
 **Project:** TrustEdge Audit
 **Domain:** Security scanning SaaS for AI-generated web applications
 **Researched:** 2026-02-04

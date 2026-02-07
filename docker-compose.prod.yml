@@ -1,0 +1,55 @@
+services:
+  db:
+    # Remove port mapping in production (no external access)
+    ports: []
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: trustedge_prod
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    # Remove port mapping in production (proxied through Nginx)
+    ports: []
+    environment:
+      DATABASE_URL: postgres://trustedge:${DB_PASSWORD}@db:5432/trustedge_prod
+    # Remove template volume mount (use baked-in templates from Docker image)
+    volumes: []
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    # Remove port mapping in production (proxied through Nginx)
+    ports: []
+    environment:
+      BACKEND_URL: http://backend:3000
+      NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

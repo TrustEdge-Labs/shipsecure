@@ -23,12 +23,10 @@ services:
       - .env
     environment:
       DATABASE_URL: postgres://trustedge:trustedge@db:5432/trustedge_dev
-      PORT: "3000"
-      RUST_LOG: info
-      TRUSTEDGE_BASE_URL: http://localhost:3001
-      # RESEND_API_KEY: set this for email delivery
     ports:
       - "3000:3000"
+    volumes:
+      - ./templates:/app/templates:ro
     depends_on:
       db:
         condition: service_healthy

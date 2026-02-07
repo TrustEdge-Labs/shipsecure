@@ -1,30 +1,17 @@
 services:
   db:
-    # Remove port mapping in production (no external access)
-    ports: []
-    environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: trustedge_prod
-    restart: unless-stopped
+    # Disabled in production — using DigitalOcean Managed PostgreSQL
     deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      replicas: 0
 
   backend:
-    # Remove port mapping in production (proxied through Nginx)
-    ports: []
+    # Bind to localhost only (Nginx proxies from host)
+    ports:
+      - "127.0.0.1:3000:3000"
     environment:
-      DATABASE_URL: postgres://trustedge:${DB_PASSWORD}@db:5432/trustedge_prod
+      DATABASE_URL: ${DATABASE_URL}
     # Remove template volume mount (use baked-in templates from Docker image)
     volumes: []
-    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -37,12 +24,12 @@ services:
         max-file: "3"
 
   frontend:
-    # Remove port mapping in production (proxied through Nginx)
-    ports: []
+    # Bind to localhost only (Nginx proxies from host)
+    ports:
+      - "127.0.0.1:3001:3001"
     environment:
       BACKEND_URL: http://backend:3000
       NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
-    restart: unless-stopped
     deploy:
       resources:
         limits:

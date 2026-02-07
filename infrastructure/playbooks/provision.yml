@@ -40,6 +40,12 @@
     - name: Import Docker installation tasks
       import_tasks: ../tasks/docker.yml
 
+  handlers:
+    - name: Restart SSH
+      service:
+        name: sshd
+        state: restarted
+
 # Play 3: Application setup as deploy user on port 2222
 # By the time this play starts, SSH has restarted on port 2222 and root
 # login is disabled. We re-add the host with the new connection parameters.

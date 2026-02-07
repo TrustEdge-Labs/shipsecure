@@ -1,0 +1,107 @@
+---
+# Ansible tasks for SSH hardening, deploy user creation, and UFW firewall
+#
+# This file is imported by playbooks/provision.yml Play 2 (root@22).
+# Hardens SSH configuration (port 2222, key-only, no root login),
+# creates deploy user with sudo access, and configures UFW firewall.
+#
+# CRITICAL: UFW SSH allow rule MUST come before enabling UFW to prevent lockout.
+# SSH handler restarts sshd at end of Play 2, after all tasks complete.
+
+- name: Create deploy user
+  user:
+    name: "{{ deploy_user }}"
+    groups: sudo
+    append: yes
+    create_home: yes
+    shell: /bin/bash
+    state: present
+
+- name: Add SSH authorized key for deploy user
+  authorized_key:
+    user: "{{ deploy_user }}"
+    key: "{{ deploy_user_ssh_key }}"
+    state: present
+
+- name: Configure SSH port
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?Port '
+    line: "Port {{ ssh_port }}"
+    validate: 'sshd -t -f %s'
+  notify: Restart SSH
+
+- name: Disable root login via SSH
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin '
+    line: 'PermitRootLogin no'
+    validate: 'sshd -t -f %s'
+  notify: Restart SSH
+
+- name: Disable password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication '
+    line: 'PasswordAuthentication no'
+    validate: 'sshd -t -f %s'
+  notify: Restart SSH
+
+- name: Enable public key authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PubkeyAuthentication '
+    line: 'PubkeyAuthentication yes'
+    validate: 'sshd -t -f %s'
+  notify: Restart SSH
+
+- name: Set MaxAuthTries to 3
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?MaxAuthTries '
+    line: 'MaxAuthTries 3'
+    validate: 'sshd -t -f %s'
+  notify: Restart SSH
+
+- name: Set LoginGraceTime to 20 seconds
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?LoginGraceTime '
+    line: 'LoginGraceTime 20'
+    validate: 'sshd -t -f %s'
+  notify: Restart SSH
+
+- name: Allow SSH on custom port in UFW (CRITICAL - must be before enabling)
+  community.general.ufw:
+    rule: allow
+    port: "{{ ssh_port }}"
+    proto: tcp
+    comment: "SSH on custom port"
+
+- name: Allow HTTP traffic in UFW
+  community.general.ufw:
+    rule: allow
+    port: '80'
+    proto: tcp
+    comment: "HTTP"
+
+- name: Allow HTTPS traffic in UFW
+  community.general.ufw:
+    rule: allow
+    port: '443'
+    proto: tcp
+    comment: "HTTPS"
+
+- name: Set UFW default incoming policy to deny
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+
+- name: Set UFW default outgoing policy to allow
+  community.general.ufw:
+    direction: outgoing
+    policy: allow
+
+- name: Enable UFW firewall
+  community.general.ufw:
+    state: enabled

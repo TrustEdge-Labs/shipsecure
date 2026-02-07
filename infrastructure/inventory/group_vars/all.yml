@@ -1,0 +1,28 @@
+---
+# DigitalOcean
+do_api_token: "{{ vault_do_api_token }}"
+droplet_name: trustedge-prod
+droplet_size: s-4vcpu-8gb
+droplet_image: ubuntu-24-04-x64
+droplet_region: nyc3
+
+# Domain & SSL
+domain_name: "{{ vault_domain_name }}"
+admin_email: "{{ vault_admin_email }}"
+
+# SSH
+ssh_port: 2222
+deploy_user: deploy
+deploy_user_ssh_key: "{{ vault_deploy_ssh_public_key }}"
+
+# Application
+app_git_repo: "{{ vault_app_git_repo }}"
+app_directory: /opt/trustedge
+
+# Database (DigitalOcean Managed PostgreSQL)
+database_url: "{{ vault_database_url }}"
+
+# Secrets (passed to application .env)
+resend_api_key: "{{ vault_resend_api_key | default('') }}"
+stripe_secret_key: "{{ vault_stripe_secret_key | default('') }}"
+stripe_webhook_secret: "{{ vault_stripe_webhook_secret | default('') }}"

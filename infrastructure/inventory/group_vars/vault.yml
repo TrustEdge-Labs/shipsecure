@@ -1,0 +1,13 @@
+---
+# Encrypt this file: ansible-vault encrypt infrastructure/inventory/group_vars/vault.yml
+# Edit encrypted: ansible-vault edit infrastructure/inventory/group_vars/vault.yml
+
+vault_do_api_token: "REPLACE_WITH_DO_API_TOKEN"
+vault_domain_name: "REPLACE_WITH_DOMAIN"
+vault_admin_email: "REPLACE_WITH_EMAIL"
+vault_deploy_ssh_public_key: "REPLACE_WITH_SSH_PUBLIC_KEY"
+vault_app_git_repo: "REPLACE_WITH_GIT_REPO_URL"
+vault_database_url: "REPLACE_WITH_MANAGED_DB_URL"
+vault_resend_api_key: ""
+vault_stripe_secret_key: ""
+vault_stripe_webhook_secret: ""

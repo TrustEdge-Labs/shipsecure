@@ -1,0 +1,4 @@
+# Do NOT ignore vault.yml — it is encrypted with ansible-vault
+# Ignore local-only files
+*.retry
+.vault_password

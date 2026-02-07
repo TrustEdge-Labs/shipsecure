@@ -1,0 +1,83 @@
+---
+# TrustEdge Audit — Production Infrastructure Provisioning
+#
+# Usage:
+#   ansible-galaxy collection install -r requirements.yml
+#   ansible-playbook playbooks/provision.yml --ask-vault-pass
+#
+# Prerequisites:
+#   - Python packages: pip3 install pydo azure-core boto3
+#   - Ansible collections: digitalocean.cloud, community.general
+#   - Vault file encrypted: ansible-vault encrypt inventory/group_vars/vault.yml
+#
+# Play structure (3 plays to handle SSH port transition):
+#   Play 1: localhost — create droplet, add to inventory as root@22
+#   Play 2: root@22 — security hardening (SSH, UFW, deploy user) + Docker
+#   Play 3: deploy@2222 — application setup (Nginx, Certbot, app, systemd)
+
+# Play 1: Create DigitalOcean droplet (runs locally)
+- name: Provision DigitalOcean droplet
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Import droplet provisioning tasks
+      import_tasks: ../tasks/droplet.yml
+
+# Play 2: Initial server setup as root on port 22
+# Security hardening changes SSH port to 2222 and disables root login.
+# Docker is included here because it needs root and standard port 22.
+# The SSH handler fires at end of this play, applying the port change.
+- name: Security hardening and Docker installation
+  hosts: production
+  become: yes
+
+  tasks:
+    - name: Import security hardening tasks
+      import_tasks: ../tasks/security.yml
+
+    - name: Import Docker installation tasks
+      import_tasks: ../tasks/docker.yml
+
+# Play 3: Application setup as deploy user on port 2222
+# By the time this play starts, SSH has restarted on port 2222 and root
+# login is disabled. We re-add the host with the new connection parameters.
+- name: Application deployment and service configuration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Update inventory for post-hardening connection
+      add_host:
+        name: "{{ droplet_ip }}"
+        groups: production_hardened
+        ansible_user: "{{ deploy_user }}"
+        ansible_port: "{{ ssh_port }}"
+        ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+
+- name: Configure application services
+  hosts: production_hardened
+  become: yes
+
+  tasks:
+    - name: Wait for SSH on new port
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: "{{ ssh_port }}"
+        timeout: 60
+      delegate_to: localhost
+      become: no
+
+    - name: Import Nginx configuration tasks
+      import_tasks: ../tasks/nginx.yml
+
+    - name: Import Certbot SSL tasks
+      import_tasks: ../tasks/certbot.yml
+
+    - name: Import application deployment tasks
+      import_tasks: ../tasks/app.yml
+
+    - name: Import systemd service tasks
+      import_tasks: ../tasks/systemd.yml

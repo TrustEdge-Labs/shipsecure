@@ -10,8 +10,8 @@ Requirements for DigitalOcean deployment milestone. Each maps to roadmap phases.
 ### Infrastructure
 
 - [ ] **INFRA-01**: Single DigitalOcean droplet provisioned with Ubuntu, Docker, and PostgreSQL
-- [ ] **INFRA-02**: Nuclei installed as native binary and executed as subprocess (no Docker-in-Docker)
-- [ ] **INFRA-03**: Production environment variables and secrets managed securely (not in code/git)
+- [x] **INFRA-02**: Nuclei installed as native binary and executed as subprocess (no Docker-in-Docker)
+- [x] **INFRA-03**: Production environment variables and secrets managed securely (not in code/git)
 
 ### Reverse Proxy
 
@@ -28,7 +28,7 @@ Requirements for DigitalOcean deployment milestone. Each maps to roadmap phases.
 
 ### Cleanup
 
-- [ ] **CLEAN-01**: All Render-specific configuration, environment variables, and documentation references removed
+- [x] **CLEAN-01**: All Render-specific configuration, environment variables, and documentation references removed
 
 ## Future Requirements
 
@@ -60,9 +60,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLEAN-01 | Phase 05 | Pending |
-| INFRA-02 | Phase 05 | Pending |
-| INFRA-03 | Phase 05 | Pending |
+| CLEAN-01 | Phase 05 | Complete |
+| INFRA-02 | Phase 05 | Complete |
+| INFRA-03 | Phase 05 | Complete |
 | INFRA-01 | Phase 06 | Pending |
 | PROXY-01 | Phase 06 | Pending |
 | PROXY-02 | Phase 06 | Pending |
@@ -78,4 +78,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-06*
-*Last updated: 2026-02-06 after roadmap creation*
+*Last updated: 2026-02-07 after Phase 05 completion*

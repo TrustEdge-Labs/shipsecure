@@ -1,0 +1,52 @@
+---
+# Systemd service setup
+# Configures systemd unit for Docker Compose lifecycle management
+
+- name: Deploy systemd service unit
+  template:
+    src: ../templates/trustedge.service.j2
+    dest: /etc/systemd/system/trustedge.service
+    mode: '0644'
+  notify: Reload systemd daemon
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Enable TrustEdge service
+  systemd:
+    name: trustedge
+    enabled: yes
+
+- name: Start TrustEdge service
+  systemd:
+    name: trustedge
+    state: started
+
+- name: Wait for backend health endpoint
+  uri:
+    url: http://127.0.0.1:3000/health
+    return_content: yes
+  register: health_check
+  retries: 30
+  delay: 10
+  until: health_check.status == 200
+
+- name: Verify frontend is accessible
+  uri:
+    url: http://127.0.0.1:3001
+    status_code: 200
+  register: frontend_check
+  retries: 10
+  delay: 5
+  until: frontend_check.status == 200
+
+- name: Display service status
+  command: systemctl status trustedge
+  changed_when: false
+
+# Handlers
+- name: Handler - Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  listen: Reload systemd daemon

@@ -1,0 +1,23 @@
+[Unit]
+Description=TrustEdge Audit Application
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory={{ app_directory }}
+EnvironmentFile={{ app_directory }}/.env
+ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+ExecReload=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+TimeoutStartSec=600
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=15
+User={{ deploy_user }}
+Group={{ deploy_user }}
+
+[Install]
+WantedBy=multi-user.target

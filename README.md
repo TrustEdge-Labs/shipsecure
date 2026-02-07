@@ -36,7 +36,7 @@ Built for developers shipping fast with AI code generators (Cursor, Bolt, Lovabl
 | Backend | Rust (Axum) |
 | Frontend | Next.js (App Router), React, Tailwind CSS |
 | Database | PostgreSQL |
-| Scanners | Nuclei (containerized), testssl.sh, custom probes |
+| Scanners | Nuclei (native binary), testssl.sh (native binary), custom probes |
 | Payments | Stripe Checkout |
 | Email | Resend API |
 | Reports | genpdf (PDF generation) |
@@ -45,17 +45,15 @@ Built for developers shipping fast with AI code generators (Cursor, Bolt, Lovabl
 
 ### Prerequisites
 
-- Rust 1.88+
-- Node.js 18+
-- PostgreSQL 16
-- Docker (for containerized scanners)
+- Docker and Docker Compose (for full-stack development)
+- OR for native development: Rust 1.88+, Node.js 20+, PostgreSQL 16, Nuclei, testssl.sh
 
 ### Quick Start with Docker
 
 ```bash
 cp .env.example .env
-# Edit .env with your configuration
-docker-compose up
+# Edit .env with your configuration (all required variables must be set)
+docker compose up
 ```
 
 This starts PostgreSQL, the Rust backend (port 3000), and the Next.js frontend (port 3001).
@@ -63,13 +61,13 @@ This starts PostgreSQL, the Rust backend (port 3000), and the Next.js frontend (
 ### Local Development
 
 ```bash
-# Start the database
-docker-compose up db
+# Start just the database
+docker compose up db
 
-# Backend
+# Backend (separate terminal)
 cp .env.example .env
+# Edit .env -- see .env.example for all required variables
 cargo build
-sqlx migrate run
 cargo run  # Runs on http://localhost:3000
 
 # Frontend (separate terminal)
@@ -85,12 +83,17 @@ Copy `.env.example` and set the following:
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `PORT` | Backend HTTP port (default: 3000) | No |
-| `RUST_LOG` | Log level (default: `info,trustedge_audit=debug`) | No |
-| `RESEND_API_KEY` | Resend API key for email delivery | No |
-| `STRIPE_SECRET_KEY` | Stripe secret key | For paid tier |
-| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key | For paid tier |
-| `TRUSTEDGE_BASE_URL` | Base URL for email links | For email |
+| `PORT` | Backend HTTP port | Yes |
+| `RUST_LOG` | Log level filter | Yes |
+| `TRUSTEDGE_BASE_URL` | Base URL for email links | Yes |
+| `FRONTEND_URL` | Frontend URL for redirects | Yes |
+| `MAX_CONCURRENT_SCANS` | Maximum parallel scans | Yes |
+| `RESEND_API_KEY` | Resend API key for email delivery | No (email disabled) |
+| `STRIPE_SECRET_KEY` | Stripe secret key | No (checkout disabled) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook validation secret | No (webhooks disabled) |
+| `NUCLEI_BINARY_PATH` | Path to Nuclei binary | No (auto-detected) |
+| `TESTSSL_BINARY_PATH` | Path to testssl.sh binary | No (auto-detected) |
+| `TRUSTEDGE_TEMPLATES_DIR` | Custom Nuclei templates directory | No (uses bundled) |
 
 ## API
 
@@ -129,9 +132,9 @@ migrations/      # PostgreSQL schema migrations
 
 - **Scan orchestrator** — Semaphore-based concurrency (max 5 concurrent scans), database-as-queue
 - **SSRF protection** — Blocks private IPs, cloud metadata endpoints (AWS/GCP/Azure), validates DNS resolution
-- **Container hardening** — CIS-hardened Docker execution (read-only filesystem, capability drop, non-root, resource limits)
+- **Scanner execution** — Nuclei and testssl.sh run as native binaries with configurable paths and graceful degradation
 - **Capability tokens** — 256-bit unguessable tokens for results access, no auth required
-- **Graceful degradation** — Docker unavailable? Empty findings with warning. Email fails? PDF saved to disk.
+- **Graceful degradation** — Scanner unavailable? Empty findings with warning. Email fails? PDF saved to disk.
 
 ## Testing
 

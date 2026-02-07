@@ -18,15 +18,15 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Milestone:** v1.1 DigitalOcean Deployment
 **Phase:** Phase 06 - Deployment Infrastructure
-**Plan:** 02 of 3 (Ansible Task Files)
-**Status:** In progress
+**Plan:** 03 of 3 (Nginx, Certbot, Application Deployment)
+**Status:** Complete
 
 **Progress:**
 ```
-[████████            ] 42% (Phase 05 complete, Phase 06 plans 01-02 complete)
+[█████████           ] 47% (Phase 05 complete, Phase 06 complete)
 ```
 
-**Last activity:** 2026-02-07 — Completed 06-02-PLAN.md (Ansible Task Files)
+**Last activity:** 2026-02-07 — Completed 06-03-PLAN.md (Nginx, Certbot, Application Deployment)
 
 ---
 
@@ -51,6 +51,10 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 | Decision | Rationale | Phase | Date |
 |----------|-----------|-------|------|
+| Nuclei installed on host (not in Docker image) | Installed to /usr/local/bin via Ansible task for PATH availability and faster execution without Docker overhead | 06-03 | 2026-02-07 |
+| Extended timeouts for scan endpoints | Backend /api/ location has 300s read timeout (vs 60s for frontend) since Nuclei scans can take 30s-3min | 06-03 | 2026-02-07 |
+| Systemd oneshot service pattern for Docker Compose | Type=oneshot with RemainAfterExit=yes tracks docker compose as active, cleaner than forking with PID tracking | 06-03 | 2026-02-07 |
+| HTTP-only to HTTPS progression for Certbot | Deploy initial HTTP-only Nginx config with ACME challenge support, then replace with full HTTPS config after certificate obtained | 06-03 | 2026-02-07 |
 | UFW SSH allow rule before firewall enable | SSH port must be allowed in UFW before enabling firewall to prevent immediate lockout | 06-02 | 2026-02-07 |
 | Ansible handlers in playbook not task files | import_tasks doesn't support handlers in imported files, must define in playbook | 06-02 | 2026-02-07 |
 | 3-play Ansible structure for SSH port transition | Play 1: create droplet as root@22; Play 2: security hardening changes SSH to 2222; Play 3: app setup as deploy@2222 | 06-01 | 2026-02-07 |
@@ -99,12 +103,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-07 04:38 UTC
-**Stopped at:** Completed 06-02-PLAN.md (Ansible Task Files)
-**Resume file:** .planning/phases/06-deployment-infrastructure/06-02-SUMMARY.md
+**Last session:** 2026-02-07 04:40 UTC
+**Stopped at:** Completed 06-03-PLAN.md (Nginx, Certbot, Application Deployment)
+**Resume file:** .planning/phases/06-deployment-infrastructure/06-03-SUMMARY.md
 
 **Starting next session:**
-Continue Phase 06: Plan 06-03 (remaining Ansible tasks: Nginx, Certbot, app deployment, systemd).
+Phase 06 (Deployment Infrastructure) complete. Ready for Phase 07 (Deployment Validation) or Ansible playbook execution.
 
 ---
 

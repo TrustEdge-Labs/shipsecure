@@ -56,6 +56,14 @@ Plans:
 
 **Dependencies:** Phase 05 (requires Render-free codebase and subprocess Nuclei)
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Update docker-compose.prod.yml and scaffold Ansible infrastructure project
+- [ ] 06-02-PLAN.md — Ansible tasks for droplet provisioning, SSH hardening, UFW firewall, Docker installation
+- [ ] 06-03-PLAN.md — Ansible tasks for Nginx reverse proxy, Certbot SSL, app deployment, systemd service
+- [ ] 06-04-PLAN.md — Configure secrets, run playbook, verify production infrastructure
+
 **Phase directory:** `.planning/phases/06-deployment-infrastructure/`
 
 ---
@@ -85,7 +93,7 @@ None (validation phase - verifies all previous requirements work together)
 | Phase | Status | Plans | Requirements |
 |-------|--------|-------|--------------|
 | 05 - Codebase Preparation | Complete | 4/4 | CLEAN-01, INFRA-02, INFRA-03 |
-| 06 - Deployment Infrastructure | Pending | 0/0 | INFRA-01, PROXY-01, PROXY-02, PROC-01, SEC-01 |
+| 06 - Deployment Infrastructure | Planned | 4 plans | INFRA-01, PROXY-01, PROXY-02, PROC-01, SEC-01 |
 | 07 - Production Validation | Pending | 0/0 | (verification phase) |
 
 ---

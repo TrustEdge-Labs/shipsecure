@@ -18,15 +18,15 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Milestone:** v1.1 DigitalOcean Deployment
 **Phase:** Phase 06 - Deployment Infrastructure
-**Plan:** Not started
-**Status:** Ready to plan
+**Plan:** 01 of 3 (Infrastructure Foundation)
+**Status:** In progress
 
 **Progress:**
 ```
-[██████              ] 33% (Phase 05 complete, Phase 06 next)
+[███████             ] 37% (Phase 05 complete, Phase 06 plan 01 complete)
 ```
 
-**Last activity:** 2026-02-07 — Phase 05 (Codebase Preparation) verified and complete
+**Last activity:** 2026-02-07 — Completed 06-01-PLAN.md (Infrastructure Foundation)
 
 ---
 
@@ -51,6 +51,10 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 | Decision | Rationale | Phase | Date |
 |----------|-----------|-------|------|
+| 3-play Ansible structure for SSH port transition | Play 1: create droplet as root@22; Play 2: security hardening changes SSH to 2222; Play 3: app setup as deploy@2222 | 06-01 | 2026-02-07 |
+| Remove restart policies from docker-compose.prod.yml | Systemd manages Docker Compose lifecycle, mixing restart policies causes conflicts | 06-01 | 2026-02-07 |
+| Bind containers to 127.0.0.1 only in production | Nginx on host proxies to backend:3000 and frontend:3001, no direct external access to containers | 06-01 | 2026-02-07 |
+| Disable db service via replicas: 0 | Using DigitalOcean Managed PostgreSQL, cleaner than removing service definition entirely | 06-01 | 2026-02-07 |
 | Complete configuration table in README | Document all 12 environment variables with required/optional designation for single-source reference | 05-04 | 2026-02-07 |
 | Migration context notes for historical research | Add notes to research docs instead of rewriting to preserve historical context while preventing confusion | 05-04 | 2026-02-07 |
 | Preserve Render as scan target platform | TrustEdge scans apps hosted on Render - legitimate feature, only cleanup is TrustEdge's own hosting | 05-04 | 2026-02-07 |
@@ -93,12 +97,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-07
-**Stopped at:** Phase 05 verified complete (15/15 must-haves passed)
-**Resume file:** .planning/phases/05-codebase-preparation/05-VERIFICATION.md
+**Last session:** 2026-02-07 04:33 UTC
+**Stopped at:** Completed 06-01-PLAN.md (Infrastructure Foundation)
+**Resume file:** .planning/phases/06-deployment-infrastructure/06-01-SUMMARY.md
 
 **Starting next session:**
-Plan and execute Phase 06 (Deployment Infrastructure).
+Continue Phase 06: Plan 06-02 (Ansible task files) or 06-03 (Nginx/Certbot/systemd integration).
 
 ---
 

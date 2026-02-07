@@ -18,15 +18,15 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Milestone:** v1.1 DigitalOcean Deployment
 **Phase:** Phase 06 - Deployment Infrastructure
-**Plan:** 01 of 3 (Infrastructure Foundation)
+**Plan:** 02 of 3 (Ansible Task Files)
 **Status:** In progress
 
 **Progress:**
 ```
-[███████             ] 37% (Phase 05 complete, Phase 06 plan 01 complete)
+[████████            ] 42% (Phase 05 complete, Phase 06 plans 01-02 complete)
 ```
 
-**Last activity:** 2026-02-07 — Completed 06-01-PLAN.md (Infrastructure Foundation)
+**Last activity:** 2026-02-07 — Completed 06-02-PLAN.md (Ansible Task Files)
 
 ---
 
@@ -51,6 +51,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 | Decision | Rationale | Phase | Date |
 |----------|-----------|-------|------|
+| UFW SSH allow rule before firewall enable | SSH port must be allowed in UFW before enabling firewall to prevent immediate lockout | 06-02 | 2026-02-07 |
+| Ansible handlers in playbook not task files | import_tasks doesn't support handlers in imported files, must define in playbook | 06-02 | 2026-02-07 |
 | 3-play Ansible structure for SSH port transition | Play 1: create droplet as root@22; Play 2: security hardening changes SSH to 2222; Play 3: app setup as deploy@2222 | 06-01 | 2026-02-07 |
 | Remove restart policies from docker-compose.prod.yml | Systemd manages Docker Compose lifecycle, mixing restart policies causes conflicts | 06-01 | 2026-02-07 |
 | Bind containers to 127.0.0.1 only in production | Nginx on host proxies to backend:3000 and frontend:3001, no direct external access to containers | 06-01 | 2026-02-07 |
@@ -97,12 +99,12 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-07 04:33 UTC
-**Stopped at:** Completed 06-01-PLAN.md (Infrastructure Foundation)
-**Resume file:** .planning/phases/06-deployment-infrastructure/06-01-SUMMARY.md
+**Last session:** 2026-02-07 04:38 UTC
+**Stopped at:** Completed 06-02-PLAN.md (Ansible Task Files)
+**Resume file:** .planning/phases/06-deployment-infrastructure/06-02-SUMMARY.md
 
 **Starting next session:**
-Continue Phase 06: Plan 06-02 (Ansible task files) or 06-03 (Nginx/Certbot/systemd integration).
+Continue Phase 06: Plan 06-03 (remaining Ansible tasks: Nginx, Certbot, app deployment, systemd).
 
 ---
 

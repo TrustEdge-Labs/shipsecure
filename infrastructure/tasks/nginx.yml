@@ -1,0 +1,57 @@
+---
+# Nginx installation and configuration
+# Deploys HTTP-only config initially (Certbot needs it for ACME challenge)
+# Full HTTPS config deployed after certificate obtained
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Create ACME challenge directory
+  file:
+    path: /var/www/certbot
+    state: directory
+    mode: '0755'
+
+- name: Deploy initial HTTP-only Nginx config
+  copy:
+    content: |
+      server {
+          listen 80;
+          listen [::]:80;
+          server_name {{ domain_name }};
+
+          location /.well-known/acme-challenge/ {
+              root /var/www/certbot;
+          }
+
+          location / {
+              return 200 'TrustEdge Audit — waiting for SSL certificate';
+              add_header Content-Type text/plain;
+          }
+      }
+    dest: /etc/nginx/sites-available/trustedge
+    mode: '0644'
+
+- name: Enable site via symlink
+  file:
+    src: /etc/nginx/sites-available/trustedge
+    dest: /etc/nginx/sites-enabled/trustedge
+    state: link
+
+- name: Remove default Nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Test Nginx configuration
+  command: nginx -t
+  changed_when: false
+
+- name: Enable and start Nginx
+  systemd:
+    name: nginx
+    enabled: yes
+    state: restarted

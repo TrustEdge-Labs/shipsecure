@@ -1,0 +1,57 @@
+---
+# SSL certificate provisioning with Certbot
+# Obtains Let's Encrypt certificate and deploys full HTTPS Nginx config
+
+- name: Install Certbot via snap
+  snap:
+    name: certbot
+    classic: yes
+    state: present
+
+- name: Create Certbot symlink
+  file:
+    src: /snap/bin/certbot
+    dest: /usr/local/bin/certbot
+    state: link
+
+- name: Check if certificate already exists
+  stat:
+    path: /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
+  register: cert_exists
+
+- name: Obtain SSL certificate
+  command: >
+    certbot --nginx --non-interactive --agree-tos
+    --email {{ admin_email }}
+    --domain {{ domain_name }}
+    --redirect
+  when: not cert_exists.stat.exists
+  args:
+    creates: /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
+
+- name: Deploy full HTTPS Nginx config
+  template:
+    src: ../templates/trustedge.nginx.conf.j2
+    dest: /etc/nginx/sites-available/trustedge
+    mode: '0644'
+  notify: Reload Nginx
+
+- name: Test Nginx configuration
+  command: nginx -t
+  changed_when: false
+
+- name: Reload Nginx
+  systemd:
+    name: nginx
+    state: reloaded
+
+- name: Test certificate renewal (dry run)
+  command: certbot renew --dry-run
+  changed_when: false
+
+# Handler for Nginx reload
+- name: Handler - Reload Nginx
+  systemd:
+    name: nginx
+    state: reloaded
+  listen: Reload Nginx

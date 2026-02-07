@@ -25,11 +25,14 @@ pub async fn scan_vibecode(
     platform: Option<&str>,
     tier: &str,
 ) -> Result<Vec<Finding>, ScannerError> {
-    // Check Docker availability
-    if !is_docker_available().await {
-        tracing::warn!("Docker not available, skipping vibe-code scan");
-        return Ok(Vec::new());
-    }
+    // Resolve Nuclei binary
+    let nuclei_binary = match crate::scanners::container::resolve_nuclei_binary() {
+        Some(path) => path,
+        None => {
+            tracing::warn!("Nuclei binary not found, skipping vibe-code scan");
+            return Ok(Vec::new());
+        }
+    };
 
     // Get templates directory
     let templates_dir = get_templates_dir();
@@ -38,13 +41,13 @@ pub async fn scan_vibecode(
             "Templates directory not found: {}",
             templates_dir.display()
         );
-        return Err(ScannerError::ContainerError(
+        return Err(ScannerError::ExecutionError(
             "Templates directory not found".to_string(),
         ));
     }
 
     // Select which templates to run based on framework/platform
-    let template_paths = select_templates(framework, platform, tier);
+    let template_paths = select_templates(&templates_dir, framework, platform, tier);
 
     tracing::info!(
         "Running vibe-code scan with {} templates (framework={:?}, platform={:?}, tier={})",
@@ -54,66 +57,65 @@ pub async fn scan_vibecode(
         tier
     );
 
-    // Build Docker command to run Nuclei with custom templates
+    // Create temp file for JSON output
+    let temp_file = tempfile::NamedTempFile::new()
+        .map_err(|e| ScannerError::ExecutionError(format!("Failed to create temp file: {}", e)))?;
+    let temp_path = temp_file.path();
+
+    // Build args for native Nuclei binary
     let mut args = vec![
-        "run",
-        "--rm",
-        "--read-only",
-        "--cap-drop",
-        "all",
-        "--user",
-        "1000:1000",
-        "--memory",
-        "512M",
-        "--pids-limit",
-        "1000",
-        "--cpu-shares",
-        "512",
-        "--no-new-privileges",
+        "-u".to_string(),
+        target_url.to_string(),
     ];
 
-    // Mount templates directory as read-only volume
-    let volume_arg = format!("{}:/templates:ro", templates_dir.display());
-    args.push("-v");
-    args.push(&volume_arg);
-
-    args.push("projectdiscovery/nuclei:latest");
-    args.push("-u");
-    args.push(target_url);
-    args.push("-t");
-
-    // If specific templates selected, use them; otherwise use all
-    let template_arg = if template_paths.is_empty() {
-        "/templates/".to_string()
-    } else {
-        template_paths.join(",")
-    };
-    args.push(&template_arg);
+    // Add template paths
+    if !template_paths.is_empty() {
+        args.push("-t".to_string());
+        args.push(template_paths.join(","));
+    }
 
     args.extend_from_slice(&[
-        "-jsonl",
-        "-silent",
-        "-severity",
-        "critical,high,medium,low",
-        "-timeout",
-        "30",
+        "-jsonl".to_string(),
+        "-silent".to_string(),
+        "-severity".to_string(),
+        "critical,high,medium,low".to_string(),
+        "-timeout".to_string(),
+        "30".to_string(),
+        "-o".to_string(),
+        temp_path.to_str().unwrap().to_string(),
     ]);
 
-    // Run Docker container
-    let output = run_docker_container(&args, Duration::from_secs(120)).await?;
+    // Execute binary
+    let child = Command::new(&nuclei_binary)
+        .args(&args)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| ScannerError::ExecutionError(format!("Failed to spawn Nuclei: {}", e)))?;
+
+    // Wait with timeout
+    match tokio::time::timeout(Duration::from_secs(120), child.wait_with_output()).await {
+        Ok(Ok(output)) => {
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                tracing::warn!("Nuclei exited with code {}: {}", output.status.code().unwrap_or(-1), stderr);
+            }
+        }
+        Ok(Err(e)) => {
+            return Err(ScannerError::ExecutionError(format!("Failed to wait for Nuclei: {}", e)));
+        }
+        Err(_) => {
+            tracing::warn!("Vibe-code scan timed out after 120s");
+            return Err(ScannerError::ScanTimeout);
+        }
+    }
+
+    // Read JSON from temp file
+    let output = std::fs::read_to_string(temp_path)
+        .map_err(|e| ScannerError::ParseError(format!("Failed to read output file: {}", e)))?;
 
     // Parse output and tag all findings as vibe_code
     parse_vibecode_output(&output, target_url)
-}
-
-/// Check if Docker is available
-async fn is_docker_available() -> bool {
-    let result = Command::new("docker").arg("info").output().await;
-
-    match result {
-        Ok(output) => output.status.success(),
-        Err(_) => false,
-    }
 }
 
 /// Get the templates directory path
@@ -130,40 +132,40 @@ fn get_templates_dir() -> PathBuf {
 }
 
 /// Select which templates to run based on detected framework and platform
-fn select_templates(framework: Option<&str>, platform: Option<&str>, tier: &str) -> Vec<String> {
+fn select_templates(templates_dir: &PathBuf, framework: Option<&str>, platform: Option<&str>, tier: &str) -> Vec<String> {
     let mut templates = Vec::new();
 
     // Universal checks (always run)
-    templates.push("/templates/supabase-rls.yaml".to_string());
-    templates.push("/templates/firebase-rules.yaml".to_string());
-    templates.push("/templates/env-in-build-output.yaml".to_string());
+    templates.push(templates_dir.join("supabase-rls.yaml").to_string_lossy().to_string());
+    templates.push(templates_dir.join("firebase-rules.yaml").to_string_lossy().to_string());
+    templates.push(templates_dir.join("env-in-build-output.yaml").to_string_lossy().to_string());
 
     // Framework-specific checks
     match framework {
         Some("nextjs") | Some("next") => {
-            templates.push("/templates/nextjs-env-leak.yaml".to_string());
-            templates.push("/templates/unprotected-api-routes.yaml".to_string());
+            templates.push(templates_dir.join("nextjs-env-leak.yaml").to_string_lossy().to_string());
+            templates.push(templates_dir.join("unprotected-api-routes.yaml").to_string_lossy().to_string());
         }
         None => {
             // Unknown framework - run everything to be safe
-            templates.push("/templates/nextjs-env-leak.yaml".to_string());
-            templates.push("/templates/unprotected-api-routes.yaml".to_string());
-            templates.push("/templates/netlify-function-exposure.yaml".to_string());
-            templates.push("/templates/vercel-env-leak.yaml".to_string());
+            templates.push(templates_dir.join("nextjs-env-leak.yaml").to_string_lossy().to_string());
+            templates.push(templates_dir.join("unprotected-api-routes.yaml").to_string_lossy().to_string());
+            templates.push(templates_dir.join("netlify-function-exposure.yaml").to_string_lossy().to_string());
+            templates.push(templates_dir.join("vercel-env-leak.yaml").to_string_lossy().to_string());
         }
         _ => {
             // Known framework but not Next.js - still run API route checks
-            templates.push("/templates/unprotected-api-routes.yaml".to_string());
+            templates.push(templates_dir.join("unprotected-api-routes.yaml").to_string_lossy().to_string());
         }
     }
 
     // Platform-specific checks
     match platform {
         Some("vercel") => {
-            templates.push("/templates/vercel-env-leak.yaml".to_string());
+            templates.push(templates_dir.join("vercel-env-leak.yaml").to_string_lossy().to_string());
         }
         Some("netlify") => {
-            templates.push("/templates/netlify-function-exposure.yaml".to_string());
+            templates.push(templates_dir.join("netlify-function-exposure.yaml").to_string_lossy().to_string());
         }
         None => {
             // Unknown platform already handled above in framework=None case
@@ -173,49 +175,17 @@ fn select_templates(framework: Option<&str>, platform: Option<&str>, tier: &str)
 
     // Add paid-tier templates for deeper scanning
     if tier == "paid" {
-        templates.push("/templates/paid/advanced-env-leak.yaml".to_string());
-        templates.push("/templates/paid/api-auth-bypass.yaml".to_string());
-        templates.push("/templates/paid/debug-endpoints.yaml".to_string());
-        templates.push("/templates/paid/database-exposure.yaml".to_string());
-        templates.push("/templates/paid/admin-panel-detection.yaml".to_string());
+        templates.push(templates_dir.join("paid/advanced-env-leak.yaml").to_string_lossy().to_string());
+        templates.push(templates_dir.join("paid/api-auth-bypass.yaml").to_string_lossy().to_string());
+        templates.push(templates_dir.join("paid/debug-endpoints.yaml").to_string_lossy().to_string());
+        templates.push(templates_dir.join("paid/database-exposure.yaml").to_string_lossy().to_string());
+        templates.push(templates_dir.join("paid/admin-panel-detection.yaml").to_string_lossy().to_string());
     }
 
     // Remove duplicates
     templates.sort();
     templates.dedup();
     templates
-}
-
-/// Execute Docker container with timeout
-async fn run_docker_container(args: &[&str], timeout: Duration) -> Result<String, ScannerError> {
-    let child = Command::new("docker")
-        .args(args)
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .spawn()
-        .map_err(|e| ScannerError::ContainerError(format!("Failed to spawn docker: {}", e)))?;
-
-    // Wait with timeout
-    match tokio::time::timeout(timeout, child.wait_with_output()).await {
-        Ok(Ok(output)) => {
-            if output.status.success() {
-                Ok(String::from_utf8_lossy(&output.stdout).to_string())
-            } else {
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                tracing::warn!("Nuclei container stderr: {}", stderr);
-                // Don't fail on non-zero exit - Nuclei returns non-zero when findings exist
-                Ok(String::from_utf8_lossy(&output.stdout).to_string())
-            }
-        }
-        Ok(Err(e)) => Err(ScannerError::ContainerError(format!(
-            "Failed to wait for container: {}",
-            e
-        ))),
-        Err(_) => {
-            tracing::warn!("Container execution timed out after {:?}", timeout);
-            Err(ScannerError::ContainerTimeout)
-        }
-    }
 }
 
 /// Parse Nuclei JSONL output and tag all findings as vibe_code
@@ -341,7 +311,8 @@ mod tests {
 
     #[test]
     fn test_template_selection_nextjs() {
-        let templates = select_templates(Some("nextjs"), None, "free");
+        let templates_dir = PathBuf::from("/templates");
+        let templates = select_templates(&templates_dir, Some("nextjs"), None, "free");
 
         // Should include universal + nextjs-specific
         assert!(templates.contains(&"/templates/supabase-rls.yaml".to_string()));
@@ -351,7 +322,8 @@ mod tests {
 
     #[test]
     fn test_template_selection_none() {
-        let templates = select_templates(None, None, "free");
+        let templates_dir = PathBuf::from("/templates");
+        let templates = select_templates(&templates_dir, None, None, "free");
 
         // Should include everything when unknown
         assert!(templates.len() >= 7);
@@ -361,7 +333,8 @@ mod tests {
 
     #[test]
     fn test_template_selection_vercel() {
-        let templates = select_templates(Some("nextjs"), Some("vercel"), "free");
+        let templates_dir = PathBuf::from("/templates");
+        let templates = select_templates(&templates_dir, Some("nextjs"), Some("vercel"), "free");
 
         // Should include vercel-specific
         assert!(templates.contains(&"/templates/vercel-env-leak.yaml".to_string()));
@@ -369,7 +342,8 @@ mod tests {
 
     #[test]
     fn test_template_selection_netlify() {
-        let templates = select_templates(None, Some("netlify"), "free");
+        let templates_dir = PathBuf::from("/templates");
+        let templates = select_templates(&templates_dir, None, Some("netlify"), "free");
 
         // Should include netlify-specific
         assert!(templates.contains(&"/templates/netlify-function-exposure.yaml".to_string()));
@@ -377,7 +351,8 @@ mod tests {
 
     #[test]
     fn test_template_selection_paid_tier() {
-        let templates = select_templates(Some("nextjs"), None, "paid");
+        let templates_dir = PathBuf::from("/templates");
+        let templates = select_templates(&templates_dir, Some("nextjs"), None, "paid");
 
         // Should include base templates + paid templates
         assert!(templates.contains(&"/templates/supabase-rls.yaml".to_string()));

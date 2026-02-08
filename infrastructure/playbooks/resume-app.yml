@@ -1,0 +1,52 @@
+---
+# Resume from Play 3+4: Application deployment after hardening is complete
+# Usage: ansible-playbook playbooks/resume-app.yml -v -e "droplet_ip=138.197.44.44"
+- name: Configure application services
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: no
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
+
+  tasks:
+    - name: Add hardened host to inventory
+      add_host:
+        name: "{{ droplet_ip }}"
+        groups: production_hardened
+        ansible_user: "{{ deploy_user }}"
+        ansible_port: "{{ ssh_port }}"
+        ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+
+- name: Deploy application services
+  hosts: production_hardened
+  become: yes
+  gather_facts: false
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
+
+  tasks:
+    - name: Wait for SSH on port {{ ssh_port }}
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: "{{ ssh_port }}"
+        timeout: 60
+      delegate_to: localhost
+      become: no
+
+    - name: Gather facts
+      setup:
+
+    - name: Import Nginx configuration tasks
+      import_tasks: ../tasks/nginx.yml
+
+    - name: Import Certbot SSL tasks
+      import_tasks: ../tasks/certbot.yml
+
+    - name: Import application deployment tasks
+      import_tasks: ../tasks/app.yml
+
+    - name: Import systemd service tasks
+      import_tasks: ../tasks/systemd.yml

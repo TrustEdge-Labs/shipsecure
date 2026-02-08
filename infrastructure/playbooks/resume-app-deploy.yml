@@ -1,0 +1,35 @@
+---
+# Resume from app deployment tasks (Nginx + Certbot already done)
+# Usage: ansible-playbook playbooks/resume-app-deploy.yml -v -e "droplet_ip=138.197.44.44"
+- name: Add hardened host
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: no
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
+
+  tasks:
+    - name: Add hardened host to inventory
+      add_host:
+        name: "{{ droplet_ip }}"
+        groups: production_hardened
+        ansible_user: "{{ deploy_user }}"
+        ansible_port: "{{ ssh_port }}"
+        ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+
+- name: Deploy application
+  hosts: production_hardened
+  become: yes
+  gather_facts: true
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
+
+  tasks:
+    - name: Import application deployment tasks
+      import_tasks: ../tasks/app.yml
+
+    - name: Import systemd service tasks
+      import_tasks: ../tasks/systemd.yml

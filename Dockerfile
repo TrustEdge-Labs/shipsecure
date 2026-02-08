@@ -15,6 +15,7 @@ RUN cargo build --release
 
 # Runtime stage
 FROM debian:bookworm-slim
+LABEL org.opencontainers.image.source=https://github.com/trustedge-labs/trustedge-audit
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

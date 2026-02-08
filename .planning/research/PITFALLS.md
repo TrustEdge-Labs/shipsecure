@@ -1,684 +1,436 @@
-# Domain Pitfalls: Security Scanning SaaS
+# Pitfalls Research
 
-**Domain:** Security scanning SaaS for AI-generated code
-**Target Audience:** Non-security developers using AI code generation tools
-**Platform:** Rust backend, containerized scanners on Render
-**Researched:** 2026-02-04
-**Overall Confidence:** MEDIUM (based on training data + domain expertise; external sources unavailable)
-
-## Research Note
-
-Web research tools were unavailable during this research session. This document is based on:
-- Training data knowledge of security scanning platforms (LOW-MEDIUM confidence)
-- Rust async patterns and containerization best practices (MEDIUM-HIGH confidence)
-- SaaS business model patterns (MEDIUM confidence)
-- Domain expertise extrapolation (MEDIUM confidence)
-
-**All findings should be verified against:**
-- SSL Labs API official documentation for rate limits
-- OWASP scanner deployment guidelines
-- Render platform documentation
-- Legal counsel for CFAA/liability questions
-
----
+**Domain:** DigitalOcean Single-Droplet Deployment (Rust/Next.js/PostgreSQL/Docker)
+**Researched:** 2026-02-06
+**Confidence:** HIGH
 
 ## Critical Pitfalls
 
-Mistakes that destroy product credibility, create legal liability, or cause rewrites.
+### Pitfall 1: Docker Socket Security — Root-Equivalent Access
 
-### Pitfall 1: False Positive Epidemic
-
-**What goes wrong:** Scanner produces too many false positives, users lose trust immediately and never return.
-
-**Why it happens:**
-- Signature-based detection without context validation
-- Running tools in "paranoid mode" to appear thorough
-- Not filtering findings by severity/confidence before showing users
-- Using outdated vulnerability databases
-- Scanning AI-generated code patterns that trigger generic heuristics
-
-**Consequences:**
-- CRITICAL: In security products, credibility is everything. One bad scan kills the brand.
-- Users share "this tool is garbage" reviews, product never recovers
-- Cannot differentiate from toy/hobby scanners
-- Paid conversion impossible when free tier doesn't work
-
-**Prevention:**
-1. **Validation layer:** Run findings through second-pass validation before showing users
-2. **Confidence scoring:** Only show HIGH confidence findings by default; hide LOW confidence
-3. **Context awareness:** Parse code to understand AI patterns (e.g., boilerplate auth code is probably fine)
-4. **Human verification:** Manually review first 100 scan results to calibrate thresholds
-5. **Explainability:** Every finding must show WHY it's a problem (reproducible exploit steps)
-
-**Detection (warning signs):**
-- User abandonment >80% after first scan
-- Support tickets saying "this isn't actually vulnerable"
-- Same finding appearing in multiple unrelated projects
-- Findings in framework boilerplate code
-
-**Phase mapping:**
-- **MVP/Phase 1:** Implement strict confidence filtering BEFORE launching
-- **Phase 2:** Add validation layer and manual review queue
-- **Phase 3:** Build context-aware parsing for AI code patterns
-
-**Confidence:** HIGH (universal pattern in security tooling)
-
----
-
-### Pitfall 2: Legal Liability Landmine
-
-**What goes wrong:** Scanning websites without proper authorization creates CFAA exposure and potential lawsuits.
+**What goes wrong:**
+Mounting `/var/run/docker.sock` into your Rust backend container to enable `docker run` for Nuclei scans gives that container **root-equivalent access** to the host. A compromised backend container can escape isolation, start privileged containers, mount the host filesystem (`/`), and completely own the droplet. With user-submitted URLs being scanned, this is a direct attack vector.
 
 **Why it happens:**
-- Misunderstanding "free tier no signup" to mean "scan anything"
-- Not capturing user agreement to terms of service
-- Unclear ownership verification for domains
-- Scanning production systems at scale (could be seen as attack)
-- Storing/displaying findings without user control (potential NDA violations)
+The Docker socket is the Docker API entry point. Any process with access to it can execute arbitrary Docker commands as root. Developers mount it into containers for convenience ("need Docker-in-Docker") without understanding the security implications.
 
-**Consequences:**
-- CRITICAL: CFAA violations carry criminal penalties
-- Civil lawsuits from scanned organizations
-- Platform shutdown, founder liability
-- No investor will touch you with legal cloud
+**How to avoid:**
+1. **Run Nuclei natively as subprocess** — Install Nuclei binary directly on the host, invoke via `std::process::Command` from Rust backend. No Docker socket access needed.
+2. **If Docker socket required:** Use Docker socket proxy (tecnativa/docker-socket-proxy) with read-only access and whitelist only necessary API endpoints (`containers.create`, `containers.start`, `containers.wait`).
+3. **Harden spawned containers:** Already doing this (8 CIS flags: `--read-only`, `--cap-drop=ALL`, `--security-opt=no-new-privileges`, `--network=none`, `--pids-limit=64`, `--memory=512m`, `--cpus=1.0`, `--user=nonroot`). Continue this.
+4. **Network isolation:** Nuclei containers use `--network=none`. Keep this for external scans to prevent SSRF.
 
-**Prevention:**
-1. **Terms acceptance:** Even "no signup" free tier must show/capture TOS acceptance
-2. **Ownership verification:** For paid tier, verify domain ownership (DNS TXT record, meta tag, file upload)
-3. **Explicit consent:** Landing page must say "By clicking Scan, you confirm you own or have authorization to test this application"
-4. **Rate limiting:** Aggressive limits prevent accidental DDoS-like behavior
-5. **Scope limiting:** Only scan what user explicitly provides (URL), don't spider/enumerate
-6. **Result privacy:** Scan results only visible to requester, auto-expire after 30 days
-7. **Legal review:** Have attorney review TOS, privacy policy, consent flow BEFORE launch
+**Warning signs:**
+- Seeing `docker.sock` mounted in `docker-compose.yml` or systemd service
+- Backend container running with `privileged: true`
+- Docker socket mounted read-write instead of read-only
 
-**Detection (warning signs):**
-- Abuse reports to hosting provider
-- Scans targeting government/military domains
-- Same IP scanning hundreds of different domains
-- Findings data growing without bound (no expiration)
-
-**Phase mapping:**
-- **PRE-MVP:** Legal review of TOS/consent flow (MUST DO)
-- **MVP/Phase 1:** Ownership verification for paid tier
-- **Phase 2:** Result expiration and privacy controls
-
-**Confidence:** MEDIUM-HIGH (CFAA is real, but specifics need legal counsel verification)
-
-**Action required:** Consult with attorney specializing in CFAA/cybersecurity law before MVP.
+**Phase to address:**
+**Phase 1 (Infrastructure Setup)** — Decide architecture: native Nuclei binary vs. containerized with socket proxy. Native is simpler and safer for single-droplet MVP.
 
 ---
 
-### Pitfall 3: SSL Labs API Abuse → IP Ban
+### Pitfall 2: UFW Firewall Bypass — Exposed Ports Despite Rules
 
-**What goes wrong:** Aggressive use of SSL Labs API gets your entire platform IP-banned, breaking core functionality.
+**What goes wrong:**
+UFW (Uncomplicated Firewall) **does not protect Docker-published ports**. Docker manipulates iptables directly in the `nat` table, bypassing UFW's INPUT/OUTPUT chains entirely. Publishing ports with `-p 5432:5432` (PostgreSQL) or `-p 3000:3000` (backend) exposes them to the internet **even if UFW denies them**. Your database becomes publicly accessible.
 
 **Why it happens:**
-- Not reading SSL Labs API terms (very strict rate limits)
-- Caching results inadequately (re-scanning same host repeatedly)
-- Multiple concurrent scans from same IP
-- Not implementing exponential backoff
-- Free tier users triggering scans constantly
+Docker inserts early iptables ACCEPT rules before UFW sees the packets. UFW sits later in the packet pipeline. Both modify the same iptables config, causing misconfigurations. This is a well-known security flaw that still exists in 2026.
 
-**Consequences:**
-- CRITICAL: IP ban is hard to reverse, may be permanent
-- Core TLS scanning feature becomes unavailable
-- Moving to new IP doesn't help if behavior continues
-- No good alternative API with same quality
+**How to avoid:**
+1. **Bind ports to localhost:** Use `127.0.0.1:5432:5432` instead of `5432:5432` to prevent external access. Nginx on host can still proxy to `localhost:3000`.
+2. **Don't publish unnecessary ports:** PostgreSQL and backend should NOT publish ports if only accessed via Docker network or localhost.
+3. **Use ufw-docker tool:** Install [chaifeng/ufw-docker](https://github.com/chaifeng/ufw-docker) to link UFW chains into `DOCKER-USER` chain.
+4. **Verify with nmap:** After deployment, run `nmap -p 1-65535 <droplet-ip>` from external machine to verify only 80/443 are exposed.
 
-**Prevention:**
-1. **Read the terms:** SSL Labs has published limits (VERIFY: check current docs)
-   - Training data suggests: max 1 scan per host per hour, max concurrent scans
-2. **Aggressive caching:** Cache SSL Labs results for 24-48 hours minimum
-3. **Queue system:** Single-threaded SSL Labs requests with inter-request delays
-4. **Pre-flight check:** Before calling API, check if cached result exists and is fresh
-5. **Fallback strategy:** Have secondary TLS scanner (testssl.sh in container) ready
-6. **Monitor 429s:** Alert when receiving rate limit responses
-7. **User communication:** Show "TLS scan in progress, results in ~2 minutes" (set expectations)
+**Warning signs:**
+- `docker ps` shows `0.0.0.0:5432->5432/tcp` instead of `127.0.0.1:5432->5432/tcp`
+- Running `ufw status` shows port blocked, but `nmap` from outside shows it open
+- PostgreSQL logs showing connection attempts from unknown IPs
 
-**Detection (warning signs):**
-- 429 Too Many Requests responses from SSL Labs
-- SSL Labs scans failing silently
-- Same domains being scanned multiple times per day
-- Concurrent SSL Labs API calls
-
-**Phase mapping:**
-- **PRE-MVP:** Read SSL Labs API documentation thoroughly
-- **MVP/Phase 1:** Implement caching layer and rate limiting
-- **Phase 2:** Build fallback scanner (testssl.sh containerized)
-
-**Confidence:** MEDIUM (SSL Labs rate limits are real, but exact limits need verification)
-
-**Action required:** Verify current SSL Labs API terms and rate limits before implementation.
+**Phase to address:**
+**Phase 2 (Docker Compose Production Config)** — Rewrite port bindings to use `127.0.0.1:` prefix. Verify with external nmap scan.
 
 ---
 
-### Pitfall 4: Scanner Itself is Insecure (Irony Alert)
+### Pitfall 3: PostgreSQL Data Loss — Ephemeral Containers Without Persistent Volumes
 
-**What goes wrong:** Security scanning tool has security vulnerabilities (SSRF, container escape, code injection).
+**What goes wrong:**
+Docker containers are ephemeral. Without a persistent volume, **all PostgreSQL data is lost** when the container stops, is removed, or crashes. `docker-compose down` wipes the database. Redeployment after a security patch deletes all scan history and user emails.
 
 **Why it happens:**
-- Trusting user-provided URLs without validation (SSRF)
-- Running scanners as root in containers
-- Not isolating scanner containers from each other
-- Logging sensitive data (secrets found during scans)
-- Storing scan results in insecure database
-- Command injection via unsanitized scan target parameters
+Developers forget to mount volumes or use anonymous volumes that Docker deletes. Testing in dev doesn't catch this because "it works on my machine" until production container restarts.
 
-**Consequences:**
-- CATASTROPHIC: "Security tool is insecure" destroys all credibility forever
-- Competitors will exploit and publicize
-- User data breach compounds the irony
-- Product cannot recover from this
+**How to avoid:**
+1. **Use named volumes:** Already have `pgdata:/var/lib/postgresql/data` in docker-compose.yml. Keep this.
+2. **Verify volume persistence:** `docker volume ls` should show `trustedge_pgdata`. Run `docker-compose down && docker-compose up` and verify data survives.
+3. **Backup automation:** Set up daily pg_dump to external storage (DigitalOcean Spaces or Dropbox). Use cron job: `docker exec postgres pg_dump -U trustedge trustedge_prod > /backup/$(date +\%Y\%m\%d).sql`
+4. **Snapshot the volume directory:** DigitalOcean droplet backups snapshot entire disk, but configure weekly snapshots separately for `/var/lib/docker/volumes/`.
 
-**Prevention:**
-1. **SSRF protection:**
-   - Validate URLs (no localhost, 127.0.0.1, 169.254.169.254, internal IPs)
-   - Blocklist cloud metadata endpoints
-   - Use DNS resolution check before allowing scan
-2. **Container hardening:**
-   - Run as non-root user
-   - Read-only filesystem where possible
-   - Resource limits (CPU, memory, network)
-   - No privileged mode
-3. **Input sanitization:**
-   - Never pass user input directly to shell commands
-   - Use Rust's Command API (not shell=true equivalent)
-   - Validate URL format, length, characters
-4. **Secret handling:**
-   - Don't log API keys, tokens, passwords found in scans
-   - Redact secrets in stored findings
-   - Encrypt findings at rest
-5. **Network isolation:**
-   - Scanner containers should not access internal services
-   - Egress filtering (only allow specific external scanner APIs)
-6. **Security audit:**
-   - Have external security researcher audit the scanner before launch
-   - Bug bounty program (credibility builder)
+**Warning signs:**
+- No volumes listed in `docker-compose.yml` for `db` service
+- Running `docker volume ls` shows no volumes with project prefix
+- PostgreSQL data directory is `/var/lib/postgresql/data` without `:volume` mapping
 
-**Detection (warning signs):**
-- Scanner accessing internal network ranges
-- Logs containing API keys or passwords
-- Containers running as UID 0
-- User input appearing directly in command strings
-
-**Phase mapping:**
-- **PRE-MVP:** Security design review (SSRF, injection, container escape)
-- **MVP/Phase 1:** Input validation and container hardening
-- **Phase 2:** External security audit
-- **Phase 3:** Bug bounty program
-
-**Confidence:** HIGH (common vulnerability patterns in scanning tools)
+**Phase to address:**
+**Phase 2 (Docker Compose Production Config)** — Verify volume exists and persists.
+**Phase 4 (Backup & Monitoring)** — Implement automated pg_dump backups and test restore.
 
 ---
 
-### Pitfall 5: Performance Death Spiral
+### Pitfall 4: Memory Exhaustion from Concurrent Scans — OOM Killer Murdering Containers
 
-**What goes wrong:** Scans take 5+ minutes, users abandon, cold starts add 30s overhead, product feels broken.
+**What goes wrong:**
+Each Nuclei scan spawns an ephemeral container with 512MB memory limit. With 5 concurrent scans (your semaphore limit), that's **2.5GB for scans alone**, plus backend (256MB?), frontend (256MB?), PostgreSQL (512MB?), Nginx (32MB?) = **~3.5GB total**. On a $12/month droplet (2GB RAM), the Linux OOM killer **randomly murders containers** when memory pressure occurs. PostgreSQL or backend could die mid-scan.
 
 **Why it happens:**
-- Running all scanners sequentially (not parallel)
-- Container cold start on every scan request
-- Scanner tools with inefficient implementations
-- Database queries slowing down with findings growth
-- Not streaming results (user sees nothing until complete)
-- Render platform resource constraints
+Developers size containers for "typical" workload, not burst workload. Five concurrent scans hitting maximum memory simultaneously triggers OOM. Kernel kills highest memory consumer (often PostgreSQL).
 
-**Consequences:**
-- CRITICAL: Users expect speed. >2 minutes = abandoned scan
-- Free tier users won't wait, can't upsell them
-- Concurrent scans overwhelm resources
-- Platform costs explode with inefficiency
+**How to avoid:**
+1. **Right-size droplet:** For 5 concurrent scans at 512MB each, minimum **4GB RAM droplet** ($24/month). Calculate: `(5 × 512MB) + backend + frontend + PostgreSQL + Nginx + OS overhead (512MB) = 4GB`.
+2. **Add swap:** Configure 2GB swap as safety buffer for short bursts. `fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile`.
+3. **Set memory limits on all containers:** Explicitly set `mem_limit: 256m` for backend, `mem_limit: 256m` for frontend, `mem_limit: 512m` for PostgreSQL in docker-compose.yml.
+4. **Monitor with alerts:** Install and configure monitoring (Prometheus + Grafana or DigitalOcean monitoring) to alert when memory >85%.
+5. **Reduce concurrency if needed:** If budget-constrained, reduce semaphore from 5 to 3 concurrent scans (1.5GB for scans, fits on 2GB droplet with swap).
 
-**Prevention:**
-1. **Parallel execution:** Run independent scanners concurrently (Rust async/tokio)
-2. **Container pre-warming:** Keep 1-2 scanner containers warm on Render
-3. **Streaming results:** Show findings as they arrive (WebSocket or SSE)
-4. **Progress indicators:** "Completed 3/7 scanners..." reduces perceived wait
-5. **Timeouts:** Cap individual scanner runtime (30s? 60s?), fail fast
-6. **Result pagination:** Don't load all findings at once
-7. **Database indexing:** Index by scan_id, timestamp, severity
-8. **Incremental scanning:** Cache previous scan, only re-run changed checks
-9. **Resource allocation:** Monitor Render limits, optimize container size
+**Warning signs:**
+- `dmesg | grep -i oom` shows "Out of memory: Killed process" messages
+- Container status shows "Exited (137)" (137 = 128 + 9 = killed by SIGKILL from OOM)
+- Scans failing randomly with "container not running" errors
+- PostgreSQL connection errors: "could not connect to server"
 
-**Detection (warning signs):**
-- >50% scan abandonment before completion
-- Container startup time >10s
-- Database queries taking >1s
-- Memory usage growing linearly with scans
-
-**Phase mapping:**
-- **MVP/Phase 1:** Parallel scanner execution, streaming results, timeouts
-- **Phase 2:** Container pre-warming, incremental scanning
-- **Phase 3:** Performance optimization based on metrics
-
-**Confidence:** HIGH (universal SaaS performance patterns)
+**Phase to address:**
+**Phase 1 (Infrastructure Setup)** — Choose droplet size based on memory calculation.
+**Phase 2 (Docker Compose Production Config)** — Set explicit memory limits on all services.
+**Phase 4 (Monitoring)** — Set up memory alerts and OOM detection.
 
 ---
 
-### Pitfall 6: Race to the Bottom Pricing
+### Pitfall 5: Disk Space Exhaustion — Logs and Images Filling Droplet
 
-**What goes wrong:** Pricing too low for security SaaS, cannot sustain scanner costs, free tier cannibalization.
+**What goes wrong:**
+Docker logs are **not rotated by default**. Each container writes unbounded logs to `/var/lib/docker/containers/*/`. Over weeks, log files grow to gigabytes, filling the 50GB droplet disk. When disk hits 100%, PostgreSQL cannot write WAL files, scans fail, and the entire app crashes. Orphaned Docker images (from redeployments) accumulate, consuming 5-10GB each.
 
 **Why it happens:**
-- Looking at generic SaaS pricing ($9/mo), not security SaaS ($99-299/mo)
-- Underestimating scanner infrastructure costs
-- Free tier too generous (unlimited scans)
-- One-time audit priced like commodity, not expertise
-- Not capturing value of prevented breaches
+Docker doesn't configure log rotation out of the box. Developers don't notice in dev because logs are small. In production, a single verbose container can generate 1GB/week.
 
-**Consequences:**
-- CRITICAL: Cannot afford quality scanners, forcing cheap/unreliable alternatives
-- Support costs exceed revenue
-- Cannot compete on quality with low-margin pricing
-- Business unsustainable, shuts down
+**How to avoid:**
+1. **Configure log rotation in docker-compose.yml:**
+   ```yaml
+   services:
+     backend:
+       logging:
+         driver: "json-file"
+         options:
+           max-size: "10m"
+           max-file: "3"
+   ```
+   This limits each container to 30MB of logs (10MB × 3 files).
 
-**Prevention:**
-1. **Security premium:** Security tools command higher prices than generic SaaS
-   - Comparable: Snyk ($99+/mo), GitGuardian ($108+/mo), not Canva ($12/mo)
-2. **Value-based pricing:** Price on value prevented (cost of breach >> cost of audit)
-3. **Free tier limits:**
-   - 1-2 scans per domain per week maximum
-   - Require email (not "no signup") to prevent abuse
-   - Watermarked reports (upgrade to remove)
-4. **One-time audit pricing:**
-   - $99-299 for comprehensive audit (not $19-29)
-   - Position as "security consultant in a box"
-   - Include remediation guidance, not just findings
-5. **Cost monitoring:** Track scanner costs per scan, ensure margin exists
-6. **Paid features:** Advanced scanners, priority support, compliance reports in paid tier
+2. **Prune old images weekly:** Set up cron job: `0 2 * * 0 docker system prune -af --volumes` (Sundays at 2am, removes unused images/volumes).
 
-**Detection (warning signs):**
-- Scanner costs exceeding revenue
-- Free tier usage 100x paid tier
-- Competitors charging 5-10x your price
-- Cannot afford to add quality scanners
+3. **Monitor disk usage:** Add to monitoring: `df -h /` should alert at >80% disk usage.
 
-**Phase mapping:**
-- **PRE-MVP:** Pricing research and cost modeling
-- **MVP/Phase 1:** Free tier limits and email collection
-- **Phase 2:** Upsell optimization and paid feature expansion
+4. **Use external logging (optional):** For production visibility, ship logs to external service (Papertrail, Logtail, or DigitalOcean managed logging).
 
-**Confidence:** MEDIUM-HIGH (SaaS pricing patterns, but security-specific validation needed)
+**Warning signs:**
+- `df -h` shows `/` at >90% usage
+- `du -sh /var/lib/docker/containers` shows multi-GB sizes
+- `docker system df` shows large "Build Cache" or "Images" sizes
+- Errors like "no space left on device" in logs
 
-**Action required:** Research Snyk, GitGuardian, Aikido Security pricing for validation.
+**Phase to address:**
+**Phase 2 (Docker Compose Production Config)** — Add log rotation to all services.
+**Phase 4 (Monitoring)** — Set up disk space alerts and automated pruning.
 
 ---
 
-## Moderate Pitfalls
+### Pitfall 6: Let's Encrypt Certificate Renewal Failure — Silent SSL Expiration
 
-Mistakes that cause delays, technical debt, or user friction (fixable but painful).
-
-### Pitfall 7: Async Complexity Explosion
-
-**What goes wrong:** Rust async complexity when orchestrating multiple external scanner processes becomes unmaintainable.
+**What goes wrong:**
+Let's Encrypt certificates expire after 90 days. Certbot auto-renewal **silently fails** when Nginx is misconfigured (wrong web root, IPv6 disabled, stale config). Three months later, your site shows "Certificate Expired" warnings, blocking all users. No monitoring = no alert until users complain.
 
 **Why it happens:**
-- Each scanner is external process (tokio::process::Command)
-- Timeouts, cancellation, error handling across async boundaries
-- Mixing blocking (process I/O) and async operations
-- Complex orchestration logic (parallel, sequential, conditional)
-- Shared state between scanners (results database)
+Certbot renewal relies on HTTP-01 challenge (writes file to `.well-known/acme-challenge/`), but Nginx config doesn't serve that directory, or certbot uses wrong web root path. IPv6 AAAA records exist, but Nginx only listens on IPv4. Renewal cron job runs, fails silently, logs ignored.
 
-**Consequences:**
-- Codebase becomes spaghetti
-- Bugs in orchestration (hanging scans, missed results)
-- Hard to add new scanners
-- Developer velocity slows
+**How to avoid:**
+1. **Test renewal immediately after setup:** `certbot renew --dry-run` to verify renewal works before 90 days pass.
+2. **Configure Nginx for ACME challenge:**
+   ```nginx
+   location /.well-known/acme-challenge/ {
+       root /var/www/certbot;
+   }
+   ```
+3. **Listen on IPv6:** Ensure Nginx listens on both IPv4 and IPv6:
+   ```nginx
+   listen 443 ssl;
+   listen [::]:443 ssl;
+   ```
+4. **Monitor renewal:** Add certbot logs to monitoring, or use external SSL monitoring (SSL Labs Scan, UptimeRobot SSL expiry checks).
+5. **Set up renewal cron job explicitly:** `0 3 * * * certbot renew --quiet && systemctl reload nginx`
 
-**Prevention:**
-1. **Abstraction layer:** Define trait for all scanners with consistent interface
-```rust
-#[async_trait]
-trait SecurityScanner {
-    async fn scan(&self, target: &Target) -> Result<Vec<Finding>>;
-    fn timeout(&self) -> Duration;
-    fn name(&self) -> &str;
-}
-```
-2. **Orchestrator pattern:** Single orchestrator manages scanner lifecycle
-3. **Bounded concurrency:** Use `tokio::task::JoinSet` or `futures::stream::FuturesUnordered`
-4. **Timeout wrapper:** Consistent timeout handling via `tokio::time::timeout`
-5. **Error type design:** Strong error types (not anyhow everywhere)
-6. **Testing strategy:** Mock scanner implementations for integration tests
-7. **Avoid:** Shared mutable state, spawning unbounded tasks, manual cancellation
+**Warning signs:**
+- `certbot renew --dry-run` fails with "Connection refused" or "Failed authorization procedure"
+- Certbot logs at `/var/log/letsencrypt/letsencrypt.log` show errors
+- `openssl s_client -connect yourdomain.com:443 -servername yourdomain.com` shows expiration date <30 days away
+- Certificate not renewed after 60 days (Let's Encrypt should renew at 30 days remaining)
 
-**Detection (warning signs):**
-- Scans hanging indefinitely
-- Memory leaks from unclosed processes
-- "Too many open files" errors
-- Difficulty adding new scanner
-
-**Phase mapping:**
-- **MVP/Phase 1:** Scanner trait abstraction from day 1
-- **Phase 2:** Refactor orchestration if complexity emerging
-
-**Confidence:** HIGH (Rust async patterns well-understood)
+**Phase to address:**
+**Phase 3 (SSL Configuration)** — Set up certbot with proper Nginx config, test dry run.
+**Phase 4 (Monitoring)** — Add SSL expiry monitoring and renewal failure alerts.
 
 ---
 
-### Pitfall 8: Report Quality Mismatch
+### Pitfall 7: Systemd Restart Loops — Crash Loops from Missing Environment Variables
 
-**What goes wrong:** Security reports too technical for non-security developers, remediation steps don't work.
+**What goes wrong:**
+Systemd service configured with `Restart=always` encounters a missing environment variable (e.g., `STRIPE_SECRET_KEY` or `DATABASE_URL`). Backend crashes on startup. Systemd immediately restarts it. It crashes again. **Infinite restart loop** floods logs, burns CPU, and never reaches healthy state. Application appears "running" in systemd but is non-functional.
 
 **Why it happens:**
-- Copy-pasting CVE descriptions (written for security professionals)
-- Assuming users understand security concepts (XSS, CSRF, SQLi)
-- Generic remediation ("update dependencies") without specifics
-- Not testing remediation steps
-- Report format designed for compliance, not action
+Environment variables not loaded in systemd service file. Developer tests with `docker-compose` (which loads `.env` file) but systemd doesn't. Backend starts, reads config, panics on missing env var, exits. Systemd sees exit, restarts per policy.
 
-**Consequences:**
-- Users don't understand findings, ignore them
-- Remediation steps fail, users give up
-- Product doesn't achieve goal (actually improving security)
-- No word-of-mouth growth (users didn't get value)
+**How to avoid:**
+1. **Use systemd EnvironmentFile:**
+   ```ini
+   [Service]
+   EnvironmentFile=/home/deploy/trustedge/.env.production
+   ExecStart=/usr/local/bin/docker-compose up
+   Restart=on-failure
+   RestartSec=10s
+   StartLimitBurst=3
+   StartLimitIntervalSec=300
+   ```
+2. **Use `on-failure` instead of `always`:** Only restart on actual failures, not manual stops.
+3. **Add StartLimitBurst:** Limit to 3 restart attempts within 5 minutes before giving up. Prevents infinite loops.
+4. **Validate environment on startup:** Backend should log "Missing required env var: STRIPE_SECRET_KEY" before panic, making diagnosis obvious.
+5. **Use systemd `ConditionPathExists`:** Ensure `.env.production` exists before starting.
 
-**Prevention:**
-1. **Audience-aware language:**
-   - NOT: "CSRF vulnerability in state-changing endpoint"
-   - YES: "Your form doesn't verify the request came from your app (attackers can trick users into submitting it)"
-2. **ELI5 explanations:** Explain WHY it's dangerous in plain language
-3. **Specific remediation:**
-   - NOT: "Update dependencies"
-   - YES: "Run `npm update zod` to upgrade from 3.20.0 to 3.23.8"
-4. **Code examples:** Show before/after code snippets
-5. **Severity calibration:** Don't cry wolf (mark low-risk issues as INFO, not CRITICAL)
-6. **Test remediation:** Actually follow your own steps, verify they work
-7. **Progressive disclosure:** Summary + "Learn more" link for deep dive
+**Warning signs:**
+- `systemctl status trustedge-backend` shows "Active (running)" but uptime keeps resetting to <10s
+- `journalctl -u trustedge-backend -n 100` shows repeated startup/crash cycles
+- CPU spiking due to rapid restart attempts
+- Backend logs show repeated initialization but no requests processed
 
-**Detection (warning signs):**
-- Users asking "what does this mean?" in support
-- Low paid conversion (free scan didn't convince them)
-- Remediation steps reported as not working
-- Report readability score too high (aimed at experts)
-
-**Phase mapping:**
-- **MVP/Phase 1:** Basic plain-language descriptions
-- **Phase 2:** Specific remediation steps with testing
-- **Phase 3:** Code examples and progressive disclosure
-
-**Confidence:** HIGH (documentation best practices)
+**Phase to address:**
+**Phase 3 (Systemd Service Setup)** — Configure systemd with EnvironmentFile, restart policies, and start limits.
 
 ---
 
-### Pitfall 9: Database Bloat from Findings
+### Pitfall 8: Nginx Reverse Proxy Connection Refused — Wrong Backend Address
 
-**What goes wrong:** Scan findings table grows unbounded, queries slow down, storage costs explode.
+**What goes wrong:**
+Nginx on the **host** tries to proxy to `http://backend:3000` (Docker service name), but that hostname doesn't exist on the host network. Or Nginx uses `http://localhost:3000`, which works in dev but fails in production because backend isn't on localhost if it's in a container. Result: 502 Bad Gateway, app unreachable.
 
 **Why it happens:**
-- Storing every finding from every scan forever
-- Not deduplicating findings across scans
-- Storing verbose scanner output (MB per scan)
-- No data retention policy
-- Not compressing old scan data
+Confusion between Docker network namespaces and host network. `backend` hostname only resolves inside Docker network, not on host. `localhost` refers to Nginx container's localhost, not the backend container's localhost.
 
-**Consequences:**
-- Database queries slow down (impacts UX)
-- Storage costs grow linearly with usage
-- Backups become unwieldy
-- Eventual database size limits hit
+**How to avoid:**
+1. **If Nginx on host:** Use `http://127.0.0.1:3000` after binding backend port to host with `127.0.0.1:3000:3000` in docker-compose.yml.
+2. **If Nginx in container:** Use Docker service name `http://backend:3000` and put Nginx in same Docker network.
+3. **For this project (Nginx on host):** Backend and frontend should publish to `127.0.0.1:PORT`, then Nginx proxies to `http://127.0.0.1:3000` (backend) and `http://127.0.0.1:3001` (frontend).
+4. **Test before SSL:** Verify `curl http://127.0.0.1:3000/health` from host returns 200 before configuring Nginx.
 
-**Prevention:**
-1. **Data retention policy:**
-   - Free tier: Delete scans after 7-30 days
-   - Paid tier: Keep scans 90 days, then compress
-2. **Deduplication:** Hash findings, store unique once, reference from scans
-3. **Compression:** Compress old scan data (JSON → gzip in S3/R2)
-4. **Selective storage:** Store summary + critical findings, not all verbose output
-5. **Pagination:** Never load all findings, always paginate
-6. **Archival strategy:** Move old scans to cold storage
-7. **Monitoring:** Alert on table size growth rate
+**Warning signs:**
+- Nginx logs show `connect() failed (111: Connection refused) while connecting to upstream`
+- 502 Bad Gateway error when accessing frontend
+- `curl localhost:3000` works, but Nginx proxy returns 502
+- Nginx config has `proxy_pass http://backend:3000` but Nginx is on host
 
-**Detection (warning signs):**
-- Database size growing >1GB/month
-- Query performance degrading over time
-- Finding duplicates across many scans
-- Backup duration increasing
-
-**Phase mapping:**
-- **MVP/Phase 1:** Basic retention policy (delete old scans)
-- **Phase 2:** Deduplication and compression
-- **Phase 3:** Archival to object storage
-
-**Confidence:** MEDIUM-HIGH (database scaling patterns)
+**Phase to address:**
+**Phase 2 (Docker Compose Production Config)** — Configure port bindings to 127.0.0.1.
+**Phase 3 (Nginx Configuration)** — Configure Nginx to proxy to 127.0.0.1:3000/3001.
 
 ---
 
-### Pitfall 10: Free Tier Abuse
+## Technical Debt Patterns
 
-**What goes wrong:** Users abuse free tier (automated scanning, reselling results, competitive intelligence).
+Shortcuts that seem reasonable but create long-term problems.
 
-**Why it happens:**
-- No authentication ("no signup" = no accountability)
-- No rate limiting per user/IP
-- Free tier features too close to paid tier
-- No CAPTCHA or bot protection
-- Scan results publicly shareable
-
-**Consequences:**
-- Infrastructure costs from abusive usage
-- Legitimate users impacted by noisy neighbors
-- Free tier users never convert (getting full value free)
-- Competitive services built on top of your free tier
-
-**Prevention:**
-1. **Minimal auth:** Even free tier requires email (can be anonymous)
-   - Enables rate limiting per user
-   - Allows ban/suspension
-   - Email = conversion funnel start
-2. **Rate limiting:**
-   - Free tier: 2-3 scans per domain per week
-   - IP-based backup limit (100 scans/day from one IP = suspicious)
-3. **CAPTCHA:** For free tier, require CAPTCHA before scan
-4. **Result privacy:** Default to private results, sharing requires account
-5. **Watermarks:** Free tier reports watermarked "Generated with TrustEdge Audit free tier"
-6. **Feature gating:** Advanced scanners, PDF export, API access = paid only
-7. **Monitoring:** Alert on suspicious patterns (same user, many domains)
-
-**Detection (warning signs):**
-- Single IP/user doing hundreds of scans
-- Scan patterns matching business hours (automated)
-- Results being scraped/embedded elsewhere
-- Free tier costs exceeding paid revenue
-
-**Phase mapping:**
-- **MVP/Phase 1:** Email requirement, basic rate limiting
-- **Phase 2:** CAPTCHA, abuse monitoring
-- **Phase 3:** Advanced abuse prevention
-
-**Confidence:** MEDIUM (SaaS abuse patterns)
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Running PostgreSQL in Docker on single droplet | Simple, no managed DB cost ($15/mo) | No automatic backups, no HA, manual scaling, backup/restore complexity | **Acceptable for MVP** — Upgrade to managed DB after validating product-market fit |
+| Using `.env` files for secrets | Simple configuration, works with docker-compose | Secrets in plain text on filesystem, visible in process list, shared insecurely | **Acceptable for MVP** — Migrate to Docker Secrets or Vault for multi-droplet/team |
+| Storing scans in PostgreSQL (no S3/object storage) | Simple, one less service, no external cost | Database bloat from large scan results, expensive to backup, difficult to archive old scans | **Acceptable for MVP** — Move to S3 after 10K scans or when DB >5GB |
+| Manual deployment via SSH | Simple, no CI/CD complexity | Deployment errors, no rollback, downtime during updates | **Acceptable for solo MVP** — Add GitHub Actions after first paying customer |
+| Single droplet (no load balancer) | Low cost ($24/mo vs $120+), simple architecture | No zero-downtime deployments, single point of failure, can't scale horizontally | **Acceptable until 1K active users** — Add load balancer when revenue >$1K/mo |
+| Polling for scan status (no WebSockets) | Simple implementation, works with Nginx | Higher latency (2-5s updates), more backend load | **Acceptable permanently** — Polling is fine for 3-5min scan duration |
 
 ---
 
-## Minor Pitfalls
+## Integration Gotchas
 
-Mistakes that cause annoyance but are relatively easy to fix.
+Common mistakes when connecting to external services.
 
-### Pitfall 11: Container Escape Paranoia
-
-**What goes wrong:** Over-engineering container security at expense of functionality/debuggability.
-
-**Why it happens:**
-- Fear of container escapes (real but rare with modern runtimes)
-- Applying server security practices to ephemeral containers
-- Not understanding Render's security model
-
-**Prevention:**
-- Use standard container hardening (non-root, read-only root FS where feasible)
-- Don't use privileged mode or host network
-- Trust Render's isolation model (verify their security docs)
-- Focus on SSRF/injection (much more likely than escape)
-
-**Confidence:** MEDIUM (container security is evolving)
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| Stripe Webhook | Using localhost URL in Stripe dashboard, webhooks never arrive | Use Stripe CLI for local dev (`stripe listen --forward-to localhost:3000/webhooks`), use real domain for production |
+| Resend Email API | Not handling rate limits (10 emails/sec), bulk sends fail | Implement exponential backoff, queue emails if >10/sec, handle 429 responses |
+| SSL Labs API | Not respecting rate limits (1 request/scan, max 25/hour), getting banned | Cache results for 24h, implement rate limiter in backend, handle 429/503 responses |
+| Nuclei Templates | Using outdated templates, missing new checks | Run `nuclei -update-templates` daily via cron, pin template version for reproducibility |
+| Docker Hub Rate Limits | Anonymous pulls limited to 100/6h, hitting limit during deployments | Authenticate to Docker Hub (200/6h), cache images locally, use DigitalOcean Container Registry |
+| DigitalOcean Firewall | Enabling DO cloud firewall + UFW causes double firewall complexity | Choose one: UFW with ufw-docker for single droplet OR DO cloud firewall for multi-droplet |
 
 ---
 
-### Pitfall 12: Inconsistent Scan Results
+## Performance Traps
 
-**What goes wrong:** Same URL scanned twice gives different results.
+Patterns that work at small scale but fail as usage grows.
 
-**Why it happens:**
-- Scanners with non-deterministic output
-- External factors (site changed, TLS cert rotated)
-- Timing-dependent checks (rate limiting, CAPTCHA)
-
-**Prevention:**
-- Hash scan results, flag when dramatically different from previous
-- Show "last scanned" timestamp prominently
-- Allow users to trigger re-scan to verify
-- Store scan metadata (scanner versions, timestamp)
-
-**Confidence:** MEDIUM
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| PostgreSQL connection pool exhaustion | "Connection pool exhausted" errors, 500s during traffic spikes | Right-size pool: `max_connections = (RAM in GB × 100)`, use PgBouncer for >100 concurrent requests | >50 concurrent scans or >200 req/s |
+| Database-as-queue for scans | Scans stuck in "pending" when workers crash, no retry logic | Add `status` index, implement dead letter queue for failed scans after 3 attempts, add scan timeout (15min) | >500 scans/day or >10 concurrent |
+| In-memory PDF generation blocking requests | PDF generation (5-10s) blocks Axum worker thread, response times spike | Move PDF generation to background task queue (tokio::spawn), return scan ID immediately, poll for PDF | PDFs >2MB or >20 PDFs/hour |
+| N+1 queries for scan results | Loading scan + findings + remediation = 3 queries per scan, slow dashboard | Use SQL JOINs or eager loading, fetch all scan data in single query | >100 scans in database |
+| Docker image layers not cached | Rebuilding images from scratch on every deployment, 5-10min downtime | Use multi-stage builds, `.dockerignore` for node_modules, cache layers in registry | Any production deployment |
+| Nginx serving frontend static files from Docker | Slow file serving, high memory usage, Nginx proxies to Next.js for every static asset | Use Next.js `output: 'standalone'` + copy static assets to Nginx directory, serve directly | >100 concurrent users |
 
 ---
 
-### Pitfall 13: Scanner Version Drift
+## Security Mistakes
 
-**What goes wrong:** Containerized scanner tools become outdated, miss new vulnerabilities.
+Domain-specific security issues beyond general web security.
 
-**Why it happens:**
-- Container images not rebuilt regularly
-- No update process for scanner dependencies
-- Vulnerability databases stale
-
-**Prevention:**
-- Automated weekly container image rebuilds
-- Version pinning with update schedule
-- Monitor scanner project releases (GitHub watch)
-- Show scanner versions in reports
-
-**Confidence:** MEDIUM
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| Not validating user-submitted URLs before scanning | SSRF attacks: scan internal network (192.168.x.x, 10.x.x.x, 169.254.x.x), scan localhost services, scan cloud metadata endpoints (169.254.169.254) | Already implemented: validate URL scheme (http/https only), block private IP ranges, block localhost, block cloud metadata IPs |
+| Exposing PostgreSQL port to internet (0.0.0.0:5432) | Direct database access for attackers, brute force attacks on postgres user, data exfiltration | Bind PostgreSQL to 127.0.0.1:5432 only, use strong passwords (32+ chars random), rotate credentials quarterly |
+| Storing Stripe secret keys in .env with weak permissions | Keys readable by all users on droplet, keys in bash history, keys in process list | Set .env file permissions to 600 (owner read/write only), never echo keys, use Docker secrets for multi-container |
+| Not sanitizing Nuclei output before display | XSS via malicious scan targets returning crafted HTML in error messages | Sanitize all Nuclei output, escape HTML in frontend, use `dangerouslySetInnerHTML` never |
+| Running backend as root in container | Container escape = root on host, privilege escalation attacks | Already using `--user=nonroot` for Nuclei containers, verify backend Dockerfile uses `USER nonroot` |
+| No rate limiting on free tier scans | Abuse: scanning entire internet, DoS by exhausting scan queue, resource exhaustion | Rate limit: 5 scans/hour per IP, 10 scans/day per email, use Redis for distributed rate limiting later |
 
 ---
 
-### Pitfall 14: Render-Specific Resource Limits
+## UX Pitfalls
 
-**What goes wrong:** Hitting Render's platform limits for containerized workloads.
+Common user experience mistakes in this domain.
 
-**Why it happens:**
-- Not understanding Render's resource allocation model
-- Underestimating container memory needs
-- Concurrent scans exceeding plan limits
-
-**Prevention:**
-- Read Render documentation thoroughly (VERIFY current limits)
-- Monitor resource usage metrics
-- Set conservative concurrency limits
-- Plan upgrade path for resource limits
-
-**Confidence:** LOW (Render-specific, need documentation verification)
-
-**Action required:** Verify Render container resource limits and scaling model.
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| No scan progress visibility | User doesn't know if scan is working, abandons page after 30s, unclear how long to wait | Show scan stages: "Fetching site... Checking SSL... Running Nuclei... Generating report..." |
+| PDF generation blocks scan results | User waits 10s extra for PDF before seeing results, unnecessary latency | Show results immediately, generate PDF in background, add "Download PDF" button when ready |
+| Generic error messages | "Scan failed" with no context, user doesn't know if it's their fault or a bug | Specific errors: "Site unreachable - check URL", "Scan timeout - site too slow", "Rate limit - try again in 1h" |
+| No email notification when paid scan completes | User paid $49, starts scan, closes tab, forgets, never gets results | Send email with PDF attachment + results link when complete (already planned) |
+| Scan results overwhelming | 50+ findings with no prioritization, user doesn't know where to start | Group by severity (Critical → High → Medium → Low), collapse Medium/Low by default, show "Fix these 3 first" |
+| Remediation code not framework-specific | Generic "add CSP header" advice, user doesn't know where to put it in Next.js | Detect framework, show Next.js-specific fix: "Add to next.config.js: headers: [...]" |
 
 ---
 
-## Phase-Specific Warnings
+## "Looks Done But Isn't" Checklist
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|----------------|------------|
-| MVP/Free Tier Launch | False positive epidemic (#1) | Manual review first 100 scans, strict confidence filtering |
-| MVP/Free Tier Launch | Legal liability (#2) | Legal review of TOS BEFORE launch |
-| MVP/Free Tier Launch | SSL Labs IP ban (#3) | Read API terms, implement caching |
-| MVP/Scanner Integration | Scanner security (#4) | SSRF protection, input validation from day 1 |
-| MVP/Scanner Integration | Async complexity (#7) | Scanner trait abstraction upfront |
-| Post-MVP/Scaling | Performance death spiral (#5) | Parallel execution, streaming results, timeouts |
-| Post-MVP/Scaling | Database bloat (#9) | Retention policy, pagination |
-| Post-MVP/Monetization | Race to bottom pricing (#6) | Research security SaaS pricing before setting |
-| Post-MVP/Growth | Free tier abuse (#10) | Email requirement, rate limiting |
-| Ongoing | Report quality mismatch (#8) | User testing with non-security developers |
-| Ongoing | Scanner version drift (#13) | Automated rebuild process |
+Things that appear complete but are missing critical pieces.
 
----
-
-## Critical Path Recommendations
-
-**Must address before MVP launch:**
-1. Legal review (TOS, consent flow, CFAA compliance)
-2. False positive prevention (confidence filtering, validation)
-3. SSL Labs API compliance (rate limits, caching)
-4. SSRF protection (URL validation, IP blocklists)
-5. Container security basics (non-root, resource limits)
-
-**Can defer to post-MVP:**
-- Container pre-warming (optimization)
-- Advanced abuse prevention (start with basic rate limits)
-- Database archival (not needed at low scale)
-- Incremental scanning (nice-to-have)
-
-**Ongoing vigilance required:**
-- Report quality (user feedback driven)
-- Scanner version updates (security critical)
-- Pricing optimization (market driven)
+- [ ] **PostgreSQL backups:** Container has persistent volume, but no automated backups — verify daily pg_dump cron job exists and test restore
+- [ ] **SSL certificate renewal:** Certbot installed and cert works, but renewal might fail — verify `certbot renew --dry-run` succeeds
+- [ ] **Docker log rotation:** Containers running fine, but logs grow unbounded — verify `logging.options.max-size` set in docker-compose.yml
+- [ ] **Firewall rules:** UFW enabled and shows blocked ports, but Docker bypasses it — verify `nmap` from external machine shows only 80/443 open
+- [ ] **Memory limits:** Containers start successfully, but no memory limits set — verify `docker stats` shows memory limits for all containers
+- [ ] **Restart policies:** Containers restart after crashes, but no restart limits — verify systemd/docker-compose has `on-failure` + `StartLimitBurst`
+- [ ] **Environment variables:** App works in dev with .env file, but systemd doesn't load it — verify systemd EnvironmentFile directive exists
+- [ ] **Health checks:** Containers show "running" status, but app is actually crashed in restart loop — verify `docker ps` shows "healthy" status
+- [ ] **Disk space monitoring:** Droplet has 50GB, feels like plenty, but Docker images consume 20GB — verify `df -h` and set up alerts at 80%
+- [ ] **Connection pool sizing:** Database accepts connections now, but will exhaust pool at scale — verify `max_connections` calculated based on RAM
 
 ---
 
-## Confidence Assessment
+## Recovery Strategies
 
-| Pitfall Category | Confidence | Basis |
-|------------------|------------|-------|
-| False positives (#1) | HIGH | Universal security tooling pattern |
-| Legal liability (#2) | MEDIUM | CFAA is real, but need legal counsel |
-| SSL Labs API (#3) | MEDIUM | Rate limits exist, need verification |
-| Scanner security (#4) | HIGH | Common vulnerability patterns |
-| Performance (#5) | HIGH | Universal SaaS patterns |
-| Pricing (#6) | MEDIUM | Domain knowledge, needs market validation |
-| Async complexity (#7) | HIGH | Rust patterns well-understood |
-| Report quality (#8) | HIGH | Documentation best practices |
-| Database bloat (#9) | MEDIUM-HIGH | Scaling patterns |
-| Free tier abuse (#10) | MEDIUM | SaaS abuse patterns |
-| Render-specific (#14) | LOW | Platform-specific, needs docs |
+When pitfalls occur despite prevention, how to recover.
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Docker socket compromised | **HIGH** — assume full host compromise | 1. Take droplet snapshot. 2. Shut down droplet. 3. Analyze snapshot for persistence. 4. Provision new droplet. 5. Deploy from clean source. 6. Rotate all secrets. |
+| PostgreSQL data loss (no backups) | **HIGH** — data unrecoverable | 1. Accept data loss. 2. Notify affected users. 3. Implement daily pg_dump backups. 4. Test restore monthly. |
+| SSL certificate expired | **LOW** — fixable in <1h | 1. Check certbot logs for failure reason. 2. Fix Nginx config (web root, IPv6). 3. Run `certbot renew --force-renewal`. 4. Test renewal: `certbot renew --dry-run`. |
+| OOM killer murdering containers | **MEDIUM** — requires droplet resize | 1. Add 2GB swap immediately: `fallocate -l 2G /swapfile && swapon /swapfile`. 2. Reduce scan concurrency to 3. 3. Resize to 4GB droplet. 4. Set memory limits. |
+| Disk full (logs or images) | **LOW** — fixable in <30min | 1. Stop containers: `docker-compose stop`. 2. Prune system: `docker system prune -af --volumes`. 3. Delete old logs: `journalctl --vacuum-time=7d`. 4. Restart. 5. Configure log rotation. |
+| UFW bypass exposing database | **MEDIUM** — requires config change + verify no breach | 1. Stop PostgreSQL immediately. 2. Change docker-compose to `127.0.0.1:5432:5432`. 3. Restart containers. 4. Check PostgreSQL logs for unauthorized access. 5. Rotate DB password if suspicious IPs found. |
+| Systemd restart loop | **LOW** — fixable in <15min | 1. Stop service: `systemctl stop trustedge-backend`. 2. Check logs: `journalctl -u trustedge-backend -n 100`. 3. Fix missing env var or config. 4. Test manually: `docker-compose up` and verify starts. 5. Restart service. |
+| Nginx reverse proxy broken | **LOW** — fixable in <15min | 1. Test backend directly: `curl http://127.0.0.1:3000/health`. 2. If works, fix Nginx proxy_pass address. 3. Test Nginx config: `nginx -t`. 4. Reload Nginx: `systemctl reload nginx`. |
 
 ---
 
-## Research Gaps to Address
+## Pitfall-to-Phase Mapping
 
-**Requires verification with authoritative sources:**
+How roadmap phases should address these pitfalls.
 
-1. **SSL Labs API:** Current rate limits, terms of service, what triggers bans
-   - Action: Read https://github.com/ssllabs/ssllabs-scan/wiki/Documentation
-
-2. **CFAA compliance:** Specific legal requirements for security scanning services
-   - Action: Consult attorney specializing in CFAA/cybersecurity law
-
-3. **Render platform:** Container resource limits, cold start characteristics, scaling model
-   - Action: Read https://render.com/docs/docker and contact support
-
-4. **Security SaaS pricing:** Market rates for comparable products (Snyk, GitGuardian, Aikido)
-   - Action: Research competitor pricing pages
-
-5. **Scanner tool specifics:** Which scanners to use, their reliability, update frequency
-   - Action: Phase-specific research when selecting scanners
-
-**Assumptions needing validation:**
-
-- Free tier limits (1-2 scans/week) are sustainable - needs cost modeling
-- $99-299 one-time audit pricing is defensible - needs market validation
-- Rust async orchestration complexity is manageable - needs prototyping
-- Render can handle containerized scanner workloads - needs testing
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Docker socket security | Phase 1 (Infrastructure Setup) | Nuclei runs as native binary OR socket proxy configured, no raw socket mount |
+| UFW firewall bypass | Phase 2 (Docker Compose Config) | `nmap <droplet-ip>` from external machine shows only 80/443 open |
+| PostgreSQL data loss | Phase 2 (Docker Compose Config) + Phase 4 (Backups) | `docker volume ls` shows named volume, `crontab -l` shows pg_dump job, test restore successful |
+| Memory exhaustion (OOM) | Phase 1 (Droplet Sizing) + Phase 2 (Memory Limits) | `docker stats` shows memory limits, no OOM entries in `dmesg`, 4GB+ droplet |
+| Disk space exhaustion | Phase 2 (Log Rotation) + Phase 4 (Monitoring) | All services have max-size/max-file in docker-compose.yml, cron prunes weekly, alerts at 80% |
+| SSL renewal failure | Phase 3 (SSL Setup) | `certbot renew --dry-run` succeeds, cron job configured, expiry monitoring active |
+| Systemd restart loops | Phase 3 (Systemd Services) | Service uses EnvironmentFile, `on-failure` policy, StartLimitBurst=3, manual test successful |
+| Nginx proxy connection refused | Phase 2 (Port Bindings) + Phase 3 (Nginx Config) | Ports bound to 127.0.0.1, Nginx proxies to 127.0.0.1:3000/3001, manual curl test successful |
+| Connection pool exhaustion | Phase 2 (PostgreSQL Config) | `max_connections` sized for workload, PgBouncer configured if >100 concurrent requests |
+| Secrets in plain text .env | Phase 2 (Secrets Management) | .env file permissions = 600, file not in git, never echoed in logs |
 
 ---
 
 ## Sources
 
-**Note:** Web research tools were unavailable. This document is based on:
+### Docker Socket Security
+- [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)
+- [Why Exposing Docker Socket is Bad - Quarkslab](https://blog.quarkslab.com/why-is-exposing-the-docker-socket-a-really-bad-idea.html)
+- [Docker Socket Security Guide - Medium](https://medium.com/@instatunnel/docker-socket-security-a-critical-vulnerability-guide-76f4137a68c5)
+- [Docker Security Documentation](https://docs.docker.com/engine/security/)
 
-- Training data (security scanning platforms, Rust, SaaS patterns)
-- Domain expertise extrapolation
-- Standard best practices
+### UFW Firewall Bypass
+- [chaifeng/ufw-docker GitHub](https://github.com/chaifeng/ufw-docker)
+- [Docker UFW Bypass Deep Dive](https://blogs.srikanthkarthi.tech/blog/docker-ufw-firewall-bypass)
+- [Docker + UFW Security Risk](https://lukasrotermund.de/posts/docker-and-ufw_when-convenience-turns-into-a-security-risk/)
+- [Docker Network Packet Filtering Docs](https://docs.docker.com/engine/network/packet-filtering-firewalls/)
 
-**Recommended verification sources:**
+### PostgreSQL Data Loss & Backups
+- [PostgreSQL Docker Backup/Restore Guide](https://simplebackups.com/blog/docker-postgres-backup-restore-guide-with-examples)
+- [Docker Volumes for Persistent Data](https://oneuptime.com/blog/post/2026-02-02-docker-volumes-persistent-data/view)
+- [PostgreSQL Docker Persistence Guide](https://oneuptime.com/blog/post/2026-01-17-postgresql-docker-persistence/view)
+- [Prevent Data Loss in Postgres Containers - DEV](https://dev.to/ndohjapan/how-to-prevent-data-loss-when-a-postgres-container-is-killed-or-shut-down-p8d)
 
-- SSL Labs: https://github.com/ssllabs/ssllabs-scan/wiki/Documentation
-- OWASP Scanner Guidance: https://owasp.org/www-community/Vulnerability_Scanning_Tools
-- Render Documentation: https://render.com/docs
-- CFAA Legal Resources: Consult qualified attorney
-- Competitor Research: Snyk, GitGuardian, Aikido Security, Semgrep
+### Memory Management & OOM
+- [Docker Resource Constraints Docs](https://docs.docker.com/engine/containers/resource_constraints/)
+- [OOMKilled Kubernetes Troubleshooting](https://komodor.com/learn/how-to-fix-oomkilled-exit-code-137/)
+- [Managing RAM and OOM Killer on VPS](https://www.dchost.com/blog/en/managing-ram-swap-and-the-oom-killer-on-vps-servers/)
+- [Docker Restart Policies Guide](https://oneuptime.com/blog/post/2026-01-16-docker-restart-policies/view)
 
-**Confidence Improvement Path:**
+### Disk Space & Log Management
+- [Docker Disk Usage Cleanup Guide](https://oneuptime.com/blog/post/2026-01-06-docker-disk-usage-cleanup/view)
+- [Managing Docker Logs to Prevent Overflow - DEV](https://dev.to/tejastn10/managing-docker-logs-and-preventing-log-overflows-on-servers-2o3p)
+- [Docker Log Rotation - Red Hat](https://access.redhat.com/solutions/2334181)
+- [Doku - Docker Disk Usage Dashboard](https://docker-disk.space/)
 
-To upgrade findings from MEDIUM to HIGH confidence:
-1. Verify SSL Labs API documentation
-2. Review OWASP scanner deployment guidelines
-3. Check Render platform specifications
-4. Analyze 3-5 competitor security SaaS products
-5. Consult legal counsel on CFAA compliance
+### SSL Certificate Renewal
+- [Common Certbot Errors - Webdock](https://webdock.io/en/docs/webdock-control-panel/ssl-certificate-guides/common-certbot-errors)
+- [Free SSL for Nginx with Let's Encrypt 2026](https://www.getpagespeed.com/server-setup/nginx/nginx-ssl-certificate-letsencrypt)
+- [Let's Encrypt Community: Certificate Renewal Failures](https://community.letsencrypt.org/t/failed-certificate-renewal-nginx/204507)
+
+### Systemd & Container Restarts
+- [Solving Docker Container Restart Loops](https://mindfulchase.com/explore/troubleshooting-tips/devops-tools/solving-docker-container-restart-loops-in-production-environments.html)
+- [Docker Restart Policies Guide](https://oneuptime.com/blog/post/2026-01-16-docker-restart-policies/view)
+- [Docker Container Restart Loops Troubleshooting 2026](https://copyprogramming.com/howto/how-to-fix-a-restarting-docker-container)
+- [Start Containers Automatically - Docker Docs](https://docs.docker.com/engine/containers/start-containers-automatically/)
+
+### Nginx Reverse Proxy
+- [Nginx Reverse Proxy Connection Refused - DigitalOcean](https://www.digitalocean.com/community/questions/nginx-reverse-proxy-connection-refused)
+- [Nginx Reverse Proxy Complete Guide 2026](https://www.getpagespeed.com/server-setup/nginx/nginx-reverse-proxy)
+- [Connection Refused Issues - Docker Forums](https://forums.docker.com/t/nginx-error-connect-failed-111-connection-refused-while-connecting-to-upstream/125697)
+
+### Secrets Management
+- [Docker Secrets Documentation](https://docs.docker.com/engine/swarm/secrets/)
+- [4 Ways to Securely Store Secrets in Docker](https://blog.gitguardian.com/how-to-handle-secrets-in-docker/)
+- [Docker Secrets Management Guide](https://oneuptime.com/blog/post/2026-01-30-docker-secrets-management/view)
+- [Docker Secrets Security - Wiz](https://www.wiz.io/academy/container-security/docker-secrets)
+
+### Connection Pool Management
+- [PostgreSQL Connection Pool Exhaustion](https://www.c-sharpcorner.com/article/postgresql-connection-pool-exhaustion-lessons-from-a-production-outage/)
+- [How to Fix Connection Pool Exhausted Errors](https://oneuptime.com/blog/post/2026-01-24-connection-pool-exhausted-errors/view)
+- [PgBouncer Connection Pooling Guide](https://oneuptime.com/blog/post/2026-01-26-pgbouncer-connection-pooling/view)
+
+---
+
+*Pitfalls research for: TrustEdge Audit DigitalOcean Single-Droplet Deployment*
+*Researched: 2026-02-06*

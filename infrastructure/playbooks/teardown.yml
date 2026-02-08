@@ -1,0 +1,25 @@
+---
+# Destroy existing droplet so we can reprovision from scratch
+# Usage: ansible-playbook playbooks/teardown.yml
+- name: Destroy DigitalOcean droplet
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: no
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
+
+  tasks:
+    - name: Destroy droplet by name
+      digitalocean.cloud.droplet:
+        state: absent
+        name: "{{ droplet_name }}"
+        region: "{{ droplet_region }}"
+        unique_name: true
+        token: "{{ do_api_token }}"
+      register: destroy_result
+
+    - name: Display result
+      debug:
+        var: destroy_result

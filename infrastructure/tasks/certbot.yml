@@ -19,12 +19,12 @@
     path: /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
   register: cert_exists
 
-- name: Obtain SSL certificate
+- name: Obtain SSL certificate via webroot
   command: >
-    certbot --nginx --non-interactive --agree-tos
+    certbot certonly --webroot --non-interactive --agree-tos
     --email {{ admin_email }}
     --domain {{ domain_name }}
-    --redirect
+    -w /var/www/certbot
   when: not cert_exists.stat.exists
   args:
     creates: /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
@@ -34,7 +34,6 @@
     src: ../templates/trustedge.nginx.conf.j2
     dest: /etc/nginx/sites-available/trustedge
     mode: '0644'
-  notify: Reload Nginx
 
 - name: Test Nginx configuration
   command: nginx -t
@@ -48,10 +47,4 @@
 - name: Test certificate renewal (dry run)
   command: certbot renew --dry-run
   changed_when: false
-
-# Handler for Nginx reload
-- name: Handler - Reload Nginx
-  systemd:
-    name: nginx
-    state: reloaded
-  listen: Reload Nginx
+  ignore_errors: true

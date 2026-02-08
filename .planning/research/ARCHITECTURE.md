@@ -1,1604 +1,891 @@
-# Architecture Patterns for Security Scanning SaaS
+# Architecture Research: DigitalOcean Deployment Topology
 
-**Domain:** Security scanning SaaS platform
-**Project:** TrustEdge Audit
-**Researched:** 2026-02-04
-**Confidence:** MEDIUM (based on training knowledge of similar systems, not verified with current sources due to tool restrictions)
+**Project:** TrustEdge Audit v1.1
+**Domain:** Single-droplet deployment architecture
+**Researched:** 2026-02-06
+**Confidence:** HIGH (verified with official Docker documentation, DigitalOcean deployment guides, and nginx best practices)
 
 ## Executive Summary
 
-Security scanning SaaS systems follow a producer-consumer pattern with clear separation between web API, job orchestration, scanner execution, and result processing. The architecture must handle concurrent scans, long-running jobs (30s-5min), containerized tool isolation, and multi-stage result aggregation. For TrustEdge Audit, a Rust backend with PostgreSQL, background worker pool, and containerized scanners provides the optimal balance of performance, safety, and operational simplicity on Render.
+For TrustEdge Audit's DigitalOcean deployment, a **hybrid native/Docker topology** provides the optimal balance of performance, security, and operational simplicity on a single droplet. PostgreSQL runs natively for maximum database performance, application services (Rust backend and Next.js frontend) run in Docker containers managed by docker-compose, and Nuclei scanners run as ephemeral Docker containers spawned by the backend. Nginx sits in front as the SSL-terminating reverse proxy, systemd manages the docker-compose stack, and UFW hardens the firewall. This topology avoids Docker-in-Docker complexity while maintaining isolation for application services and scanner containers.
 
-## Recommended Architecture
+## Recommended Service Topology
+
+### Architecture Pattern: Hybrid Native + Docker Stack
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         User Layer                              │
-│  ┌──────────────────┐              ┌──────────────────┐        │
-│  │   Landing Page   │              │  Results Dashboard│        │
-│  │   (Next.js SSG)  │              │   (Next.js SSR)   │        │
-│  └──────────────────┘              └──────────────────┘        │
-└─────────────────────────────────────────────────────────────────┘
-                         │                       │
-                         ▼                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      API Gateway Layer                          │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │   Rust Backend (Axum)                                    │  │
-│  │   - POST /api/scans (create scan)                        │  │
-│  │   - GET  /api/scans/:id (poll status)                    │  │
-│  │   - GET  /api/scans/:id/results (findings)               │  │
-│  │   - GET  /api/scans/:id/pdf (download report)            │  │
-│  │   - POST /api/payments/webhook (Stripe)                  │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Data Layer                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │   PostgreSQL                                             │  │
-│  │   - scans (id, url, status, tier, created_at)           │  │
-│  │   - scan_jobs (scan_id, scanner_type, status, output)   │  │
-│  │   - findings (scan_id, severity, title, description)    │  │
-│  │   - users (email, stripe_customer_id)                   │  │
-│  │   - payments (user_id, amount, status)                  │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Job Orchestration Layer                       │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │   Scan Orchestrator (in-process Rust worker pool)       │  │
-│  │   - Polling loop: SELECT jobs WHERE status='pending'    │  │
-│  │   - Spawn scanner tasks (tokio tasks)                   │  │
-│  │   - Timeout enforcement (tokio::time::timeout)          │  │
-│  │   - Concurrency limit (semaphore, max 5 concurrent)     │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Scanner Execution Layer                      │
-│  ┌──────────────┬──────────────┬──────────────┬──────────────┐ │
-│  │  Headers     │  TLS         │  Files       │  Secrets     │ │
-│  │  Scanner     │  Scanner     │  Scanner     │  Scanner     │ │
-│  │              │              │              │              │ │
-│  │  (HTTP lib)  │  (testssl)   │  (Nuclei)    │  (regex)     │ │
-│  │  In-process  │  Container   │  Container   │  In-process  │ │
-│  └──────────────┴──────────────┴──────────────┴──────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Findings Processing Layer                     │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │   Findings Aggregator                                    │  │
-│  │   - Parse scanner output (JSON/text)                     │  │
-│  │   - Normalize to common schema                          │  │
-│  │   - Deduplicate findings (hash title+url+type)          │  │
-│  │   - Apply severity scoring (critical/high/med/low/info) │  │
-│  │   - Map to remediation playbooks                        │  │
-│  │   - Write to findings table                             │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Delivery Layer                             │
-│  ┌──────────────────┐              ┌──────────────────┐        │
-│  │  Email Service   │              │  PDF Generator   │        │
-│  │  (Resend/SES)    │              │  (typst/weasypr) │        │
-│  └──────────────────┘              └──────────────────┘        │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                        DigitalOcean Droplet                         │
+│                        (Ubuntu 24.04 LTS)                          │
+│                                                                     │
+│  Port 443 (HTTPS)                                                  │
+│       │                                                            │
+│       ▼                                                            │
+│  ┌────────────────────────────────────────────────────┐           │
+│  │  Nginx (Native, systemd-managed)                   │           │
+│  │  - SSL termination (Let's Encrypt)                 │           │
+│  │  - Reverse proxy                                   │           │
+│  │  - Static file serving (optional)                  │           │
+│  │  Port: 443 → 80 (external to internal)            │           │
+│  └─────────────┬──────────────────┬───────────────────┘           │
+│                │                  │                                │
+│        /:3001 (frontend)    /api:3000 (backend)                   │
+│                │                  │                                │
+│                ▼                  ▼                                │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │         Docker Compose Stack (systemd-managed)              │  │
+│  │                                                             │  │
+│  │  ┌───────────────────────┐  ┌───────────────────────┐      │  │
+│  │  │  Frontend Container   │  │  Backend Container    │      │  │
+│  │  │  Next.js:3001        │  │  Rust/Axum:3000      │      │  │
+│  │  │  - SSR/App Router    │  │  - HTTP API          │      │  │
+│  │  │  - Static assets     │  │  - Scan orchestrator │      │  │
+│  │  │  - Server Actions    │  │  - PDF generator     │      │  │
+│  │  └───────────────────────┘  └──────────┬────────────┘      │  │
+│  │                                        │                    │  │
+│  │                                        │ docker run         │  │
+│  │                                        │ (via socket)       │  │
+│  └────────────────────────────────────────┼────────────────────┘  │
+│                                           │                       │
+│       ┌───────────────────────────────────┘                       │
+│       │                                                           │
+│       ▼                                                           │
+│  /var/run/docker.sock (bind-mounted to backend container)        │
+│       │                                                           │
+│       ▼                                                           │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │         Ephemeral Scanner Containers (Docker)               │ │
+│  │  ┌──────────────┐  ┌──────────────┐                        │ │
+│  │  │ Nuclei       │  │ testssl.sh   │  Spawned via:          │ │
+│  │  │ (--rm)       │  │ (--rm)       │  docker run --rm       │ │
+│  │  │ CIS-hardened │  │ CIS-hardened │  --read-only           │ │
+│  │  │ 120s timeout │  │ 180s timeout │  --cap-drop all        │ │
+│  │  └──────────────┘  └──────────────┘  --memory 512M          │ │
+│  │                                      --pids-limit 1000     │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                                                   │
+│       ┌────────────────────────────────────┐                     │
+│       │                                    │                     │
+│       ▼                                    ▼                     │
+│  ┌────────────────────┐        ┌─────────────────────┐          │
+│  │  PostgreSQL 16     │←───────│  pgAdmin (optional) │          │
+│  │  (Native)          │        │  Docker (port 5050) │          │
+│  │  Port: 5432        │        └─────────────────────┘          │
+│  │  Data: /var/lib/   │                                         │
+│  │  postgresql/16/    │                                         │
+│  └────────────────────┘                                         │
+│                                                                   │
+│  File System Layout:                                             │
+│  /opt/trustedge/           # Application root                   │
+│  ├── docker-compose.yml    # Stack definition                   │
+│  ├── .env.production       # Secrets (DATABASE_URL, etc.)       │
+│  ├── backend/              # Backend source (if building on-box)│
+│  ├── frontend/             # Frontend source                    │
+│  ├── reports/              # PDF reports (if saved to disk)     │
+│  └── logs/                 # Application logs (optional)        │
+│                                                                   │
+│  /etc/nginx/                                                     │
+│  ├── nginx.conf            # Main config                        │
+│  ├── sites-available/                                           │
+│  │   └── trustedge        # Site config                        │
+│  └── sites-enabled/                                             │
+│      └── trustedge → ../sites-available/trustedge              │
+│                                                                   │
+│  /etc/systemd/system/                                            │
+│  └── trustedge.service     # docker-compose systemd unit        │
+│                                                                   │
+│  /etc/letsencrypt/         # SSL certificates                   │
+│                                                                   │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Component Boundaries
+### Service Responsibilities
 
-### 1. Web API (Rust Backend)
+| Service | Type | Port(s) | Purpose | Restart Policy |
+|---------|------|---------|---------|----------------|
+| Nginx | Native (systemd) | 443 (external), 80 (redirect) | SSL termination, reverse proxy | systemd `Restart=always` |
+| PostgreSQL | Native (systemd) | 5432 (localhost only) | Persistent data store | systemd `Restart=always` |
+| Backend | Docker (docker-compose) | 3000 (internal) | HTTP API, scan orchestrator | `restart: unless-stopped` |
+| Frontend | Docker (docker-compose) | 3001 (internal) | Next.js SSR + static assets | `restart: unless-stopped` |
+| Nuclei | Docker (ephemeral) | N/A | Security scanner (spawned per scan) | `--rm` (auto-remove) |
+| testssl.sh | Docker (ephemeral) | N/A | TLS/SSL scanner (spawned per scan) | `--rm` (auto-remove) |
 
-**Responsibility:** HTTP request handling, authentication, business logic
-**Technology:** Axum (recommended over Actix-web for simpler async and better ecosystem fit)
-**Communicates with:** PostgreSQL, Scanner Orchestrator (in-process), Email Service, Stripe API
+## Port Allocation and Internal Routing
 
-**Key endpoints:**
-```rust
-// Scan lifecycle
-POST   /api/scans              // Create scan, return scan_id
-GET    /api/scans/:id          // Poll status (pending/running/completed/failed)
-GET    /api/scans/:id/results  // Retrieve findings (JSON)
-GET    /api/scans/:id/pdf      // Download PDF report
+### External (Internet → Droplet)
 
-// Payment flow
-POST   /api/checkout           // Create Stripe checkout session
-POST   /api/payments/webhook   // Stripe webhook handler
+| Port | Protocol | Service | Purpose |
+|------|----------|---------|---------|
+| 443 | HTTPS | Nginx | Public HTTPS traffic (SSL-terminated) |
+| 80 | HTTP | Nginx | Redirect to HTTPS |
+| 22 | SSH | OpenSSH | Remote administration (restrict via UFW to specific IPs) |
 
-// Health and status
-GET    /health                 // Kubernetes-style healthcheck
-GET    /api/scanners/status    // Worker pool status
+### Internal (Localhost/Docker Network)
+
+| Port | Service | Bound To | Accessible From |
+|------|---------|----------|-----------------|
+| 3000 | Backend | 127.0.0.1:3000 | Nginx only (proxy_pass) |
+| 3001 | Frontend | 127.0.0.1:3001 | Nginx only (proxy_pass) |
+| 5432 | PostgreSQL | 127.0.0.1:5432 | Backend container (via host network or db hostname) |
+
+**Firewall (UFW) Rules:**
+```bash
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp      # SSH (optionally limit to specific IPs)
+ufw allow 80/tcp      # HTTP (redirect to HTTPS)
+ufw allow 443/tcp     # HTTPS
+ufw enable
 ```
 
-**Responsibilities:**
-- Request validation (URL format, tier permissions)
-- Scan creation (INSERT INTO scans, spawn jobs)
-- Status polling (SELECT status FROM scans WHERE id=?)
-- Results retrieval (JOIN scans and findings)
-- Authentication (JWT or session for paid tier dashboard)
-- Rate limiting (per-IP for free tier, per-user for paid)
+## Request Flow Diagrams
 
-### 2. Database (PostgreSQL)
+### Frontend Request Flow
 
-**Responsibility:** Persistent storage, transactional integrity, queuing primitive
-**Technology:** PostgreSQL 15+ with SQLx (compile-time checked queries)
-**Communicates with:** Web API, Scanner Orchestrator
-
-**Schema:**
-
-```sql
--- Scans table (one row per scan request)
-CREATE TABLE scans (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    url TEXT NOT NULL,
-    email TEXT NOT NULL,
-    tier TEXT NOT NULL CHECK (tier IN ('free', 'paid')),
-    status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'completed', 'failed')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    completed_at TIMESTAMPTZ,
-    error_message TEXT
-);
-
--- Scan jobs table (one row per scanner invocation)
-CREATE TABLE scan_jobs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    scan_id UUID NOT NULL REFERENCES scans(id) ON DELETE CASCADE,
-    scanner_type TEXT NOT NULL CHECK (scanner_type IN ('headers', 'tls', 'files', 'secrets', 'nuclei')),
-    status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'completed', 'failed')),
-    raw_output JSONB,  -- Store scanner output
-    started_at TIMESTAMPTZ,
-    completed_at TIMESTAMPTZ,
-    error_message TEXT,
-    UNIQUE(scan_id, scanner_type)  -- One job per scanner per scan
-);
-
--- Findings table (normalized security issues)
-CREATE TABLE findings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    scan_id UUID NOT NULL REFERENCES scans(id) ON DELETE CASCADE,
-    severity TEXT NOT NULL CHECK (severity IN ('critical', 'high', 'medium', 'low', 'info')),
-    category TEXT NOT NULL,  -- 'headers', 'tls', 'secrets', 'exposure', 'vuln'
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    remediation_id TEXT,  -- Maps to remediation playbook
-    metadata JSONB,  -- Scanner-specific data (e.g., CVE, CVSS score)
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- Users table (for paid tier)
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email TEXT NOT NULL UNIQUE,
-    stripe_customer_id TEXT,
-    tier TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'paid_once', 'pro', 'agency')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- Payments table
-CREATE TABLE payments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id),
-    stripe_payment_id TEXT NOT NULL,
-    amount INTEGER NOT NULL,  -- Cents
-    currency TEXT NOT NULL DEFAULT 'usd',
-    status TEXT NOT NULL CHECK (status IN ('pending', 'succeeded', 'failed')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- Indexes for performance
-CREATE INDEX idx_scans_status ON scans(status) WHERE status IN ('pending', 'running');
-CREATE INDEX idx_scan_jobs_pending ON scan_jobs(status, created_at) WHERE status = 'pending';
-CREATE INDEX idx_findings_scan ON findings(scan_id);
-CREATE INDEX idx_scans_email ON scans(email);
+```
+User Browser
+    │ HTTPS (443)
+    ▼
+Nginx (SSL termination)
+    │ HTTP (3001)
+    ▼
+Frontend Container (Next.js)
+    │ Server Action (POST /api/...)
+    ▼
+Backend Container (Axum)
+    │ SQL query
+    ▼
+PostgreSQL (native)
+    │ Response
+    ▼
+Backend → Frontend → Nginx → Browser
 ```
 
-**Why PostgreSQL:**
-- JSONB for flexible scanner output storage
-- Strong typing (ENUMs via CHECK constraints)
-- ACID transactions for scan creation (insert scan + insert jobs atomically)
-- Native UUID support
-- Listen/Notify for real-time updates (future: websocket status)
-- Mature Rust ecosystem (SQLx, diesel)
+### API Request Flow (Direct)
 
-### 3. Scanner Orchestrator (Worker Pool)
+```
+User Browser / API Client
+    │ HTTPS POST /api/scans (443)
+    ▼
+Nginx (SSL termination)
+    │ HTTP proxy_pass (3000)
+    ▼
+Backend Container (Axum)
+    │ 1. Create scan record
+    ▼
+PostgreSQL (INSERT into scans)
+    │ 2. Spawn scan job
+    ▼
+Backend spawns tokio task
+    │ 3. Execute docker run
+    ▼
+Docker Socket (/var/run/docker.sock)
+    │ 4. Create & run Nuclei container
+    ▼
+Nuclei Container (ephemeral)
+    │ 5. Scan target URL
+    │ 6. Output JSON to stdout
+    │ 7. Container exits, auto-removed (--rm)
+    ▼
+Backend captures stdout
+    │ 8. Parse JSON findings
+    ▼
+PostgreSQL (INSERT into findings)
+    │ 9. Update scan status = 'completed'
+    ▼
+Backend → JSON response → Nginx → Browser
+```
 
-**Responsibility:** Job queue processing, concurrency control, timeout enforcement
-**Technology:** In-process Rust worker (tokio tasks, no external queue)
-**Communicates with:** PostgreSQL, Scanner Execution Layer
+### WebSocket Consideration (Future)
 
-**Architecture choice: Database as queue vs. Redis/RabbitMQ**
+Current architecture uses polling (`GET /api/scans/:id` every 2 seconds). If real-time scan progress is added later, Nginx must be configured to proxy WebSocket connections:
 
-For this system, **database-as-queue** is recommended:
-- Simpler operations (one fewer service)
-- Transactional scan creation + job enqueue
-- Sufficient performance for <1000 scans/day
-- Render deployment simplicity
-
-**Implementation pattern:**
-
-```rust
-// Worker pool (runs in background tokio task)
-async fn scanner_orchestrator(pool: PgPool) {
-    let semaphore = Arc::new(Semaphore::new(5)); // Max 5 concurrent scans
-
-    loop {
-        // Poll for pending jobs
-        let jobs = sqlx::query!(
-            "SELECT id, scan_id, scanner_type FROM scan_jobs
-             WHERE status = 'pending'
-             ORDER BY created_at ASC
-             LIMIT 10"
-        )
-        .fetch_all(&pool)
-        .await?;
-
-        for job in jobs {
-            let permit = semaphore.clone().acquire_owned().await?;
-            let pool = pool.clone();
-
-            tokio::spawn(async move {
-                let _permit = permit; // Hold semaphore
-                execute_scan_job(pool, job).await;
-            });
-        }
-
-        tokio::time::sleep(Duration::from_secs(2)).await;
-    }
-}
-
-async fn execute_scan_job(pool: PgPool, job: ScanJob) {
-    // Mark as running
-    sqlx::query!("UPDATE scan_jobs SET status = 'running', started_at = now() WHERE id = $1", job.id)
-        .execute(&pool).await?;
-
-    // Execute scanner with timeout
-    let result = tokio::time::timeout(
-        Duration::from_secs(300), // 5 min max
-        run_scanner(job.scanner_type, job.scan_id)
-    ).await;
-
-    match result {
-        Ok(Ok(output)) => {
-            // Success: store output, extract findings
-            sqlx::query!(
-                "UPDATE scan_jobs SET status = 'completed', raw_output = $1, completed_at = now() WHERE id = $2",
-                output, job.id
-            ).execute(&pool).await?;
-
-            process_findings(pool, job.scan_id, job.scanner_type, output).await;
-        }
-        Ok(Err(e)) => {
-            // Scanner error
-            sqlx::query!(
-                "UPDATE scan_jobs SET status = 'failed', error_message = $1, completed_at = now() WHERE id = $2",
-                e.to_string(), job.id
-            ).execute(&pool).await?;
-        }
-        Err(_) => {
-            // Timeout
-            sqlx::query!(
-                "UPDATE scan_jobs SET status = 'failed', error_message = 'Timeout', completed_at = now() WHERE id = $1",
-                job.id
-            ).execute(&pool).await?;
-        }
-    }
-
-    // Check if all jobs complete, update scan status
-    update_scan_status(pool, job.scan_id).await;
+```nginx
+location /api/ws {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
 }
 ```
 
-**Concurrency strategy:**
-- Semaphore limits concurrent scanner executions (prevents resource exhaustion)
-- Each scanner runs in isolated tokio task
-- Database polling every 2 seconds (sufficient latency for user experience)
-- Future optimization: PostgreSQL LISTEN/NOTIFY for immediate job dispatch
+## Docker Socket Access Pattern
 
-**Timeout handling:**
-- Hard timeout: 5 minutes per scanner (tokio::time::timeout)
-- Soft timeout: 2 minutes warning (log slow scanner)
-- Container timeout: Docker --timeout flag as backstop
+### The Challenge
 
-### 4. Scanner Execution Layer
+TrustEdge Audit's backend must spawn Docker containers (Nuclei, testssl.sh) for security scanning. This requires access to the Docker daemon socket (`/var/run/docker.sock`).
 
-**Responsibility:** Invoke security scanning tools, capture output
-**Technology:** Mix of in-process (Rust) and containerized (Docker) scanners
-**Communicates with:** Scanner Orchestrator
+**Three approaches exist:**
+1. **Docker-in-Docker (DinD):** Run Docker daemon inside backend container (complex, security risk, high overhead)
+2. **Socket bind-mount:** Mount host's Docker socket into backend container (simple, security risk if container compromised)
+3. **Native backend:** Run backend natively, call Docker directly (no isolation for backend, more complex deployment)
 
-**Scanner types and execution models:**
+### Recommended: Socket Bind-Mount (Calculated Risk)
 
-| Scanner | Execution | Reason |
-|---------|-----------|--------|
-| Headers | In-process (reqwest) | Simple HTTP fetch, no external deps |
-| Secrets | In-process (regex) | JS bundle fetch + pattern matching |
-| TLS | Container (testssl.sh) | Complex bash script, shellshock risk |
-| Files | Container (Nuclei) | Go binary, template isolation |
-| Nuclei | Container (Nuclei) | Active scanning, network isolation |
+**Why this choice:**
+- Backend container is trusted code (we control it)
+- Simplifies deployment (docker-compose manages everything)
+- Scanner containers are still isolated (CIS-hardened, ephemeral)
+- Risk is acceptable for MVP (single-tenant, no untrusted code in backend)
 
-**Container execution pattern:**
+**Implementation in docker-compose.yml:**
 
-```rust
-async fn run_nuclei_scan(url: &str) -> Result<ScanOutput> {
-    let output = Command::new("docker")
-        .args([
-            "run", "--rm",
-            "--network", "bridge",  // Isolated network
-            "--cpus", "1.0",         // CPU limit
-            "--memory", "512m",      // Memory limit
-            "--timeout", "240s",     // Container timeout
-            "projectdiscovery/nuclei:latest",
-            "-u", url,
-            "-t", "/app/templates/",  // Custom templates
-            "-json",                   // JSON output
-            "-silent"                  // No banner
-        ])
-        .output()
-        .await?;
-
-    if !output.status.success() {
-        return Err(ScanError::ToolFailed(String::from_utf8_lossy(&output.stderr).to_string()));
-    }
-
-    Ok(serde_json::from_slice(&output.stdout)?)
-}
+```yaml
+services:
+  backend:
+    build: .
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Read-only mount
+    user: "1000:999"  # Non-root user, docker group (GID 999)
+    environment:
+      DATABASE_URL: postgres://trustedge:${DB_PASSWORD}@host.docker.internal:5432/trustedge_prod
 ```
 
-**Container resource limits:**
-- CPU: 1 core max (prevents runaway processes)
-- Memory: 512MB (sufficient for Nuclei, testssl.sh)
-- Network: Bridge mode (outbound only, no inter-container)
-- Timeout: 4 minutes (shorter than orchestrator timeout)
+**Security Mitigations:**
 
-**In-process scanner pattern:**
+1. **Read-only socket mount:** Backend can spawn containers but cannot modify Docker daemon config
+2. **Non-root user:** Backend runs as UID 1000 (non-root), member of docker group (GID 999)
+3. **CIS-hardened scanner containers:** All spawned containers use 8 security flags:
+   - `--rm` (auto-remove after exit)
+   - `--read-only` (no filesystem writes)
+   - `--cap-drop all` (drop all Linux capabilities)
+   - `--user 1000:1000` (non-root inside container)
+   - `--memory 512M` (memory limit)
+   - `--pids-limit 1000` (process limit)
+   - `--cpu-shares 512` (CPU throttling)
+   - `--no-new-privileges` (prevent privilege escalation)
+4. **Timeout enforcement:** All scanner executions have hard timeouts (120s Nuclei, 180s testssl)
+5. **Network isolation:** Scanners only have outbound network access (no host network mode)
 
-```rust
-async fn scan_headers(url: &str) -> Result<HeaderFindings> {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .build()?;
+**Security Risk Assessment:**
 
-    let resp = client.get(url).send().await?;
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Backend container compromised → attacker gains Docker socket access | LOW (trusted code, no user input executed) | HIGH (full host control) | Non-root user, read-only mount, minimal attack surface in backend |
+| Scanner container breakout | VERY LOW (hardened, ephemeral, no privileges) | MEDIUM (could access host filesystem) | CIS hardening, timeout enforcement, auto-removal |
+| SSRF attack via target URL → scan internal services | MEDIUM (user-controlled input) | MEDIUM (could probe internal network) | URL validation, SSRF protection in backend |
 
-    let mut findings = Vec::new();
+**Alternative for Higher Security (Future):**
+If backend is ever compromised, consider:
+- Docker socket proxy (e.g., [Tecnativa/docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy)) to restrict API surface
+- Rootless Docker mode on host
+- Separate scanner orchestration service (backend → message queue → scanner service → Docker)
 
-    // Check for missing security headers
-    if resp.headers().get("content-security-policy").is_none() {
-        findings.push(Finding {
-            severity: Severity::Medium,
-            title: "Missing Content-Security-Policy header".into(),
-            description: "CSP prevents XSS attacks by controlling resource loading".into(),
-            remediation_id: Some("missing_csp".into()),
-        });
+## File System Layout
+
+### Application Directory: `/opt/trustedge/`
+
+Following Linux FHS conventions, third-party applications live in `/opt/`.
+
+```
+/opt/trustedge/
+├── docker-compose.yml          # Stack definition
+├── docker-compose.prod.yml     # Production overrides (optional)
+├── .env.production             # Environment variables (SECRETS!)
+│   # DATABASE_URL=postgres://trustedge:STRONG_PW@localhost:5432/trustedge_prod
+│   # RESEND_API_KEY=re_...
+│   # STRIPE_SECRET_KEY=sk_...
+│   # TRUSTEDGE_BASE_URL=https://trustedge.audit
+├── backend/
+│   ├── Dockerfile
+│   ├── Cargo.toml
+│   ├── Cargo.lock
+│   ├── src/
+│   └── migrations/             # Database migrations (SQLx)
+├── frontend/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── next.config.ts
+│   ├── app/                    # Next.js App Router
+│   └── public/                 # Static assets
+├── reports/                    # PDF reports (if saved to disk)
+│   # NOTE: v1.0 generates PDFs in-memory for email, but may save here on failure
+└── logs/                       # Application logs (optional)
+    ├── backend.log
+    └── frontend.log
+```
+
+**Permissions:**
+```bash
+sudo chown -R 1000:1000 /opt/trustedge
+sudo chmod 700 /opt/trustedge/.env.production  # Secrets file
+sudo chmod 755 /opt/trustedge
+```
+
+### Nginx Configuration: `/etc/nginx/`
+
+```
+/etc/nginx/
+├── nginx.conf                  # Main config (usually untouched)
+├── sites-available/
+│   └── trustedge               # Site-specific config
+└── sites-enabled/
+    └── trustedge → ../sites-available/trustedge  # Symlink
+```
+
+**Example `/etc/nginx/sites-available/trustedge`:**
+
+```nginx
+# Redirect HTTP → HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name trustedge.audit www.trustedge.audit;
+    return 301 https://$server_name$request_uri;
+}
+
+# Main HTTPS server
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name trustedge.audit www.trustedge.audit;
+
+    # SSL certificates (Let's Encrypt via certbot)
+    ssl_certificate /etc/letsencrypt/live/trustedge.audit/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/trustedge.audit/privkey.pem;
+
+    # SSL configuration (Mozilla Intermediate)
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:...';
+    ssl_prefer_server_ciphers off;
+
+    # Security headers
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Backend API
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts (scans take 30s-3min)
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
     }
 
-    // Check HSTS
-    if let Some(hsts) = resp.headers().get("strict-transport-security") {
-        let value = hsts.to_str()?;
-        if !value.contains("max-age") {
-            findings.push(Finding {
-                severity: Severity::High,
-                title: "Invalid HSTS header".into(),
-                description: format!("HSTS value '{}' missing max-age directive", value),
-                remediation_id: Some("invalid_hsts".into()),
-            });
-        }
+    # Frontend (everything else)
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
     }
 
-    Ok(HeaderFindings { findings })
+    # Optional: Serve static assets directly (if frontend exports static build)
+    # location /_next/static/ {
+    #     alias /opt/trustedge/frontend/.next/static/;
+    #     expires 1y;
+    #     add_header Cache-Control "public, immutable";
+    # }
 }
 ```
 
-### 5. Findings Processing Layer
+### Systemd Service: `/etc/systemd/system/trustedge.service`
 
-**Responsibility:** Parse scanner output, normalize findings, deduplicate, score severity, map to remediation
-**Technology:** Rust (part of backend service)
-**Communicates with:** PostgreSQL
+```ini
+[Unit]
+Description=TrustEdge Audit Application Stack
+Requires=docker.service postgresql.service
+After=docker.service postgresql.service network-online.target
+Wants=network-online.target
 
-**Data flow:**
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/trustedge
+ExecStart=/usr/bin/docker-compose up -d
+ExecStop=/usr/bin/docker-compose down
+TimeoutStartSec=300
+TimeoutStopSec=15
+Restart=on-failure
+RestartSec=10
 
-```
-Raw scanner output (JSON/text)
-    ↓
-Parse to scanner-specific structs
-    ↓
-Normalize to common Finding schema
-    ↓
-Deduplicate (hash-based: title + URL + category)
-    ↓
-Apply severity scoring rules
-    ↓
-Map to remediation playbook ID
-    ↓
-INSERT INTO findings table
-```
-
-**Normalization pattern:**
-
-```rust
-struct Finding {
-    severity: Severity,      // critical, high, medium, low, info
-    category: Category,      // headers, tls, secrets, exposure, vuln
-    title: String,
-    description: String,
-    remediation_id: Option<String>,
-    metadata: serde_json::Value,
-}
-
-impl From<NucleiOutput> for Vec<Finding> {
-    fn from(nuclei: NucleiOutput) -> Vec<Finding> {
-        nuclei.results.into_iter().map(|r| {
-            Finding {
-                severity: match r.info.severity.as_str() {
-                    "critical" => Severity::Critical,
-                    "high" => Severity::High,
-                    "medium" => Severity::Medium,
-                    "low" => Severity::Low,
-                    _ => Severity::Info,
-                },
-                category: Category::Vuln,
-                title: r.info.name,
-                description: r.info.description.unwrap_or_default(),
-                remediation_id: r.template_id.map(|id| format!("nuclei_{}", id)),
-                metadata: json!({
-                    "matched_at": r.matched_at,
-                    "matcher_name": r.matcher_name,
-                }),
-            }
-        }).collect()
-    }
-}
+[Install]
+WantedBy=multi-user.target
 ```
 
-**Deduplication strategy:**
-```rust
-fn dedup_findings(findings: Vec<Finding>) -> Vec<Finding> {
-    use std::collections::HashSet;
+**Key settings:**
+- `Requires=postgresql.service`: PostgreSQL must be running before stack starts
+- `Type=oneshot` + `RemainAfterExit=yes`: Service runs docker-compose command once, then systemd tracks it as active
+- `Restart=on-failure`: Automatically restart if docker-compose fails
+- `TimeoutStartSec=300`: Allow 5 minutes for pulling images and starting containers
 
-    let mut seen = HashSet::new();
-    findings.into_iter().filter(|f| {
-        let key = format!("{}-{}-{}", f.title, f.category, f.severity);
-        seen.insert(key)
-    }).collect()
-}
-```
+### PostgreSQL Data: `/var/lib/postgresql/16/`
 
-**Severity scoring rules:**
-
-| Finding Type | Default Severity | Upgrade Conditions |
-|-------------|------------------|-------------------|
-| Missing CSP | Medium | → High if no XSS protection headers |
-| Missing HSTS | Medium | → High if site handles auth |
-| Hardcoded secret | High | → Critical if production API key pattern |
-| TLS < 1.2 | High | Always critical |
-| Exposed .env | Critical | Always critical |
-| Missing header | Low | → Medium if security-relevant |
-
-### 6. Frontend (Next.js)
-
-**Responsibility:** User interface, form submission, results display
-**Technology:** Next.js 14+ (App Router), Tailwind CSS, shadcn/ui
-**Communicates with:** Rust backend API
-
-**Page structure:**
+Native PostgreSQL installation stores data in standard location. Managed by PostgreSQL's own systemd service.
 
 ```
-/app
-├── page.tsx                    // Landing page (SSG)
-├── scan/page.tsx               // Scan submission form
-├── scan/[id]/page.tsx          // Results page (SSR)
-├── scan/[id]/pdf/route.ts      // PDF download proxy
-├── dashboard/page.tsx          // Paid tier dashboard
-├── api/
-│   └── checkout/route.ts       // Stripe checkout session
-└── components/
-    ├── ScanForm.tsx
-    ├── ResultsTable.tsx
-    ├── FindingCard.tsx
-    └── SeverityBadge.tsx
+/var/lib/postgresql/16/main/
+├── base/                       # Database files
+├── pg_wal/                     # Write-ahead log
+├── pg_stat/                    # Statistics
+└── ...
 ```
 
-**Scan submission flow:**
-
-```typescript
-// app/scan/page.tsx
-'use client';
-
-export default function ScanPage() {
-  const [scanId, setScanId] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'polling' | 'complete'>('idle');
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setStatus('submitting');
-
-    // Create scan
-    const res = await fetch('/api/scans', {
-      method: 'POST',
-      body: JSON.stringify({ url, email, tier: 'free' }),
-    });
-    const { scan_id } = await res.json();
-    setScanId(scan_id);
-    setStatus('polling');
-
-    // Poll for completion
-    const interval = setInterval(async () => {
-      const statusRes = await fetch(`/api/scans/${scan_id}`);
-      const { status } = await statusRes.json();
-
-      if (status === 'completed') {
-        clearInterval(interval);
-        setStatus('complete');
-        router.push(`/scan/${scan_id}`);
-      } else if (status === 'failed') {
-        clearInterval(interval);
-        // Handle error
-      }
-    }, 2000); // Poll every 2 seconds
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input type="url" name="url" required />
-      <input type="email" name="email" required />
-      <button type="submit">Scan Now</button>
-
-      {status === 'polling' && <PollingIndicator />}
-    </form>
-  );
-}
+**Backup strategy (recommended):**
+```bash
+# Daily backup via cron
+0 2 * * * pg_dump -U postgres trustedge_prod | gzip > /opt/trustedge/backups/db-$(date +\%Y\%m\%d).sql.gz
 ```
 
-**Results page (SSR for SEO):**
+### SSL Certificates: `/etc/letsencrypt/`
 
-```typescript
-// app/scan/[id]/page.tsx
-export default async function ResultsPage({ params }: { params: { id: string } }) {
-  // Server-side fetch
-  const findings = await fetch(`${process.env.BACKEND_URL}/api/scans/${params.id}/results`);
-  const data = await findings.json();
+Managed by Certbot (Let's Encrypt client).
 
-  return (
-    <div>
-      <h1>Scan Results</h1>
-      <SeverityChart findings={data.findings} />
-      <FindingsTable findings={data.findings} />
-
-      {data.tier === 'free' && <UpgradePrompt scanId={params.id} />}
-      {data.tier === 'paid' && <PDFDownloadButton scanId={params.id} />}
-    </div>
-  );
-}
+```
+/etc/letsencrypt/
+├── live/
+│   └── trustedge.audit/
+│       ├── fullchain.pem       # Certificate + chain
+│       ├── privkey.pem         # Private key
+│       ├── cert.pem            # Certificate only
+│       └── chain.pem           # CA chain
+└── renewal/
+    └── trustedge.audit.conf    # Auto-renewal config
 ```
 
-### 7. Email Service
+Certbot systemd timer (`certbot.timer`) runs twice daily to check for renewals. Nginx automatically reloads on certificate renewal.
 
-**Responsibility:** Transactional emails (scan complete, PDF delivery)
-**Technology:** Resend (recommended) or AWS SES
-**Communicates with:** Rust backend (outbound only)
+## Deployment Build Order
 
-**Why Resend over SES:**
-- Better DX (simpler API, webhook handling)
-- Built-in template system
-- Free tier: 3,000 emails/month (sufficient for MVP)
-- Render-friendly (no AWS credentials complexity)
+Phases should be structured to address dependencies in this order:
 
-**Email triggers:**
+### Phase 1: Base Infrastructure Setup
+**What:** Provision droplet, harden OS, install prerequisites
+**Tasks:**
+1. Create DigitalOcean droplet (Ubuntu 24.04 LTS, 2 vCPU, 2GB RAM minimum)
+2. SSH key authentication, disable password auth
+3. Install: `docker`, `docker-compose`, `postgresql-16`, `nginx`, `certbot`, `ufw`
+4. Enable UFW with ports 22, 80, 443
+5. Configure unattended-upgrades for security patches
 
-| Event | Template | Content |
-|-------|----------|---------|
-| Free scan complete | scan_complete_free | Summary + link to results + upgrade CTA |
-| Paid scan complete | scan_complete_paid | Summary + PDF attachment + dashboard link |
-| Scan failed | scan_failed | Error message + support email |
-| Payment success | payment_success | Receipt + scan limit increase notice |
+**Verification:** `docker --version`, `psql --version`, `nginx -v`, `ufw status`
+
+### Phase 2: Database Setup
+**What:** Initialize PostgreSQL, create database and user
+**Tasks:**
+1. Start PostgreSQL: `sudo systemctl enable --now postgresql`
+2. Create database user and database:
+   ```sql
+   CREATE USER trustedge WITH PASSWORD 'STRONG_PASSWORD';
+   CREATE DATABASE trustedge_prod OWNER trustedge;
+   ```
+3. Configure `pg_hba.conf` to allow localhost connections
+4. Test connection: `psql -U trustedge -d trustedge_prod -h localhost`
+
+**Verification:** Backend can connect via `DATABASE_URL`
+
+### Phase 3: Application Deployment
+**What:** Deploy backend and frontend as Docker containers
+**Tasks:**
+1. Create `/opt/trustedge/` directory structure
+2. Copy `docker-compose.yml`, `backend/`, `frontend/` to droplet (via `rsync` or `git pull`)
+3. Create `.env.production` with secrets:
+   - `DATABASE_URL=postgres://trustedge:PW@localhost:5432/trustedge_prod`
+   - `RESEND_API_KEY=...`
+   - `STRIPE_SECRET_KEY=...`
+   - `TRUSTEDGE_BASE_URL=https://trustedge.audit`
+4. Build and start containers:
+   ```bash
+   cd /opt/trustedge
+   docker-compose build
+   docker-compose up -d
+   ```
+5. Run database migrations (SQLx):
+   ```bash
+   docker-compose exec backend trustedge_audit migrate
+   ```
+
+**Verification:** `curl http://localhost:3000/health`, `curl http://localhost:3001/`
+
+### Phase 4: Nginx Reverse Proxy
+**What:** Configure Nginx to proxy requests to backend/frontend
+**Tasks:**
+1. Create `/etc/nginx/sites-available/trustedge` (see config above)
+2. Enable site: `sudo ln -s /etc/nginx/sites-available/trustedge /etc/nginx/sites-enabled/`
+3. Disable default site: `sudo rm /etc/nginx/sites-enabled/default`
+4. Test config: `sudo nginx -t`
+5. Start Nginx: `sudo systemctl enable --now nginx`
+
+**Verification:** `curl http://DROPLET_IP/` (should return frontend HTML)
+
+### Phase 5: SSL Setup
+**What:** Install Let's Encrypt SSL certificate
+**Tasks:**
+1. Point DNS A record `trustedge.audit` to droplet IP (wait for propagation)
+2. Install certificate:
+   ```bash
+   sudo certbot --nginx -d trustedge.audit -d www.trustedge.audit
+   ```
+3. Certbot automatically updates Nginx config with SSL settings
+4. Test auto-renewal: `sudo certbot renew --dry-run`
+
+**Verification:** `https://trustedge.audit/` loads with valid certificate
+
+### Phase 6: Systemd Service Management
+**What:** Manage docker-compose stack via systemd
+**Tasks:**
+1. Create `/etc/systemd/system/trustedge.service` (see config above)
+2. Reload systemd: `sudo systemctl daemon-reload`
+3. Enable service: `sudo systemctl enable trustedge`
+4. Test manual start/stop:
+   ```bash
+   sudo systemctl stop trustedge
+   sudo systemctl start trustedge
+   sudo systemctl status trustedge
+   ```
+5. Reboot droplet, verify services auto-start
+
+**Verification:** After reboot, `https://trustedge.audit/` is accessible
+
+### Phase 7: Monitoring and Logging
+**What:** Set up basic monitoring and log aggregation
+**Tasks:**
+1. Configure docker-compose logging driver (json-file with rotation):
+   ```yaml
+   services:
+     backend:
+       logging:
+         driver: "json-file"
+         options:
+           max-size: "10m"
+           max-file: "3"
+   ```
+2. Set up log rotation for Nginx: `/etc/logrotate.d/nginx`
+3. Optional: Install monitoring (Netdata, Prometheus, or DigitalOcean Monitoring Agent)
+4. Set up alerting for disk space, memory, CPU
+
+**Verification:** Logs are rotating, disk usage is stable
+
+## Architectural Patterns
+
+### Pattern 1: Database-as-Queue (Scan Orchestration)
+
+**What:** Use PostgreSQL as job queue for scan orchestration instead of Redis/RabbitMQ
+
+**When to use:** MVP with low-to-medium scan volume (<1000 scans/day)
+
+**Trade-offs:**
+- **Pros:** Simpler deployment (no additional service), ACID guarantees, easy debugging (SQL queries)
+- **Cons:** Not optimized for high-throughput queues, polling overhead, potential lock contention at scale
 
 **Implementation:**
-
 ```rust
-async fn send_scan_complete_email(scan: &Scan, findings_summary: &FindingsSummary) -> Result<()> {
-    let client = reqwest::Client::new();
-
-    let email = if scan.tier == "free" {
-        json!({
-            "from": "TrustEdge Audit <scans@trustedge.audit>",
-            "to": [scan.email],
-            "subject": format!("Security Scan Complete: {} findings", findings_summary.total),
-            "html": render_template("scan_complete_free", json!({
-                "url": scan.url,
-                "critical_count": findings_summary.critical,
-                "high_count": findings_summary.high,
-                "results_link": format!("https://trustedge.audit/scan/{}", scan.id),
-            })),
-        })
-    } else {
-        // Paid tier: attach PDF
-        let pdf_bytes = generate_pdf_report(scan.id).await?;
-        let pdf_base64 = base64::encode(pdf_bytes);
-
-        json!({
-            "from": "TrustEdge Audit <scans@trustedge.audit>",
-            "to": [scan.email],
-            "subject": format!("Security Audit Complete: {}", scan.url),
-            "html": render_template("scan_complete_paid", /* ... */),
-            "attachments": [{
-                "filename": format!("security-audit-{}.pdf", scan.id),
-                "content": pdf_base64,
-            }],
-        })
-    };
-
-    client.post("https://api.resend.com/emails")
-        .header("Authorization", format!("Bearer {}", env!("RESEND_API_KEY")))
-        .json(&email)
-        .send()
-        .await?;
-
-    Ok(())
-}
-```
-
-### 8. PDF Generation
-
-**Responsibility:** Professional security audit reports
-**Technology:** typst (recommended) or WeasyPrint (HTML-to-PDF)
-**Communicates with:** Rust backend (in-process or container)
-
-**Why typst over WeasyPrint:**
-- Native binary (easier to embed in Rust)
-- Faster rendering (compiled, not Python)
-- Better typography (designed for technical documents)
-- Smaller attack surface (no HTML/CSS parser)
-
-**Alternative: WeasyPrint** if you need HTML templates for easier iteration.
-
-**Report structure:**
-
-```
-┌─────────────────────────────────────┐
-│  TRUSTEDGE AUDIT                    │
-│  Security Scan Report               │
-│  Date: 2026-02-04                   │
-│  URL: https://example.com           │
-└─────────────────────────────────────┘
-
-Executive Summary
-─────────────────
-✗ 3 Critical findings
-✗ 5 High findings
-⚠ 12 Medium findings
-ℹ 8 Low/Info findings
-
-Overall Grade: C
-
-Findings by Severity
-────────────────────
-
-CRITICAL
-────────
-1. Hardcoded API key exposed in JavaScript
-   Location: /static/js/bundle.min.js
-   Risk: Attacker can access your database
-
-   Remediation:
-   1. Rotate exposed key immediately
-   2. Move API calls to backend
-   [Code example]
-
-2. Missing Row Level Security on users table
-   [...]
-
-Recommendations
-───────────────
-1. Enable RLS on all Supabase tables
-2. Implement CSP header
-3. Rotate all exposed secrets
-
-Appendix
-────────
-- Scan metadata
-- Methodology
-- Contact info
-```
-
-**Implementation options:**
-
-```rust
-// Option 1: typst (recommended)
-async fn generate_pdf_typst(scan_id: Uuid) -> Result<Vec<u8>> {
-    let findings = fetch_findings(scan_id).await?;
-
-    // Render typst template
-    let template = include_str!("../templates/report.typ");
-    let rendered = render_typst_template(template, findings)?;
-
-    // Compile to PDF
-    let pdf = std::process::Command::new("typst")
-        .args(["compile", "-", "-"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()?
-        .wait_with_output()?;
-
-    Ok(pdf.stdout)
-}
-
-// Option 2: WeasyPrint (HTML-based)
-async fn generate_pdf_weasyprint(scan_id: Uuid) -> Result<Vec<u8>> {
-    let findings = fetch_findings(scan_id).await?;
-
-    // Render HTML template (use askama or tera)
-    let html = render_html_template("report.html", findings)?;
-
-    // Convert to PDF via container
-    let output = Command::new("docker")
-        .args([
-            "run", "--rm", "-i",
-            "weasyprint/weasyprint:latest",
-            "-", "-",
-        ])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()?;
-
-    output.stdin.unwrap().write_all(html.as_bytes())?;
-    let pdf = output.wait_with_output()?.stdout;
-
-    Ok(pdf)
-}
-```
-
-## Data Flow
-
-### Scan Creation Flow
-
-```
-User submits URL + email
-    ↓
-Next.js frontend → POST /api/scans
-    ↓
-Rust backend validates input
-    ↓
-BEGIN TRANSACTION
-  INSERT INTO scans (url, email, tier, status='pending')
-  INSERT INTO scan_jobs (scan_id, scanner_type='headers', status='pending')
-  INSERT INTO scan_jobs (scan_id, scanner_type='tls', status='pending')
-  INSERT INTO scan_jobs (scan_id, scanner_type='files', status='pending')
-  INSERT INTO scan_jobs (scan_id, scanner_type='secrets', status='pending')
-COMMIT
-    ↓
-Return scan_id to frontend
-    ↓
-Frontend polls GET /api/scans/:id every 2 seconds
-```
-
-### Scanner Execution Flow
-
-```
-Orchestrator polls: SELECT * FROM scan_jobs WHERE status='pending'
-    ↓
-For each job (up to 5 concurrent):
-    ↓
-UPDATE scan_jobs SET status='running', started_at=now()
-    ↓
-Execute scanner (in-process or container)
-    ↓
-Capture output (stdout/stderr)
-    ↓
-UPDATE scan_jobs SET status='completed', raw_output=[JSON], completed_at=now()
-    ↓
-Parse output → normalize findings
-    ↓
-Deduplicate findings
-    ↓
-INSERT INTO findings (scan_id, severity, title, description, remediation_id)
-    ↓
-Check if all jobs complete:
-  IF all jobs complete:
-    UPDATE scans SET status='completed', completed_at=now()
-    Trigger email delivery
-```
-
-### Results Retrieval Flow
-
-```
-User opens /scan/:id
-    ↓
-Next.js SSR → GET /api/scans/:id/results
-    ↓
-Rust backend queries:
-  SELECT * FROM findings WHERE scan_id = :id ORDER BY severity DESC
-    ↓
-Group by severity, attach remediation text
-    ↓
-Return JSON to frontend
-    ↓
-Frontend renders findings table
-    ↓
-If paid tier: Show PDF download button
-    ↓
-User clicks PDF download
-    ↓
-GET /api/scans/:id/pdf
-    ↓
-Generate PDF (typst/weasyprint)
-    ↓
-Cache PDF in object storage (future optimization)
-    ↓
-Stream PDF to browser
-```
-
-### Payment Flow
-
-```
-User clicks "Upgrade to Paid Scan"
-    ↓
-Frontend → POST /api/checkout
-    ↓
-Rust backend creates Stripe checkout session
-    ↓
-Redirect to Stripe Checkout
-    ↓
-User completes payment
-    ↓
-Stripe webhook → POST /api/payments/webhook
-    ↓
-Verify webhook signature
-    ↓
-UPDATE scans SET tier='paid' WHERE id=:scan_id
-INSERT INTO payments (user_id, amount, status='succeeded')
-    ↓
-Trigger deeper scan (nuclei, additional checks)
-    ↓
-Completion triggers PDF generation + email
-```
-
-## Deployment Topology on Render
-
-Render deployment uses three services:
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Render Region (Oregon)                                      │
-│                                                              │
-│  ┌────────────────────┐                                     │
-│  │  Web Service       │                                     │
-│  │  (Rust Backend)    │                                     │
-│  │  - Axum HTTP       │                                     │
-│  │  - Worker pool     │                                     │
-│  │  - Docker access   │                                     │
-│  │  Instance: 512MB   │                                     │
-│  └────────────────────┘                                     │
-│           │                                                  │
-│           ↓                                                  │
-│  ┌────────────────────┐       ┌──────────────────────────┐ │
-│  │  PostgreSQL        │       │  Static Site (Next.js)   │ │
-│  │  (Managed)         │       │  - Landing page (SSG)    │ │
-│  │  - 1GB storage     │       │  - Results (SSR)         │ │
-│  │  - Backups daily   │       │  - API proxy to backend  │ │
-│  └────────────────────┘       └──────────────────────────┘ │
-│                                                              │
-│  Environment Variables:                                     │
-│  - DATABASE_URL (Render managed)                            │
-│  - RESEND_API_KEY                                           │
-│  - STRIPE_SECRET_KEY                                        │
-│  - STRIPE_WEBHOOK_SECRET                                    │
-│  - BACKEND_URL (for Next.js SSR)                            │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Service configuration:**
-
-1. **Rust Backend (Web Service)**
-   - Build command: `cargo build --release`
-   - Start command: `./target/release/trustedge-backend`
-   - Health check: `GET /health`
-   - Docker enabled: Yes (for scanner containers)
-   - Instance size: 512MB (free tier) → 1GB (production)
-   - Auto-deploy: Yes (on main branch push)
-
-2. **PostgreSQL (Managed Database)**
-   - Version: 15
-   - Storage: 1GB (free tier) → 10GB (production)
-   - Backups: Daily (7-day retention)
-   - Connection pooling: Render managed
-
-3. **Next.js Frontend (Static Site)**
-   - Build command: `npm run build`
-   - Publish directory: `.next`
-   - Environment: `NEXT_PUBLIC_API_URL=$BACKEND_URL`
-   - CDN: Render global edge
-
-**Container execution on Render:**
-
-Render Web Services have Docker daemon access, allowing containerized scanner execution:
-
-```rust
-// Executes on Render compute instance
-let output = Command::new("docker")
-    .args(["run", "--rm", "projectdiscovery/nuclei:latest", /* ... */])
-    .output()
-    .await?;
-```
-
-**Limitations and workarounds:**
-
-| Limitation | Workaround |
-|-----------|------------|
-| No background workers service in free tier | Use in-process worker pool (polling pattern) |
-| Docker image pull latency on first run | Pre-pull images in Dockerfile, cache in instance |
-| 512MB RAM limit (free tier) | Limit concurrent scans to 3, use memory-efficient scanners |
-| No object storage in free tier | Store PDFs in PostgreSQL BYTEA (up to 1MB) or defer to paid tier |
-
-## API Design
-
-### REST Endpoints
-
-**Scan lifecycle:**
-
-```
-POST /api/scans
-Request:
-{
-  "url": "https://example.com",
-  "email": "user@example.com",
-  "tier": "free" | "paid",
-  "payment_intent_id": "pi_xxx" (if tier=paid)
-}
-Response:
-{
-  "scan_id": "uuid",
-  "status": "pending",
-  "created_at": "2026-02-04T12:00:00Z"
-}
-
-GET /api/scans/:id
-Response:
-{
-  "scan_id": "uuid",
-  "url": "https://example.com",
-  "status": "pending" | "running" | "completed" | "failed",
-  "created_at": "2026-02-04T12:00:00Z",
-  "completed_at": "2026-02-04T12:05:23Z",
-  "tier": "free"
-}
-
-GET /api/scans/:id/results
-Response:
-{
-  "scan_id": "uuid",
-  "url": "https://example.com",
-  "summary": {
-    "critical": 2,
-    "high": 5,
-    "medium": 12,
-    "low": 8,
-    "info": 3
-  },
-  "findings": [
-    {
-      "id": "uuid",
-      "severity": "critical",
-      "category": "secrets",
-      "title": "Hardcoded API key in JavaScript bundle",
-      "description": "...",
-      "remediation": {
-        "id": "hardcoded_secret_js",
-        "title": "How to fix hardcoded secrets",
-        "steps": ["1. Rotate key", "2. Move to backend", "3. Use env vars"],
-        "code_example": "..."
-      }
-    }
-  ]
-}
-
-GET /api/scans/:id/pdf
-Response: application/pdf (stream)
-```
-
-**Payment endpoints:**
-
-```
-POST /api/checkout
-Request:
-{
-  "scan_id": "uuid",
-  "tier": "paid_once" | "pro" | "agency"
-}
-Response:
-{
-  "checkout_url": "https://checkout.stripe.com/xxx"
-}
-
-POST /api/payments/webhook
-Headers: stripe-signature
-Request: Stripe webhook payload
-Response: 200 OK
-```
-
-**Rate limiting:**
-
-```
-Free tier: 5 scans per email per day
-Paid tier (one-time): 1 scan per payment
-Pro tier: Unlimited scans
-```
-
-Implementation:
-```rust
-// Rate limiting middleware
-async fn rate_limit_middleware(
-    req: Request<Body>,
-    next: Next<Body>,
-) -> Result<Response, StatusCode> {
-    let email = extract_email(&req)?;
-    let tier = lookup_tier(email).await?;
-
-    if tier == "free" {
-        let count = sqlx::query_scalar!(
-            "SELECT COUNT(*) FROM scans WHERE email = $1 AND created_at > now() - interval '24 hours'",
-            email
-        ).fetch_one(&pool).await?;
-
-        if count >= 5 {
-            return Err(StatusCode::TOO_MANY_REQUESTS);
-        }
+// Backend polls for pending scan jobs
+loop {
+    let jobs = sqlx::query!("
+        SELECT id FROM scan_jobs
+        WHERE status = 'pending'
+        ORDER BY created_at ASC
+        LIMIT 5
+        FOR UPDATE SKIP LOCKED
+    ")
+    .fetch_all(&pool).await?;
+
+    for job in jobs {
+        tokio::spawn(execute_scan(job.id, pool.clone()));
     }
 
-    Ok(next.run(req).await)
+    tokio::time::sleep(Duration::from_secs(2)).await;
 }
 ```
 
-## Patterns to Follow
+**When to migrate:** When scan volume exceeds 1000/day or polling causes database CPU spikes
 
-### Pattern 1: Scan State Machine
+### Pattern 2: In-Process Worker Pool (Scan Concurrency)
 
-**What:** Explicit state transitions for scan lifecycle
-**When:** Every scan status change
-**Why:** Prevents invalid states (e.g., completed → running), enables audit trail
+**What:** Use tokio semaphore to limit concurrent scan executions within single backend process
 
+**When to use:** Single-server deployment with predictable resource limits
+
+**Trade-offs:**
+- **Pros:** Simple, efficient (no inter-process communication), easy to tune (semaphore count)
+- **Cons:** Single point of failure (backend crash = all scans fail), no horizontal scaling
+
+**Implementation:**
 ```rust
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum ScanStatus {
-    Pending,
-    Running,
-    Completed,
-    Failed,
-}
+// Limit to 5 concurrent scans
+static SCAN_SEMAPHORE: Semaphore = Semaphore::const_new(5);
 
-impl ScanStatus {
-    fn can_transition_to(&self, new: ScanStatus) -> bool {
-        match (self, new) {
-            (Pending, Running) => true,
-            (Running, Completed) => true,
-            (Running, Failed) => true,
-            _ => false,
-        }
-    }
-}
-
-async fn update_scan_status(pool: &PgPool, scan_id: Uuid, new_status: ScanStatus) -> Result<()> {
-    let current = sqlx::query_scalar!("SELECT status FROM scans WHERE id = $1", scan_id)
-        .fetch_one(pool).await?;
-
-    let current_status = ScanStatus::from_str(&current)?;
-
-    if !current_status.can_transition_to(new_status) {
-        return Err(Error::InvalidStateTransition(current_status, new_status));
-    }
-
-    sqlx::query!(
-        "UPDATE scans SET status = $1, updated_at = now() WHERE id = $2",
-        new_status.to_string(), scan_id
-    ).execute(pool).await?;
-
-    Ok(())
+async fn execute_scan(scan_id: Uuid, pool: PgPool) -> Result<()> {
+    let _permit = SCAN_SEMAPHORE.acquire().await?;
+    // Spawn scanner containers, collect findings
+    // Permit is released when function exits
 }
 ```
 
-### Pattern 2: Structured Scanner Output
+**When to migrate:** When horizontal scaling is needed (multiple backend instances across droplets)
 
-**What:** Each scanner returns a typed struct, converted to common Finding schema
-**When:** All scanner integrations
-**Why:** Type safety, easier testing, consistent normalization
+### Pattern 3: Ephemeral Scanner Containers (Isolation)
 
+**What:** Spawn scanner containers per scan with `--rm` flag, auto-removed after execution
+
+**When to use:** Always (for security and resource efficiency)
+
+**Trade-offs:**
+- **Pros:** Perfect isolation per scan, no container accumulation, no state leakage between scans
+- **Cons:** Image pull overhead (mitigated by pre-pulling images), slight startup latency (200-500ms)
+
+**Implementation:**
 ```rust
-// Scanner-specific output
-#[derive(Deserialize)]
-struct NucleiResult {
-    template_id: String,
-    info: NucleiInfo,
-    matched_at: String,
-}
-
-// Common finding schema
-struct Finding {
-    severity: Severity,
-    category: Category,
-    title: String,
-    description: String,
-    remediation_id: Option<String>,
-}
-
-// Conversion trait
-trait ToFindings {
-    fn to_findings(&self) -> Vec<Finding>;
-}
-
-impl ToFindings for Vec<NucleiResult> {
-    fn to_findings(&self) -> Vec<Finding> {
-        self.iter().map(|r| Finding {
-            severity: map_severity(&r.info.severity),
-            category: Category::Vuln,
-            title: r.info.name.clone(),
-            description: r.info.description.clone().unwrap_or_default(),
-            remediation_id: Some(format!("nuclei_{}", r.template_id)),
-        }).collect()
-    }
-}
+let args = vec![
+    "run", "--rm",           // Auto-remove after exit
+    "--read-only",           // No filesystem writes
+    "--cap-drop", "all",     // Drop all capabilities
+    "--user", "1000:1000",   // Non-root user
+    "--memory", "512M",      // Memory limit
+    "--pids-limit", "1000",  // Process limit
+    "--cpu-shares", "512",   // CPU throttling
+    "--no-new-privileges",   // Prevent privilege escalation
+    "projectdiscovery/nuclei:latest",
+    "-u", target_url,
+    "-jsonl", "-silent",
+];
+Command::new("docker").args(args).output().await?
 ```
 
-### Pattern 3: Remediation Playbook Mapping
+**When to optimize:** Pre-pull scanner images during deployment, consider keeping 1-2 warm containers
 
-**What:** Map finding types to remediation content via ID
-**When:** Findings aggregation
-**Why:** Consistent advice, easy to update remediation content
+## Anti-Patterns
 
-```rust
-// Remediation playbook (loaded from YAML/JSON)
-struct RemediationPlaybook {
-    id: String,
-    title: String,
-    steps: Vec<String>,
-    code_example: Option<String>,
-    references: Vec<String>,
-}
+### Anti-Pattern 1: Docker-in-Docker (DinD)
 
-// Load at startup
-lazy_static! {
-    static ref REMEDIATIONS: HashMap<String, RemediationPlaybook> =
-        load_remediations("remediations.yaml");
-}
+**What people do:** Run Docker daemon inside backend container to spawn scanners
 
-// Attach during findings retrieval
-async fn get_findings_with_remediation(scan_id: Uuid) -> Result<Vec<FindingWithRemediation>> {
-    let findings = sqlx::query_as!(Finding, "SELECT * FROM findings WHERE scan_id = $1", scan_id)
-        .fetch_all(&pool).await?;
+**Why it's wrong:**
+- Requires privileged mode (`--privileged`), full security bypass
+- Complex networking (nested NAT)
+- High overhead (daemon inside daemon)
+- Difficult debugging (logs nested two levels deep)
 
-    findings.into_iter().map(|f| {
-        let remediation = f.remediation_id
-            .and_then(|id| REMEDIATIONS.get(&id))
-            .cloned();
+**Do this instead:** Bind-mount Docker socket from host (as recommended above)
 
-        FindingWithRemediation { finding: f, remediation }
-    }).collect()
-}
-```
+### Anti-Pattern 2: Exposing PostgreSQL Port Publicly
 
-### Pattern 4: Graceful Scanner Failure
+**What people do:** Bind PostgreSQL to `0.0.0.0:5432` for "convenience"
 
-**What:** Scan continues even if one scanner fails
-**When:** Scanner execution
-**Why:** Partial results better than no results
+**Why it's wrong:**
+- Direct exposure to internet attacks (brute force, SQL injection via psql)
+- No need for external access (backend is on same host)
+- Violates least-privilege principle
 
-```rust
-async fn execute_all_scanners(scan_id: Uuid, url: &str) -> Result<()> {
-    let scanners = vec![
-        ("headers", scan_headers(url)),
-        ("tls", scan_tls(url)),
-        ("files", scan_files(url)),
-        ("secrets", scan_secrets(url)),
-    ];
+**Do this instead:** Bind PostgreSQL to `127.0.0.1:5432`, firewall blocks external access
 
-    for (scanner_name, scanner_future) in scanners {
-        match scanner_future.await {
-            Ok(findings) => {
-                insert_findings(scan_id, findings).await?;
-                mark_job_complete(scan_id, scanner_name).await?;
-            }
-            Err(e) => {
-                log::error!("Scanner {} failed: {}", scanner_name, e);
-                mark_job_failed(scan_id, scanner_name, e.to_string()).await?;
-                // Continue to next scanner
-            }
-        }
-    }
+### Anti-Pattern 3: Running Backend/Frontend as Root
 
-    // Mark scan complete even if some scanners failed
-    if all_jobs_finished(scan_id).await? {
-        update_scan_status(scan_id, ScanStatus::Completed).await?;
-    }
+**What people do:** Deploy Docker containers with `user: root` for "simplicity"
 
-    Ok(())
-}
-```
+**Why it's wrong:**
+- Container breakout = root on host
+- Violates least-privilege principle
+- Unnecessary risk (applications don't need root)
 
-### Pattern 5: Idempotent Job Processing
-
-**What:** Reprocessing same job produces same result
-**When:** Job queue polling
-**Why:** Prevents duplicate findings on retry
-
-```rust
-async fn process_scan_job(pool: &PgPool, job_id: Uuid) -> Result<()> {
-    // Atomic claim: only one worker processes this job
-    let claimed = sqlx::query_scalar!(
-        "UPDATE scan_jobs SET status = 'running', started_at = now()
-         WHERE id = $1 AND status = 'pending'
-         RETURNING id",
-        job_id
-    ).fetch_optional(pool).await?;
-
-    if claimed.is_none() {
-        // Another worker claimed it
-        return Ok(());
-    }
-
-    // Execute scanner
-    let output = run_scanner(job_id).await?;
-
-    // Idempotent insert: use ON CONFLICT DO NOTHING for findings
-    for finding in output.findings {
-        sqlx::query!(
-            "INSERT INTO findings (scan_id, severity, title, description, category)
-             VALUES ($1, $2, $3, $4, $5)
-             ON CONFLICT (scan_id, title, category) DO NOTHING",
-            finding.scan_id, finding.severity, finding.title, finding.description, finding.category
-        ).execute(pool).await?;
-    }
-
-    sqlx::query!(
-        "UPDATE scan_jobs SET status = 'completed', completed_at = now() WHERE id = $1",
-        job_id
-    ).execute(pool).await?;
-
-    Ok(())
-}
-```
-
-## Anti-Patterns to Avoid
-
-### Anti-Pattern 1: Synchronous Scan Execution in API Handler
-
-**What goes wrong:** User submits scan → API handler blocks for 2-5 minutes running scanners → timeout
-**Why bad:** Poor user experience, server resource exhaustion, no visibility into progress
-**Instead:** Async job queue pattern (create scan, return immediately, poll for status)
-
-```rust
-// WRONG
-async fn create_scan_sync(url: String) -> Result<ScanResults> {
-    let findings = run_all_scanners(&url).await?; // Blocks for minutes
-    Ok(ScanResults { findings })
-}
-
-// CORRECT
-async fn create_scan_async(url: String) -> Result<ScanId> {
-    let scan_id = insert_scan(&url).await?;
-    insert_scan_jobs(scan_id).await?;
-    // Worker pool picks up jobs asynchronously
-    Ok(scan_id)
-}
-```
-
-### Anti-Pattern 2: Storing Large Scanner Output in Memory
-
-**What goes wrong:** Nuclei scan produces 50MB JSON → loaded into memory → OOM on concurrent scans
-**Why bad:** Memory exhaustion, crashes on Render 512MB instances
-**Instead:** Stream scanner output to database, process incrementally
-
-```rust
-// WRONG
-async fn process_nuclei_output(scan_id: Uuid) -> Result<()> {
-    let output = run_nuclei(scan_id).await?; // 50MB string
-    let findings: Vec<Finding> = parse_json(&output)?; // All in memory
-    insert_findings(findings).await?;
-    Ok(())
-}
-
-// CORRECT
-async fn process_nuclei_output(scan_id: Uuid) -> Result<()> {
-    let output_stream = run_nuclei_streaming(scan_id).await?;
-    let mut reader = BufReader::new(output_stream);
-    let mut line = String::new();
-
-    while reader.read_line(&mut line).await? > 0 {
-        if let Ok(finding) = serde_json::from_str::<NucleiFinding>(&line) {
-            insert_finding(scan_id, finding.to_finding()).await?;
-        }
-        line.clear();
-    }
-    Ok(())
-}
-```
-
-### Anti-Pattern 3: No Timeout on Scanner Execution
-
-**What goes wrong:** testssl.sh hangs on unresponsive server → worker stuck forever → all workers blocked
-**Why bad:** Resource exhaustion, no capacity for new scans
-**Instead:** Hard timeout on all scanner executions
-
-```rust
-// WRONG
-async fn run_scanner(url: &str) -> Result<Output> {
-    Command::new("docker")
-        .args(["run", "scanner:latest", url])
-        .output()
-        .await // May never complete
-}
-
-// CORRECT
-async fn run_scanner(url: &str) -> Result<Output> {
-    tokio::time::timeout(
-        Duration::from_secs(300), // 5 min hard limit
-        Command::new("docker")
-            .args(["run", "--timeout", "240s", "scanner:latest", url])
-            .output()
-    ).await
-    .map_err(|_| Error::ScannerTimeout)?
-}
-```
-
-### Anti-Pattern 4: Exposing Database IDs in URLs
-
-**What goes wrong:** User sees `/scan/123` → tries `/scan/122` → sees other user's results
-**Why bad:** Privacy violation, potential data leak
-**Instead:** Use UUIDs, check ownership
-
-```rust
-// WRONG
-GET /api/scans/:id  (where id is integer)
-
-// CORRECT
-GET /api/scans/:uuid  (UUID, cryptographically random)
-
-// Plus authorization check
-async fn get_scan_results(scan_uuid: Uuid, requester_email: &str) -> Result<ScanResults> {
-    let scan = sqlx::query_as!(Scan, "SELECT * FROM scans WHERE id = $1", scan_uuid)
-        .fetch_one(&pool).await?;
-
-    // For free tier, only the email owner can see results
-    if scan.tier == "free" && scan.email != requester_email {
-        return Err(Error::Unauthorized);
-    }
-
-    Ok(get_findings(scan_uuid).await?)
-}
-```
-
-### Anti-Pattern 5: Generating PDF on Every Request
-
-**What goes wrong:** User refreshes results page → regenerates PDF → CPU spike → slow response
-**Why bad:** Wasteful computation, poor performance, higher costs
-**Instead:** Generate once, cache in database or object storage
-
-```rust
-// WRONG
-async fn download_pdf(scan_id: Uuid) -> Result<Vec<u8>> {
-    let findings = get_findings(scan_id).await?;
-    generate_pdf(findings).await // Regenerates every time
-}
-
-// CORRECT
-async fn download_pdf(scan_id: Uuid) -> Result<Vec<u8>> {
-    // Check cache
-    if let Some(cached) = get_cached_pdf(scan_id).await? {
-        return Ok(cached);
-    }
-
-    // Generate once
-    let findings = get_findings(scan_id).await?;
-    let pdf = generate_pdf(findings).await?;
-
-    // Cache for future requests
-    cache_pdf(scan_id, &pdf).await?;
-
-    Ok(pdf)
-}
-
-// Implementation with PostgreSQL
-async fn cache_pdf(scan_id: Uuid, pdf: &[u8]) -> Result<()> {
-    sqlx::query!(
-        "UPDATE scans SET pdf_report = $1 WHERE id = $2",
-        pdf, scan_id
-    ).execute(&pool).await?;
-    Ok(())
-}
-```
-
-### Anti-Pattern 6: Running Scanners as Root in Containers
-
-**What goes wrong:** Nuclei container runs as root → vulnerability in Nuclei → host compromise
-**Why bad:** Security risk, violates principle of least privilege
-**Instead:** Run containers with non-root user, read-only filesystem
-
+**Do this instead:** Run as non-root user (UID 1000) in containers:
 ```dockerfile
-# WRONG
-FROM projectdiscovery/nuclei:latest
-# Runs as root by default
-
-# CORRECT
-FROM projectdiscovery/nuclei:latest
-USER nobody
+# In Dockerfile
+RUN useradd -m -u 1000 appuser
+USER appuser
 ```
 
-```rust
-// CORRECT: Docker run with security constraints
-Command::new("docker")
-    .args([
-        "run", "--rm",
-        "--user", "nobody",           // Non-root user
-        "--read-only",                // Read-only filesystem
-        "--tmpfs", "/tmp:rw,size=10m", // Temp dir for writes
-        "--network", "bridge",        // Network isolation
-        "--cap-drop", "ALL",          // Drop all capabilities
-        "projectdiscovery/nuclei:latest",
-        /* ... */
-    ])
-    .output()
-    .await
-```
+### Anti-Pattern 4: Storing Secrets in Git
 
-## Scalability Considerations
+**What people do:** Commit `.env` file with `DATABASE_URL`, `STRIPE_SECRET_KEY` to Git
 
-| Concern | At 100 scans/day | At 1,000 scans/day | At 10,000 scans/day |
-|---------|------------------|-------------------|---------------------|
-| **Job Queue** | PostgreSQL polling (2s interval) | Same, increase polling workers to 10 | Migrate to Redis/RabbitMQ for lower latency |
-| **Database** | 1GB PostgreSQL (Render free) | 10GB PostgreSQL (Render $15/mo) | Read replicas for analytics, pgBouncer for connection pooling |
-| **Scanner Concurrency** | 5 concurrent scans | 20 concurrent (2GB instance) | Dedicated worker service, autoscaling (10-50 workers) |
-| **PDF Storage** | PostgreSQL BYTEA (1MB/PDF) | Object storage (S3/R2) with DB reference | Same, add CDN caching |
-| **Email Delivery** | Resend free tier (3K/mo) | Resend paid ($20/mo, 50K/mo) | AWS SES (cheaper at scale) |
-| **Frontend** | Render static site (SSG) | Same, add ISR for results pages | Edge caching (Cloudflare), separate CDN |
-| **Rate Limiting** | Database-backed (query count) | Redis-backed sliding window | Cloudflare WAF + Redis |
+**Why it's wrong:**
+- Secrets leaked in Git history forever (even if file is deleted later)
+- Public repos = instant compromise
+- Private repos still vulnerable (any collaborator can see)
 
-### Migration Path: 100 → 10,000 scans/day
+**Do this instead:**
+- `.env.production` only on server, never committed
+- Use `.env.example` with placeholder values in Git
+- Consider secret management service (HashiCorp Vault, DigitalOcean Secrets) for larger teams
 
-**Phase 1 (100/day):** Single Render service, in-process workers, PostgreSQL queue
-**Phase 2 (1,000/day):** Separate worker service, Redis queue, object storage for PDFs
-**Phase 3 (10,000/day):** Autoscaling workers, read replicas, edge caching, Cloudflare
+### Anti-Pattern 5: No Resource Limits on Scanner Containers
 
-## Build Order Recommendations
+**What people do:** Spawn scanner containers without `--memory`, `--cpu-shares`, `--pids-limit`
 
-Suggested development sequence based on dependencies:
+**Why it's wrong:**
+- Scanner gone rogue can consume all host resources
+- OOM killer may kill PostgreSQL or backend instead
+- DoS via malicious target URL triggering resource-intensive scan
 
-### Phase 1: Core Infrastructure (Week 1)
-1. PostgreSQL schema + migrations
-2. Rust backend skeleton (Axum, SQLx)
-3. Basic health check endpoint
-4. Deploy to Render
+**Do this instead:** Always set resource limits (as shown in Pattern 3)
 
-**Dependencies:** None
-**Deliverable:** Backend responds to GET /health
+## Scaling Considerations
 
-### Phase 2: Simple Scanner (Week 1)
-1. Headers scanner (in-process, reqwest)
-2. POST /api/scans endpoint (creates scan + jobs)
-3. GET /api/scans/:id endpoint (returns status)
-4. Worker loop (poll pending jobs, execute headers scanner)
-5. Findings table + insertion
+### 0-100 Scans/Day (MVP: Single Droplet)
 
-**Dependencies:** Phase 1
-**Deliverable:** Can scan headers, store findings
+**Current architecture is optimal:**
+- 2 vCPU, 2GB RAM DigitalOcean droplet ($18/month)
+- PostgreSQL handles <10 concurrent scans easily
+- 5 concurrent scanner containers fit in memory
+- No bottlenecks expected
 
-### Phase 3: Frontend MVP (Week 2)
-1. Next.js landing page (form to submit URL + email)
-2. Polling mechanism (GET /api/scans/:id every 2s)
-3. Results page (display findings)
-4. Deploy Next.js to Render
+**Estimated costs:**
+- Droplet: $18/month
+- Bandwidth: ~10GB/month (free tier covers)
+- **Total: ~$18/month**
 
-**Dependencies:** Phase 2
-**Deliverable:** End-to-end free tier flow
+### 100-1000 Scans/Day (Scale Up: Larger Droplet)
 
-### Phase 4: Email Delivery (Week 2)
-1. Resend integration
-2. Email template rendering
-3. Trigger email on scan completion
-4. Free tier email (summary + link)
+**Bottleneck:** CPU (scanner containers are CPU-intensive)
 
-**Dependencies:** Phase 3
-**Deliverable:** Users receive email when scan completes
+**Solution:** Upgrade droplet to 4 vCPU, 8GB RAM ($72/month)
+- Increase `SCAN_SEMAPHORE` to 10 concurrent scans
+- Add connection pooling to PostgreSQL (pgbouncer)
+- No architecture changes required
 
-### Phase 5: Additional Scanners (Week 3)
-1. TLS scanner (testssl.sh in container)
-2. File scanner (Nuclei in container)
-3. Secrets scanner (regex-based)
-4. Findings normalization for each scanner
-5. Deduplication logic
+**Estimated costs:**
+- Droplet: $72/month
+- **Total: ~$72/month**
 
-**Dependencies:** Phase 2 (scanner infrastructure)
-**Deliverable:** Comprehensive scan results
+### 1000-10000 Scans/Day (Scale Out: Multi-Droplet)
 
-### Phase 6: Payments (Week 4)
-1. Stripe integration (checkout session creation)
-2. Webhook handler (payment success)
-3. Tier-based scan logic (free vs. paid)
-4. Paid tier email template
+**Bottleneck:** Single backend process, database connection contention
 
-**Dependencies:** Phase 3 (frontend), Phase 4 (email)
-**Deliverable:** Users can purchase paid scans
+**Solution:** Split into multiple droplets:
+1. **Database droplet:** PostgreSQL + pgbouncer (dedicated)
+2. **Backend droplet(s):** Multiple backend instances, round-robin load balancing
+3. **Frontend droplet:** Nginx + Next.js (can colocate with load balancer)
+4. **Load balancer:** DigitalOcean Load Balancer ($12/month)
 
-### Phase 7: PDF Reports (Week 5)
-1. typst template design
-2. PDF generation function
-3. GET /api/scans/:id/pdf endpoint
-4. Attach PDF to paid tier emails
-5. Cache PDFs in database
+**Architecture changes:**
+- Migrate from database-as-queue to Redis-based job queue
+- Add distributed locking (Redis) to prevent duplicate scan execution
+- Horizontal scaling: 2-4 backend droplets behind load balancer
 
-**Dependencies:** Phase 5 (all scanners), Phase 6 (tier detection)
-**Deliverable:** Paid users receive PDF reports
+**Estimated costs:**
+- DB droplet: $72/month (4 vCPU, 8GB)
+- Backend droplets: $144/month (2 × $72)
+- Frontend + LB droplet: $18/month
+- Load Balancer: $12/month
+- **Total: ~$246/month**
 
-### Phase 8: Dashboard (Week 6)
-1. User authentication (JWT or session)
-2. Dashboard page (list user's scans)
-3. Scan history
-4. Re-scan functionality
+### 10000+ Scans/Day (Kubernetes or Managed Services)
 
-**Dependencies:** Phase 6 (user accounts)
-**Deliverable:** Logged-in users see scan history
+**At this scale, consider:**
+- DigitalOcean Kubernetes (DOKS) for orchestration
+- Managed PostgreSQL (DigitalOcean Managed Database)
+- Managed Redis (DigitalOcean Managed Cache)
+- Object storage (DigitalOcean Spaces) for PDF reports
+- CDN (Cloudflare) for static assets
 
-### Phase 9: Continuous Monitoring (Week 6)
-1. GitHub App setup
-2. Webhook receiver
-3. Automated re-scan on push
-4. Email alerts for new findings
+**Architecture becomes microservices:**
+- API gateway (Nginx Ingress or Traefik)
+- Backend pods (auto-scaling 5-20 replicas)
+- Scanner service (separate pods, auto-scaling)
+- Background job processor (separate service)
 
-**Dependencies:** Phase 8 (user accounts), Phase 5 (scanners)
-**Deliverable:** Pro tier continuous monitoring
+## Integration Points
 
-## Technology Decisions Summary
+### External Services
 
-| Component | Recommended | Alternative | Reason |
-|-----------|-------------|-------------|--------|
-| **Backend framework** | Axum | Actix-web | Simpler async, better ecosystem, less boilerplate |
-| **Database client** | SQLx | Diesel | Compile-time query checking, async-first |
-| **Job queue** | PostgreSQL-backed | Redis, RabbitMQ | Simpler ops, sufficient for <1K scans/day |
-| **Worker pattern** | In-process tokio tasks | Separate service | Fewer moving parts, easier deployment |
-| **Container runtime** | Docker CLI | podman | Universal availability, Render compatibility |
-| **Email service** | Resend | AWS SES | Better DX, simpler API, generous free tier |
-| **PDF generator** | typst | WeasyPrint | Faster, safer, native binary |
-| **Frontend framework** | Next.js 14 App Router | SvelteKit | Better Rust backend integration, larger ecosystem |
-| **Styling** | Tailwind + shadcn/ui | Plain CSS | Faster iteration, professional components |
-| **Payment processing** | Stripe | Paddle | Standard, well-documented, Rust SDK available |
-| **Hosting** | Render | Fly.io, Railway | Docker support, managed Postgres, simple pricing |
+| Service | Integration Pattern | Configuration | Notes |
+|---------|---------------------|---------------|-------|
+| PostgreSQL | Direct connection via `sqlx` | `DATABASE_URL` env var | Native on host, backend connects via localhost |
+| Docker | Socket bind-mount + `Command::new("docker")` | `/var/run/docker.sock` mounted | Backend spawns containers via host Docker |
+| Resend (Email) | HTTP API via `reqwest` | `RESEND_API_KEY` env var | Used for PDF report delivery |
+| Stripe (Payments) | HTTP API via `stripe-rust` | `STRIPE_SECRET_KEY` env var | Webhook endpoint at `/api/payments/webhook` |
+| SSL Labs API | HTTP API via `reqwest` | No auth, rate-limited | Used for TLS grading (testssl.sh alternative) |
 
-## Confidence Assessment
+### Internal Boundaries
 
-| Area | Confidence | Reason |
-|------|------------|--------|
-| Overall architecture | HIGH | Standard producer-consumer pattern for scanning SaaS |
-| Rust backend + Axum | HIGH | Well-established ecosystem, good async support |
-| PostgreSQL schema | HIGH | Relational model fits scan/findings hierarchy well |
-| Job queue pattern | MEDIUM | Database-as-queue works for MVP, may need Redis later |
-| Container execution | MEDIUM | Docker on Render works, resource limits need tuning |
-| Render deployment | LOW | Unable to verify current Render Docker support (tool restrictions) |
-| PDF generation | MEDIUM | typst is newer, WeasyPrint more proven but heavier |
-| Email delivery | HIGH | Resend is standard choice for transactional emails |
+| Boundary | Communication | Protocol | Notes |
+|----------|---------------|----------|-------|
+| Frontend ↔ Backend | HTTP API | REST (JSON) | `NEXT_PUBLIC_BACKEND_URL=http://localhost:3000` |
+| Backend ↔ PostgreSQL | PostgreSQL wire protocol | SQL via `sqlx` | Connection pooling (max 20 connections) |
+| Backend ↔ Docker | Unix socket | Docker API | Spawn containers, stream logs |
+| Nginx ↔ Backend | HTTP reverse proxy | `proxy_pass` | Timeouts: 300s for scans |
+| Nginx ↔ Frontend | HTTP reverse proxy | `proxy_pass` | Standard timeouts |
+
+## Security Hardening Checklist
+
+- [ ] UFW enabled with minimal ports (22, 80, 443)
+- [ ] SSH password authentication disabled, key-only
+- [ ] PostgreSQL bound to localhost only (`listen_addresses = 'localhost'`)
+- [ ] Docker socket mounted read-only to backend container
+- [ ] Backend/frontend containers run as non-root user (UID 1000)
+- [ ] Scanner containers CIS-hardened (8 security flags)
+- [ ] Secrets in `.env.production`, never committed to Git
+- [ ] Nginx security headers (HSTS, X-Frame-Options, CSP)
+- [ ] SSL/TLS A+ grade (Mozilla Intermediate profile)
+- [ ] Unattended security updates enabled (`unattended-upgrades`)
+- [ ] Log rotation configured (Nginx, Docker, PostgreSQL)
+- [ ] Rate limiting on API endpoints (backend or Nginx level)
+- [ ] SSRF protection in backend (URL validation, blocklist RFC 1918)
+- [ ] Fail2ban or similar for SSH brute force protection (optional)
+
+## Performance Optimization Checklist
+
+- [ ] PostgreSQL connection pooling (max 20 connections)
+- [ ] PostgreSQL indexes on frequently queried columns (`scans.id`, `findings.scan_id`)
+- [ ] Docker images pre-pulled (`docker-compose pull` during deployment)
+- [ ] Nginx gzip compression enabled for text assets
+- [ ] Nginx caching for static assets (if Next.js static export used)
+- [ ] Semaphore tuned for concurrent scans (start with 5, increase if CPU allows)
+- [ ] Scanner container memory limits tuned (512M is conservative, may decrease)
+- [ ] Database vacuuming scheduled (PostgreSQL autovacuum enabled by default)
+
+## Comparison Matrix: Deployment Topologies
+
+| Topology | PostgreSQL | App Containers | Scanner Execution | Complexity | Performance | Security |
+|----------|------------|----------------|-------------------|------------|-------------|----------|
+| **Hybrid (Recommended)** | Native | Docker | Docker (socket mount) | Medium | High (DB native) | Good (CIS-hardened scanners) |
+| All Docker (docker-compose) | Docker | Docker | Docker-in-Docker (DinD) | Low | Medium (DB overhead) | Poor (requires privileged) |
+| All Native | Native | Native binaries | Docker (native Docker CLI) | High | Highest (no overhead) | Best (no socket mount risk) |
+| Kubernetes (overkill for MVP) | Managed DB | K8s Pods | K8s Jobs | Very High | High (auto-scaling) | Best (RBAC, network policies) |
+
+**Recommendation:** **Hybrid topology** balances all factors for single-droplet MVP.
 
 ## Sources
 
-Unable to verify with external sources due to tool restrictions. This document is based on:
-- Training knowledge of security scanning system architectures (as of January 2025)
-- Established patterns for SaaS job processing systems
-- Rust ecosystem best practices (Axum, SQLx, tokio)
-- PRD context provided
+### Docker Security and Socket Access
+- [Docker Security - OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html) — Authoritative security best practices
+- [Protect the Docker daemon socket | Docker Docs](https://docs.docker.com/engine/security/protect-access/) — Official guidance on socket access
+- [Docker Security Best Practices | Better Stack Community](https://betterstack.com/community/guides/scaling-docker/docker-security-best-practices/) — Comprehensive hardening guide
+- [Bind mounts | Docker Docs](https://docs.docker.com/engine/storage/bind-mounts/) — Official bind mount documentation
 
-**Recommended validation steps:**
-1. Verify Render Docker support for containerized scanners
-2. Check latest Axum version and async patterns
-3. Verify typst PDF generation capabilities
-4. Confirm Resend API limits and pricing
+### DigitalOcean Deployment
+- [Deploying multiple dockerized apps to a single DigitalOcean droplet using docker-compose contexts | Daniel Wachtel's Blog](https://danielwachtel.com/devops/deploying-multiple-dockerized-apps-digitalocean-docker-compose-contexts) — Multi-app deployment patterns
+- [Deploying Your Web App to DigitalOcean with Docker Compose | Medirelay](https://medirelay.com/blog/127-deploy-webapp-digitalocean-docker-compose/) — Production deployment guide
+- [How To Use the Docker 1-Click Install on DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-use-the-docker-1-click-install-on-digitalocean) — Droplet provisioning
 
-## Open Questions for Implementation
+### Nginx Reverse Proxy
+- [How to Nginx Reverse Proxy with Docker Compose - Gcore](https://gcore.com/learning/reverse-proxy-with-docker-compose) — Nginx + Docker patterns
+- [How to use Nginx with Docker Compose effectively with examples](https://geshan.com.np/blog/2024/03/nginx-docker-compose/) — Configuration examples
+- [Deploying a Next.js App on HTTPS with Docker Using NGINX as a Reverse Proxy - Collabnix](https://collabnix.com/deploying-a-next-js-app-on-https-with-docker-using-nginx-as-a-reverse-proxy/) — Next.js-specific patterns
 
-1. **Container image caching:** Does Render cache Docker images between runs, or does each scanner invocation pull fresh?
-2. **PostgreSQL connection pooling:** What's the optimal pool size for Render managed PostgreSQL?
-3. **PDF size limits:** What's the realistic upper bound for PDF report size (affects database BYTEA storage)?
-4. **Scanner timeout tuning:** What's the 95th percentile runtime for each scanner type?
-5. **Concurrency sweet spot:** At what point does in-process worker pool become bottleneck vs. cost of separate worker service?
+### PostgreSQL Performance
+- [Docker vs Native PostgreSQL: Impact on Database Performance](https://secnep.com/docker-vs-native-postgresql-performance-comparison/) — Performance benchmarks
+- [Benchmark PostgreSQL on all three systems: Docker versus native | ITNEXT](https://itnext.io/benchmark-postgresql-docker-versus-native-2dde6b5a8552) — Detailed comparison
+
+### Systemd and Docker Compose
+- [Running Docker Compose as a systemd Service: A Comprehensive Guide](https://bootvar.com/systemd-service-for-docker-compose/) — Systemd integration patterns
+- [Start containers automatically | Docker Docs](https://docs.docker.com/engine/containers/start-containers-automatically/) — Restart policies
+- [Docker compose as a systemd unit](https://gist.github.com/mosquito/b23e1c1e5723a7fd9e6568e5cf91180f) — Example service file
+
+### Linux Filesystem Conventions
+- [Understanding and Utilizing the Linux `/opt` Folder — linuxvox.com](https://linuxvox.com/blog/linux-opt-folder/) — FHS /opt best practices
+- [What Is /Opt In Linux? (The Ultimate Guide) | Unixmen](https://www.unixmen.com/what-is-opt-in-linux-the-ultimate-guide/) — Directory structure conventions
+
+---
+
+*Architecture research for: TrustEdge Audit DigitalOcean Deployment*
+*Researched: 2026-02-06*
+*Confidence: HIGH (verified with official documentation and production deployment guides)*

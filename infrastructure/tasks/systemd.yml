@@ -7,7 +7,6 @@
     src: ../templates/trustedge.service.j2
     dest: /etc/systemd/system/trustedge.service
     mode: '0644'
-  notify: Reload systemd daemon
 
 - name: Reload systemd daemon
   systemd:
@@ -44,9 +43,3 @@
 - name: Display service status
   command: systemctl status trustedge
   changed_when: false
-
-# Handlers
-- name: Handler - Reload systemd daemon
-  systemd:
-    daemon_reload: yes
-  listen: Reload systemd daemon

@@ -1,6 +1,6 @@
 ---
 # Application deployment
-# Clones repository, deploys production .env, installs Nuclei binary
+# Deploys compose file and .env, authenticates with ghcr.io, pulls pre-built images
 
 - name: Create application directory
   file:
@@ -10,13 +10,13 @@
     group: "{{ deploy_user }}"
     mode: '0755'
 
-- name: Clone application repository
-  git:
-    repo: "{{ app_git_repo }}"
-    dest: "{{ app_directory }}"
-    version: main
-    force: yes
-  become_user: "{{ deploy_user }}"
+- name: Deploy production docker-compose file
+  template:
+    src: ../templates/docker-compose.production.yml.j2
+    dest: "{{ app_directory }}/docker-compose.yml"
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_user }}"
+    mode: '0644'
 
 - name: Deploy production .env file
   template:
@@ -26,61 +26,15 @@
     group: "{{ deploy_user }}"
     mode: '0600'
 
-- name: Check if Nuclei already installed
-  stat:
-    path: /usr/local/bin/nuclei
-  register: nuclei_installed
+- name: Log in to GitHub Container Registry
+  shell: echo "{{ ghcr_token }}" | docker login ghcr.io -u "{{ ghcr_username }}" --password-stdin
+  become_user: "{{ deploy_user }}"
+  changed_when: true
+  no_log: true
 
-- name: Get latest Nuclei version from GitHub API
-  uri:
-    url: https://api.github.com/repos/projectdiscovery/nuclei/releases/latest
-    return_content: yes
-  register: nuclei_release
-  when: not nuclei_installed.stat.exists
-
-- name: Set Nuclei version fact
-  set_fact:
-    nuclei_version: "{{ nuclei_release.json.tag_name | regex_replace('^v', '') }}"
-  when: not nuclei_installed.stat.exists
-
-- name: Download Nuclei
-  get_url:
-    url: "https://github.com/projectdiscovery/nuclei/releases/download/v{{ nuclei_version }}/nuclei_{{ nuclei_version }}_linux_amd64.zip"
-    dest: /tmp/nuclei.zip
-    mode: '0644'
-  when: not nuclei_installed.stat.exists
-
-- name: Install unzip if needed
-  apt:
-    name: unzip
-    state: present
-  when: not nuclei_installed.stat.exists
-
-- name: Extract Nuclei to /usr/local/bin
-  unarchive:
-    src: /tmp/nuclei.zip
-    dest: /usr/local/bin/
-    remote_src: yes
-    creates: /usr/local/bin/nuclei
-  when: not nuclei_installed.stat.exists
-
-- name: Set Nuclei executable permissions
-  file:
-    path: /usr/local/bin/nuclei
-    mode: '0755'
-
-- name: Clean up Nuclei zip file
-  file:
-    path: /tmp/nuclei.zip
-    state: absent
-
-- name: Verify Nuclei installation
-  command: nuclei -version
-  changed_when: false
-
-- name: Pre-pull Docker images
-  command: docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+- name: Pull latest images from ghcr.io
+  command: docker compose pull
   args:
     chdir: "{{ app_directory }}"
   become_user: "{{ deploy_user }}"
-  changed_when: false
+  changed_when: true

@@ -20,6 +20,10 @@
   hosts: localhost
   connection: local
   gather_facts: false
+  become: no
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
 
   tasks:
     - name: Import droplet provisioning tasks
@@ -32,6 +36,9 @@
 - name: Security hardening and Docker installation
   hosts: production
   become: yes
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
 
   tasks:
     - name: Import security hardening tasks
@@ -42,9 +49,13 @@
 
   handlers:
     - name: Restart SSH
+      # async/poll: fire-and-forget to avoid killing Ansible's port-22 connection
+      # when SSH restarts on port 2222. Play 4 wait_for handles reconnection.
       service:
-        name: sshd
+        name: ssh
         state: restarted
+      async: 30
+      poll: 0
 
 # Play 3: Application setup as deploy user on port 2222
 # By the time this play starts, SSH has restarted on port 2222 and root
@@ -53,6 +64,10 @@
   hosts: localhost
   connection: local
   gather_facts: false
+  become: no
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
 
   tasks:
     - name: Update inventory for post-hardening connection
@@ -66,6 +81,10 @@
 - name: Configure application services
   hosts: production_hardened
   become: yes
+  gather_facts: false
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
 
   tasks:
     - name: Wait for SSH on new port
@@ -75,6 +94,9 @@
         timeout: 60
       delegate_to: localhost
       become: no
+
+    - name: Gather facts
+      setup:
 
     - name: Import Nginx configuration tasks
       import_tasks: ../tasks/nginx.yml

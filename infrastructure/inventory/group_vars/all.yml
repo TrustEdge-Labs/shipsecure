@@ -1,7 +1,7 @@
 ---
 # DigitalOcean
 do_api_token: "{{ vault_do_api_token }}"
-droplet_name: trustedge-prod
+droplet_name: shipsecureai
 droplet_size: s-4vcpu-8gb
 droplet_image: ubuntu-24-04-x64
 droplet_region: nyc3
@@ -16,8 +16,11 @@ deploy_user: deploy
 deploy_user_ssh_key: "{{ vault_deploy_ssh_public_key }}"
 
 # Application
-app_git_repo: "{{ vault_app_git_repo }}"
 app_directory: /opt/trustedge
+
+# Container Registry (GitHub Container Registry)
+ghcr_username: "{{ vault_ghcr_username }}"
+ghcr_token: "{{ vault_ghcr_token }}"
 
 # Database (DigitalOcean Managed PostgreSQL)
 database_url: "{{ vault_database_url }}"

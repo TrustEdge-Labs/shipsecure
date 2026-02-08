@@ -1,6 +1,7 @@
 ---
-# Encrypt this file: ansible-vault encrypt infrastructure/inventory/group_vars/vault.yml
-# Edit encrypted: ansible-vault edit infrastructure/inventory/group_vars/vault.yml
+# Copy to vault.yml and fill in real values:
+#   cp vault.yml.example vault.yml
+# vault.yml is gitignored — never committed with real secrets
 
 vault_do_api_token: "REPLACE_WITH_DO_API_TOKEN"
 vault_domain_name: "REPLACE_WITH_DOMAIN"

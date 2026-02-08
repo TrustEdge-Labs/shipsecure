@@ -36,9 +36,26 @@
     var: droplet_result
     verbosity: 1
 
-- name: Extract droplet IP address
+- name: Extract droplet ID
   set_fact:
-    droplet_ip: "{{ droplet_result.droplet.networks.v4 | selectattr('type', 'equalto', 'public') | map(attribute='ip_address') | first }}"
+    droplet_id: "{{ droplet_result.droplet.id }}"
+
+- name: Assign Reserved IP to droplet
+  uri:
+    url: "https://api.digitalocean.com/v2/reserved_ips"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ do_api_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      droplet_id: "{{ droplet_id | int }}"
+    status_code: [200, 202]
+  register: reserved_ip_result
+
+- name: Extract static IP address
+  set_fact:
+    droplet_ip: "{{ reserved_ip_result.json.reserved_ip.ip }}"
 
 - name: Add droplet to in-memory inventory
   add_host:
@@ -59,6 +76,7 @@
   debug:
     msg: |
       Droplet created successfully!
-      IP Address: {{ droplet_ip }}
+      Reserved (static) IP: {{ droplet_ip }}
 
       Action required: Set up DNS A record pointing {{ domain_name }} to {{ droplet_ip }}
+      This IP is static and will not change even if the droplet is destroyed and recreated.

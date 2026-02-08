@@ -84,6 +84,12 @@ None (validation phase - verifies all previous requirements work together)
 
 **Dependencies:** Phase 06 (requires fully deployed infrastructure)
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Infrastructure health, font installation, scanner validation, and free scan email verification
+- [ ] 07-02-PLAN.md — Stripe payment flow, PDF report delivery, and service resilience testing
+
 **Phase directory:** `.planning/phases/07-production-validation/`
 
 ---
@@ -94,7 +100,7 @@ None (validation phase - verifies all previous requirements work together)
 |-------|--------|-------|--------------|
 | 05 - Codebase Preparation | Complete | 4/4 | CLEAN-01, INFRA-02, INFRA-03 |
 | 06 - Deployment Infrastructure | Complete | 4/4 | INFRA-01, PROXY-01, PROXY-02, PROC-01, SEC-01 |
-| 07 - Production Validation | Pending | 0/0 | (verification phase) |
+| 07 - Production Validation | In Progress | 0/2 | (verification phase) |
 
 ---
 
@@ -111,7 +117,7 @@ None (validation phase - verifies all previous requirements work together)
 | PROC-01 | Phase 06 | Create systemd service units |
 | SEC-01 | Phase 06 | Configure UFW firewall |
 
-**Coverage:** 8/8 requirements mapped (100%) ✓
+**Coverage:** 8/8 requirements mapped (100%)
 
 ---
 
@@ -125,7 +131,7 @@ None (validation phase - verifies all previous requirements work together)
 **Depth calibration:**
 - Config setting: "quick" (3-5 phases)
 - Applied: 3 phases for 8 requirements
-- Rationale: Infrastructure work naturally groups into preparation → provisioning → validation
+- Rationale: Infrastructure work naturally groups into preparation -> provisioning -> validation
 
 **No orphaned requirements:** All 8 v1.1 requirements mapped to exactly one phase.
 

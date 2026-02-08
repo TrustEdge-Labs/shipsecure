@@ -1,6 +1,6 @@
 # Project State: TrustEdge Audit
 
-**Last updated:** 2026-02-07
+**Last updated:** 2026-02-08
 **Status:** v1.1 IN PROGRESS
 
 ---
@@ -10,23 +10,23 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Deployment infrastructure setup
+**Current focus:** Production validation
 
 ---
 
 ## Current Position
 
 **Milestone:** v1.1 DigitalOcean Deployment
-**Phase:** Phase 06 - Deployment Infrastructure
-**Plan:** 03 of 3 (Nginx, Certbot, Application Deployment)
-**Status:** Complete
+**Phase:** Phase 06 - Deployment Infrastructure (COMPLETE)
+**Plan:** 04 of 4 (all complete)
+**Status:** Complete — ready for Phase 07
 
 **Progress:**
 ```
-[█████████           ] 47% (Phase 05 complete, Phase 06 complete)
+[████████████████    ] 80% (Phases 05+06 complete, Phase 07 pending)
 ```
 
-**Last activity:** 2026-02-07 — Completed 06-03-PLAN.md (Nginx, Certbot, Application Deployment)
+**Last activity:** 2026-02-08 — Phase 06 complete. Production live at https://shipsecure.ai
 
 ---
 
@@ -38,9 +38,9 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 - Requirements delivered: 23/23 (100%)
 
 **v1.1 (active):**
-- Phases completed: 1/3
-- Plans completed: 4/4 in Phase 05 (Phase 06 not yet planned)
-- Requirements delivered: 3/8 (INFRA-02, INFRA-03, CLEAN-01 complete)
+- Phases completed: 2/3
+- Plans completed: 8/8 (Phase 05: 4/4, Phase 06: 4/4)
+- Requirements delivered: 8/8 (CLEAN-01, INFRA-01, INFRA-02, INFRA-03, PROXY-01, PROXY-02, PROC-01, SEC-01)
 - Requirements mapped: 8/8 (100%)
 
 ---
@@ -51,6 +51,10 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 | Decision | Rationale | Phase | Date |
 |----------|-----------|-------|------|
+| Reserved IP for static DNS | IP survives droplet destroy/recreate, no DNS changes needed | 06-04 | 2026-02-08 |
+| doadmin for managed PostgreSQL | DigitalOcean managed DB doesn't grant CREATE on public schema to non-admin users | 06-04 | 2026-02-08 |
+| Skip vault encryption | vault.yml is gitignored; encryption adds friction with no security benefit | 06-04 | 2026-02-08 |
+| ShipSecure branding everywhere user-facing | Product brand is ShipSecure; repo name trustedge-audit is internal only | 06-04 | 2026-02-08 |
 | Nuclei installed on host (not in Docker image) | Installed to /usr/local/bin via Ansible task for PATH availability and faster execution without Docker overhead | 06-03 | 2026-02-07 |
 | Extended timeouts for scan endpoints | Backend /api/ location has 300s read timeout (vs 60s for frontend) since Nuclei scans can take 30s-3min | 06-03 | 2026-02-07 |
 | Systemd oneshot service pattern for Docker Compose | Type=oneshot with RemainAfterExit=yes tracks docker compose as active, cleaner than forking with PID tracking | 06-03 | 2026-02-07 |
@@ -81,8 +85,6 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 1. **Legal review timing:** When to conduct CFAA compliance review (before production launch)?
 2. **SSL Labs API:** Current rate limits and caching strategy?
-3. **Domain name:** What domain to point at the droplet?
-4. **Droplet sizing:** What DigitalOcean droplet size (CPU/RAM) for initial production launch?
 
 ### Active TODOs
 
@@ -90,9 +92,10 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 - [x] Complete 05-02 (Environment Configuration) - DONE 2026-02-07
 - [x] Complete 05-03 (Docker Configuration) - DONE 2026-02-07
 - [x] Complete 05-04 (Documentation Cleanup) - DONE 2026-02-07
-- [ ] Download and install Liberation Sans fonts in fonts/ directory (pre-launch)
+- [x] Complete 06-01 through 06-04 (Deployment Infrastructure) - DONE 2026-02-08
+- [x] Set up Resend account and configure RESEND_API_KEY for email delivery - DONE 2026-02-08
+- [ ] Download and install Liberation Sans fonts in fonts/ directory (pre-launch, needed for PDF reports)
 - [ ] Schedule legal review of TOS/consent flow before production launch (pre-launch)
-- [ ] Set up Resend account and configure RESEND_API_KEY for email delivery (pre-launch)
 - [ ] Set up Stripe account (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) (pre-launch)
 
 ### Blockers
@@ -101,16 +104,28 @@ None currently.
 
 ---
 
+## Production Infrastructure
+
+- **Domain:** https://shipsecure.ai
+- **IP:** 45.55.120.175 (DigitalOcean Reserved IP)
+- **SSH:** `ssh -p 2222 deploy@shipsecure.ai`
+- **SSL:** Let's Encrypt, auto-renewal via certbot timer
+- **Containers:** trustedge-backend:3000, trustedge-frontend:3001 (bound to 127.0.0.1)
+- **Database:** DigitalOcean Managed PostgreSQL (doadmin user)
+- **CI/CD:** GitHub Actions builds → GHCR images; manual deploy via SSH
+
+---
+
 ## Session Continuity
 
-**Last session:** 2026-02-07 04:40 UTC
-**Stopped at:** Completed 06-03-PLAN.md (Nginx, Certbot, Application Deployment)
-**Resume file:** .planning/phases/06-deployment-infrastructure/06-03-SUMMARY.md
+**Last session:** 2026-02-08
+**Stopped at:** Phase 06 complete. Production deployed and verified.
+**Resume file:** .planning/phases/06-deployment-infrastructure/06-04-SUMMARY.md
 
 **Starting next session:**
-Phase 06 (Deployment Infrastructure) complete. Ready for Phase 07 (Deployment Validation) or Ansible playbook execution.
+Phase 07 (Production Validation) — end-to-end verification of all scan workflows in production.
 
 ---
 
 **State initialized:** 2026-02-04
-**Next action:** Plan Phase 06 (Deployment Infrastructure)
+**Next action:** Plan and execute Phase 07 (Production Validation)

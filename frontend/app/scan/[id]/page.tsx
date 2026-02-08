@@ -38,6 +38,7 @@ export default function ScanProgressPage() {
 
         if (!res.ok) {
           setErrorCount(prev => prev + 1)
+          setLoading(false)
           return
         }
 

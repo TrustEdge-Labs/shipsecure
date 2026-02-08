@@ -201,17 +201,17 @@ Architecture
 ```mermaid
 flowchart TD
     %% Top Layer
-    A[Web Interface / GitHub App<br/>(URL form, repo connect, webhook receiver)]
-    B[Scan Orchestrator<br/>(Queue management, job dispatch, API)]
+    A["Web Interface / GitHub App<br/>(URL form, repo connect, webhook receiver)"]
+    B["Scan Orchestrator<br/>(Queue management, job dispatch, API)"]
 
     A --> B
 
     %% Scanners
-    B --> C1[URL Scanner<br/>- Headers<br/>- Nuclei<br/>- ZAP<br/>- Probes]
-    B --> C2[TLS Scanner<br/>- SSL Labs<br/>- testssl]
-    B --> C3[Code Scanner<br/>- Semgrep<br/>- Gitleaks<br/>- OSV-Scan<br/>- npm audit]
-    B --> C4[SBOM Builder<br/>- Syft / CycloneDX<br/>- Enrich]
-    B --> C5[Shannon AI Pentester<br/>- Code + URL<br/>- Exploits<br/>- PoCs]
+    B --> C1["URL Scanner<br/>- Headers<br/>- Nuclei<br/>- ZAP<br/>- Probes"]
+    B --> C2["TLS Scanner<br/>- SSL Labs<br/>- testssl"]
+    B --> C3["Code Scanner<br/>- Semgrep<br/>- Gitleaks<br/>- OSV-Scan<br/>- npm audit"]
+    B --> C4["SBOM Builder<br/>- Syft / CycloneDX<br/>- Enrich"]
+    B --> C5["Shannon AI Pentester<br/>- Code + URL<br/>- Exploits<br/>- PoCs"]
 
     %% Findings aggregator
     C1 --> D
@@ -220,16 +220,16 @@ flowchart TD
     C4 --> D
     C5 --> D
 
-    D[Findings Aggregator<br/>(Dedupe, normalize, prioritize, map remediation)]
+    D["Findings Aggregator<br/>(Dedupe, normalize, prioritize, map remediation)"]
 
     %% Outputs
-    D --> E1[Report Generator<br/>(PDF, dashboard, email summary)]
-    D --> E2[Audit Attestation Generator]
-    D --> E3[SBOM Attestation Generator]
-    D --> E4[Logs / Telemetry]
+    D --> E1["Report Generator<br/>(PDF, dashboard, email summary)"]
+    D --> E2["Audit Attestation Generator"]
+    D --> E3["SBOM Attestation Generator"]
+    D --> E4["Logs / Telemetry"]
 
     %% Delivery
-    E1 --> F[Delivery<br/>- Dashboard, PDF, email<br/>- GitHub attestations (audit + SBOM)<br/>- SBOM download, GitHub Issues export]
+    E1 --> F["Delivery<br/>- Dashboard, PDF, email<br/>- GitHub attestations (audit + SBOM)<br/>- SBOM download, GitHub Issues export"]
     E2 --> F
     E3 --> F
     E4 --> F
@@ -276,8 +276,8 @@ flowchart TD
     E --> F[User selects repo<br/>for scan/attestation]
 
     F --> G{User has required<br/>permissions on repo?}
-    G -->|No| G1[Show error:<br/>\"You must be an admin/maintainer<br/>to request attestation\"] --> E
-    G -->|Yes| G2[Mark repo as<br/>ownership-verified<br/>(via GitHub App)]
+    G -->|No| G1["Show error:<br/>You must be an admin/maintainer<br/>to request attestation"] --> E
+    G -->|Yes| G2["Mark repo as<br/>ownership-verified<br/>via GitHub App"]
 
     %% Domain ownership
     H --> I{Domain already<br/>verified?}
@@ -285,8 +285,8 @@ flowchart TD
     I -->|No| J[Show DNS / file<br/>verification options]
 
     J --> K{Verification method}
-    K -->|DNS TXT| K1[User adds TXT record:<br/>shipsecure-verification=&lt;token&gt;]
-    K -->|Well-known file| K2[User serves file at<br/>/.well-known/shipsecure-verify.txt]
+    K -->|DNS TXT| K1["User adds TXT record:<br/>shipsecure-verification=&lt;token&gt;"]
+    K -->|Well-known file| K2["User serves file at<br/>/.well-known/shipsecure-verify.txt"]
 
     K1 --> M[ShipSecure resolves DNS<br/>and validates token]
     K2 --> M
@@ -294,14 +294,14 @@ flowchart TD
     M -->|Fail| M1[Show error and<br/>retry instructions] --> J
 
     %% Order premium scan
-    G2 --> N[User chooses scan tier<br/>(Standard / Premium / Shannon)]
+    G2 --> N["User chooses scan tier<br/>(Standard / Premium / Shannon)"]
     L --> N
 
     N --> O{Ownership verified<br/>for ALL targets?}
-    O -->|No| O1[Block attested / Shannon scans.<br/>Offer non-attested basic scan only.]
-    O -->|Yes| P[Run configured scans<br/>(URL, code, SBOM,<br/>optional Shannon)]
+    O -->|No| O1["Block attested / Shannon scans.<br/>Offer non-attested basic scan only."]
+    O -->|Yes| P["Run configured scans<br/>(URL, code, SBOM,<br/>optional Shannon)"]
 
-    P --> Q[Generate findings,<br/>SBOM, PoCs]
+    P --> Q["Generate findings,<br/>SBOM, PoCs"]
     Q --> R[Produce security-audit<br/>and SBOM attestations]
     R --> S[Deliver report +<br/>signed attestations<br/>to verified owner]
 ```

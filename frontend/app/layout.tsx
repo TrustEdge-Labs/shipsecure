@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TrustEdge Audit - Security Scanning for Vibe-Coded Apps",
+  title: "ShipSecure - Security Scanning for Vibe-Coded Apps",
   description: "Ship fast, stay safe. Free security scanning for AI-generated web applications.",
 };
 

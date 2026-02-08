@@ -97,7 +97,7 @@ export default async function Home() {
       {/* Footer */}
       <footer className="border-t border-gray-200 dark:border-gray-800 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>&copy; {new Date().getFullYear()} TrustEdge Audit</p>
+          <p>&copy; {new Date().getFullYear()} ShipSecure</p>
         </div>
       </footer>
     </div>

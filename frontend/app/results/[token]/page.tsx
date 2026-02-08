@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: ResultsPageProps) {
 
     if (!res.ok) {
       return {
-        title: 'Results Not Found - TrustEdge Audit',
+        title: 'Results Not Found - ShipSecure',
         robots: { index: false },
       }
     }
@@ -29,13 +29,13 @@ export async function generateMetadata({ params }: ResultsPageProps) {
     const data: ScanResponse = await res.json()
 
     return {
-      title: `Security Scan: ${data.score || 'In Progress'} Grade - TrustEdge Audit`,
+      title: `Security Scan: ${data.score || 'In Progress'} Grade - ShipSecure`,
       description: `Security scan results for ${data.target_url}`,
       robots: { index: false },
     }
   } catch (error) {
     return {
-      title: 'Results Not Found - TrustEdge Audit',
+      title: 'Results Not Found - ShipSecure',
       robots: { index: false },
     }
   }

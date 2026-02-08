@@ -134,7 +134,7 @@ lazy_static::lazy_static! {
         Regex::new(r"xxx+").unwrap(),
         Regex::new(r"000+").unwrap(),
         Regex::new(r"123+").unwrap(),
-        Regex::new(r"^(.)\1+$").unwrap(), // All same character
+        Regex::new(r"^(.)\1+$").ok().unwrap_or_else(|| Regex::new(r"^(a{2,}|b{2,}|c{2,}|d{2,}|e{2,}|f{2,}|0{2,}|1{2,}|x{2,}|X{2,})$").unwrap()), // All same character (backrefs unsupported, match common placeholders)
     ];
 }
 

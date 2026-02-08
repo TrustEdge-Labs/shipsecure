@@ -97,7 +97,7 @@ pub fn scan_complete_html(
                             <p style="margin: 0 0 8px; font-size: 14px; color: #6b7280;">
                                 Fixed some issues? Scan again to see your new score.
                             </p>
-                            <a href="https://trustedgeaudit.com" style="color: #3b82f6; text-decoration: none; font-weight: 500; font-size: 14px;">
+                            <a href="https://shipsecure.ai" style="color: #3b82f6; text-decoration: none; font-weight: 500; font-size: 14px;">
                                 Run Another Scan
                             </a>
                         </td>
@@ -116,7 +116,7 @@ pub fn scan_complete_html(
                     <tr>
                         <td style="padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
                             <p style="margin: 0; font-size: 13px; color: #9ca3af;">
-                                Powered by <strong style="color: #6b7280;">TrustEdge Audit</strong>
+                                Powered by <strong style="color: #6b7280;">ShipSecure</strong>
                             </p>
                         </td>
                     </tr>

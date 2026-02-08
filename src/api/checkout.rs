@@ -74,7 +74,7 @@ pub async fn create_checkout(
     let price_data = stripe::CreateCheckoutSessionLineItemsPriceData {
         currency: stripe::Currency::USD,
         product_data: Some(stripe::CreateCheckoutSessionLineItemsPriceDataProductData {
-            name: "TrustEdge Deep Security Audit".to_string(),
+            name: "ShipSecure Deep Security Audit".to_string(),
             ..Default::default()
         }),
         unit_amount: Some(4900), // $49.00

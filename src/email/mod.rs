@@ -70,7 +70,7 @@ pub async fn send_scan_complete_email(
 
     // Build request body
     let request_body = serde_json::json!({
-        "from": "TrustEdge Audit <scans@trustedgeaudit.com>",
+        "from": "ShipSecure <scans@shipsecure.ai>",
         "to": [to],
         "subject": subject,
         "html": html_body,
@@ -123,7 +123,7 @@ pub async fn send_paid_audit_email(
     // Generate email content
     let results_url = format!("{}/results/{}", base_url, results_token);
 
-    let subject = format!("Your TrustEdge Deep Audit Report: {} Grade for {}", grade, target_url);
+    let subject = format!("Your ShipSecure Deep Audit Report: {} Grade for {}", grade, target_url);
 
     // Build HTML body for paid audit email
     let html_body = format!(
@@ -131,11 +131,11 @@ pub async fn send_paid_audit_email(
 <html>
 <head>
     <meta charset="utf-8">
-    <title>TrustEdge Deep Audit Report</title>
+    <title>ShipSecure Deep Audit Report</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px; margin-bottom: 30px;">
-        <h1 style="margin: 0 0 10px 0; font-size: 28px;">TrustEdge Deep Audit Complete</h1>
+        <h1 style="margin: 0 0 10px 0; font-size: 28px;">ShipSecure Deep Audit Complete</h1>
         <p style="margin: 0; font-size: 16px; opacity: 0.9;">Your comprehensive security analysis is ready</p>
     </div>
 
@@ -163,7 +163,7 @@ pub async fn send_paid_audit_email(
 
     <div style="border-top: 2px solid #e9ecef; padding-top: 20px; color: #6c757d; font-size: 14px;">
         <p>Questions about your report? Reply to this email and we'll help you understand and prioritize the findings.</p>
-        <p style="margin-bottom: 0;">— The TrustEdge Team</p>
+        <p style="margin-bottom: 0;">— The ShipSecure Team</p>
     </div>
 </body>
 </html>"#,
@@ -188,12 +188,12 @@ pub async fn send_paid_audit_email(
 
     // Build request body with attachment
     let request_body = serde_json::json!({
-        "from": "TrustEdge Audit <scans@trustedgeaudit.com>",
+        "from": "ShipSecure <scans@shipsecure.ai>",
         "to": [to],
         "subject": subject,
         "html": html_body,
         "attachments": [{
-            "filename": format!("trustedge-deep-audit-{}.pdf", scan_id_short),
+            "filename": format!("shipsecure-deep-audit-{}.pdf", scan_id_short),
             "content": pdf_base64,
             "content_type": "application/pdf"
         }]

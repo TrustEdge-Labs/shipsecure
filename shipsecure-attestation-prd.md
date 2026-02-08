@@ -263,6 +263,48 @@ Product Tiers
 | Pro               | $149/month      | URL + repo, continuous | Generated + attested (keyless)     | Security audit attestation           | No (or 1 run/month add-on)            |
 | Agency/Enterprise | $299–499+/month | Multiple projects, SLA | Generated + attested (HW optional) | Audit attestation (HW-backed option) | Included for key projects / scheduled |
 
+```mermaid
+flowchart TD
+    A[User lands on ShipSecure<br/>dashboard] --> B{What do they want<br/>to attest?}
+
+    B -->|GitHub Repo| C[Connect GitHub Account]
+    B -->|Domain / Site| H[Enter Site URL]
+
+    %% GitHub repo ownership
+    C --> D[User authorizes<br/>ShipSecure GitHub App]
+    D --> E[ShipSecure fetches<br/>list of accessible repos]
+    E --> F[User selects repo<br/>for scan/attestation]
+
+    F --> G{User has required<br/>permissions on repo?}
+    G -->|No| G1[Show error:<br/>\"You must be an admin/maintainer<br/>to request attestation\"] --> E
+    G -->|Yes| G2[Mark repo as<br/>ownership-verified<br/>(via GitHub App)]
+
+    %% Domain ownership
+    H --> I{Domain already<br/>verified?}
+    I -->|Yes| L[Mark domain as<br/>ownership-verified]
+    I -->|No| J[Show DNS / file<br/>verification options]
+
+    J --> K{Verification method}
+    K -->|DNS TXT| K1[User adds TXT record:<br/>shipsecure-verification=&lt;token&gt;]
+    K -->|Well-known file| K2[User serves file at<br/>/.well-known/shipsecure-verify.txt]
+
+    K1 --> M[ShipSecure resolves DNS<br/>and validates token]
+    K2 --> M
+    M -->|Success| L
+    M -->|Fail| M1[Show error and<br/>retry instructions] --> J
+
+    %% Order premium scan
+    G2 --> N[User chooses scan tier<br/>(Standard / Premium / Shannon)]
+    L --> N
+
+    N --> O{Ownership verified<br/>for ALL targets?}
+    O -->|No| O1[Block attested / Shannon scans.<br/>Offer non-attested basic scan only.]
+    O -->|Yes| P[Run configured scans<br/>(URL, code, SBOM,<br/>optional Shannon)]
+
+    P --> Q[Generate findings,<br/>SBOM, PoCs]
+    Q --> R[Produce security-audit<br/>and SBOM attestations]
+    R --> S[Deliver report +<br/>signed attestations<br/>to verified owner]
+```
 
 Additional revenue:
 
@@ -324,5 +366,7 @@ Risk Mitigation
 | SBOM format fragmentation        | Support both CycloneDX and SPDX; default to CycloneDX                        |
 | Licensing constraints (Shannon)  | Use unmodified container or formal Pro license; document clearly             |
 | Regulatory landscape shifts      | Keep predicates extensible; monitor and track CISA/CRA/OMB updates           |
+
+
 | Scope creep                      | Maintain strict MVP scope; feature-flag Shannon and advanced SBOM enrichment |
 

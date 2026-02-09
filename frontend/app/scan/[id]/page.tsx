@@ -126,7 +126,7 @@ export default function ScanProgressPage() {
           </p>
           <a
             href="/"
-            className="inline-block min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            className="inline-flex items-center justify-center min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
             Try Again
           </a>

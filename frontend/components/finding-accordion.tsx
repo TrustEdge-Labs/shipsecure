@@ -42,7 +42,7 @@ export function FindingAccordion({ finding, defaultExpanded = false }: FindingAc
       {/* Header - always visible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center gap-3 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+        className="w-full px-4 py-3 flex flex-wrap items-center gap-2 sm:gap-3 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
       >
         <span className={`px-2 py-1 text-xs font-medium rounded uppercase ${getSeverityStyles(finding.severity)}`}>
           {finding.severity}
@@ -52,10 +52,10 @@ export function FindingAccordion({ finding, defaultExpanded = false }: FindingAc
             Vibe-Code
           </span>
         )}
-        <span className="flex-1 font-medium text-gray-900 dark:text-gray-100">
+        <span className="flex-1 min-w-0 font-medium text-gray-900 dark:text-gray-100 break-words">
           {finding.title}
         </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
           {getScannerDisplayName(finding.scanner_name)}
         </span>
         <span className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
@@ -72,13 +72,13 @@ export function FindingAccordion({ finding, defaultExpanded = false }: FindingAc
         } overflow-hidden`}
       >
         <div className="px-4 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 break-words">
             {finding.description}
           </p>
           <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
             How to Fix
           </h4>
-          <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
+          <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line break-words">
             {finding.remediation}
           </p>
         </div>

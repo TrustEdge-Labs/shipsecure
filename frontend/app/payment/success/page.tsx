@@ -32,7 +32,7 @@ export default function PaymentSuccessPage() {
 
         <Link
           href="/"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors font-medium"
+          className="inline-flex items-center justify-center min-h-[44px] bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors font-medium"
         >
           Return to Home
         </Link>

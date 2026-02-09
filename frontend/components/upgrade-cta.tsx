@@ -87,7 +87,7 @@ export function UpgradeCTA({ scanId, token }: UpgradeCTAProps) {
         <button
           onClick={handleUpgrade}
           disabled={loading}
-          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-3 min-h-[44px] bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Redirecting to checkout...' : 'Upgrade for $49'}
         </button>

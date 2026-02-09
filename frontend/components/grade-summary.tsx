@@ -42,7 +42,7 @@ export function GradeSummary({ grade, summary, framework, platform }: GradeSumma
   }
 
   return (
-    <div className="flex items-center gap-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       {/* Grade Circle */}
       <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${getGradeColor(grade)}`}>
         {grade}
@@ -67,7 +67,7 @@ export function GradeSummary({ grade, summary, framework, platform }: GradeSumma
       </div>
 
       {/* Finding Counts */}
-      <div className="flex flex-wrap gap-3 items-center flex-1">
+      <div className="flex flex-wrap gap-3 items-center w-full sm:flex-1 mt-2 sm:mt-0">
         {summary.critical > 0 && (
           <span className="px-3 py-1 text-sm font-medium rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">
             {summary.critical} Critical

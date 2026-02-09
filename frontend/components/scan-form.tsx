@@ -2,23 +2,21 @@
 
 import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { usePlausible } from 'next-plausible'
 import { submitScan, type ScanFormState } from '@/app/actions/scan'
 
 export function ScanForm() {
   const [state, formAction, pending] = useActionState(submitScan, {} as ScanFormState)
   const router = useRouter()
-  const plausible = usePlausible()
 
   useEffect(() => {
     if (state.scanId) {
-      plausible('Scan Submitted', { props: { scan_type: 'url' } })
+      window.plausible?.('Scan Submitted', { props: { scan_type: 'url' } })
       const timer = setTimeout(() => {
         router.push(`/scan/${state.scanId}`)
       }, 2500)
       return () => clearTimeout(timer)
     }
-  }, [state.scanId, router, plausible])
+  }, [state.scanId, router])
 
   if (state.scanId) {
     return (

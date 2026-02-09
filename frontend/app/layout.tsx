@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import PlausibleProvider from "next-plausible";
+import Script from "next/script";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,7 +21,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <PlausibleProvider domain="shipsecure.ai" trackOutboundLinks />
+        <Script
+          src="https://plausible.io/js/pa-tyZW93JgybTFzRD4-tmty.js"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="plausible-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()`,
+          }}
+        />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}

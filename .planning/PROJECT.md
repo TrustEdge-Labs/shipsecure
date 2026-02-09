@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A SaaS security scanning platform that targets developers using AI code generation tools (Cursor, Bolt, Lovable, etc.) who ship fast but lack security expertise. It orchestrates containerized open-source security tools, applies vibe-code-specific detection rules, auto-detects frameworks, and delivers actionable remediation guidance with copy-paste code fixes — no security expertise required. Includes a free tier (no signup) and a paid deep audit ($49) with professional PDF reports.
+A SaaS security scanning platform that targets developers using AI code generation tools (Cursor, Bolt, Lovable, etc.) who ship fast but lack security expertise. It orchestrates open-source security tools as native subprocesses, applies vibe-code-specific detection rules, auto-detects frameworks, and delivers actionable remediation guidance with copy-paste code fixes — no security expertise required. Includes a free tier (no signup) and a paid deep audit ($49) with professional PDF reports. Live at https://shipsecure.ai.
 
 ## Core Value
 
@@ -27,16 +27,17 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - Results dashboard showing findings, severity, and remediation guidance — v1.0
 - Scan orchestrator managing concurrent scan jobs — v1.0
 - SSRF protection, rate limiting, Docker-hardened container execution — v1.0
+- ✓ Single-droplet DigitalOcean deployment with Docker, PostgreSQL, Nginx, and SSL — v1.1
+- ✓ Remove all Render references from codebase and config — v1.1
+- ✓ Production-ready Nginx reverse proxy with Let's Encrypt SSL — v1.1
+- ✓ Systemd service management for auto-start and process supervision — v1.1
+- ✓ Firewall hardening (UFW) for production security — v1.1
+- ✓ Production environment configuration and secrets management — v1.1
+- ✓ Nuclei running natively as subprocess (no Docker-in-Docker) — v1.1
 
 ### Active
 
-- [ ] Single-droplet DigitalOcean deployment with Docker, PostgreSQL, Nginx, and SSL
-- [ ] Remove all Render references from codebase and config
-- [ ] Production-ready Nginx reverse proxy with Let's Encrypt SSL
-- [ ] Systemd service management for auto-start and process supervision
-- [ ] Firewall hardening (UFW) for production security
-- [ ] Production environment configuration and secrets management
-- [ ] Nuclei running natively as subprocess (no Docker-in-Docker)
+(None — next milestone not yet defined)
 
 ### Out of Scope
 
@@ -60,13 +61,15 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - One-time audit is the first revenue product — validate willingness to pay before building subscriptions
 - Remediation playbooks are a key differentiator — not just "you have a vulnerability" but "here's exactly how to fix it"
 - **v1.0 shipped 2026-02-06:** ~7,000 LOC Rust, ~21,000 LOC TypeScript, 165 files, 4 phases, 23 plans
+- **v1.1 shipped 2026-02-08:** Production live at https://shipsecure.ai, 77 files changed, 3 phases, 10 plans
 
 ## Constraints
 
 - **Tech Stack**: Rust backend (Axum), Next.js frontend, PostgreSQL
-- **Hosting**: DigitalOcean — single droplet with Docker, full control over infrastructure
-- **Scanning Tools**: Containerized (Nuclei, testssl.sh, custom probes) — isolation and portability
+- **Hosting**: DigitalOcean — single droplet with Docker, Nginx reverse proxy, Let's Encrypt SSL
+- **Scanning Tools**: Native subprocesses (Nuclei, testssl.sh, custom probes) — installed on host
 - **Payments**: Stripe — standard, reliable
+- **Email**: Resend — transactional email for scan results and PDF reports
 - **Free Tier**: No signup required — URL + email only, maximum conversion
 - **Launch Model**: Free + One-Time Audit first, subscriptions later
 
@@ -74,28 +77,20 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Rust over Python for backend | Performance for concurrent scanning, type safety | Good — 5 scanners run in parallel with semaphore control |
-| Next.js over HTMX for frontend | Richer interactivity for results dashboard, broader ecosystem | Good — polling, conditional rendering, client components work well |
-| URL scanning before repo scanning | Faster to ship, lower friction for users, no GitHub auth complexity | Good — shipped in 3 days |
-| One-time audit before subscriptions | Validate willingness to pay before building recurring billing | Pending — needs production deployment to validate |
-| Containerized scanners | Isolation, reproducibility, portable across hosts | Good — Docker CIS hardened with 8 security flags |
-| DigitalOcean over Render | Full Docker access on droplet, no Docker-in-Docker limitation | Pending — v1.1 milestone |
-| No signup for free tier | Maximize conversion, capture email for follow-up | Good — zero friction to first scan |
-| Capability URL for results | Unguessable token, no auth needed, shareable | Good — simple, enables sharing |
-| Database-as-queue for scans | Simple, no Redis/RabbitMQ dependency for MVP | Good — sufficient for MVP scale |
-| In-memory PDF generation | No filesystem I/O, efficient for email attachment | Good — genpdf produces Vec<u8> directly |
-
-## Current Milestone: v1.1 DigitalOcean Deployment
-
-**Goal:** Deploy the existing v1.0 application to a single DigitalOcean droplet with production-ready infrastructure (Nginx, SSL, systemd, firewall). Remove all Render references. Zero changes to scanning architecture.
-
-**Target features:**
-- Single-droplet deployment (Ubuntu, Docker, PostgreSQL, Nginx, Let's Encrypt)
-- Production Nginx reverse proxy with SSL termination
-- Systemd service management for backend and frontend
-- UFW firewall hardening
-- Remove Render config and references from codebase
-- Production environment configuration
+| Rust over Python for backend | Performance for concurrent scanning, type safety | ✓ Good — 5 scanners run in parallel with semaphore control |
+| Next.js over HTMX for frontend | Richer interactivity for results dashboard, broader ecosystem | ✓ Good — polling, conditional rendering, client components work well |
+| URL scanning before repo scanning | Faster to ship, lower friction for users, no GitHub auth complexity | ✓ Good — shipped in 3 days |
+| One-time audit before subscriptions | Validate willingness to pay before building recurring billing | Pending — production live, needs real users |
+| DigitalOcean over Render | Full Docker access on droplet, no Docker-in-Docker limitation | ✓ Good — full control, Nuclei runs as native subprocess |
+| No signup for free tier | Maximize conversion, capture email for follow-up | ✓ Good — zero friction to first scan |
+| Capability URL for results | Unguessable token, no auth needed, shareable | ✓ Good — simple, enables sharing |
+| Database-as-queue for scans | Simple, no Redis/RabbitMQ dependency for MVP | ✓ Good — sufficient for MVP scale |
+| In-memory PDF generation | No filesystem I/O, efficient for email attachment | ✓ Good — genpdf produces Vec<u8> directly |
+| Native subprocesses over Docker-in-Docker | Simpler, faster, no nested container complexity | ✓ Good — Nuclei/testssl.sh run directly on host |
+| Ansible for infrastructure automation | Reproducible provisioning, idempotent, standard tooling | ✓ Good — 3-play structure handles SSH port transition cleanly |
+| Reserved IP for DNS stability | IP survives droplet destroy/recreate, no DNS changes needed | ✓ Good — clean separation of compute and networking |
+| DigitalOcean Managed PostgreSQL | No backup management, automatic failover, connection pooling | ✓ Good — requires doadmin user for schema operations |
+| Systemd oneshot for Docker Compose | Tracks compose lifecycle cleanly, RemainAfterExit=yes | ✓ Good — restart/stop/start all work correctly |
 
 ---
-*Last updated: 2026-02-06 after v1.1 milestone start*
+*Last updated: 2026-02-08 after v1.1 milestone*

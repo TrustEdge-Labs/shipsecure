@@ -25,3 +25,30 @@
 **What's next:** Production deployment, domain setup, and demand validation. Then repo scanning, continuous monitoring, and subscription tiers for v1.1+.
 
 ---
+
+## v1.1 DigitalOcean Deployment (Shipped: 2026-02-08)
+
+**Delivered:** Production deployment on DigitalOcean with full infrastructure automation, SSL, and end-to-end validation of all scan and payment workflows
+
+**Phases completed:** 05-07 (10 plans total)
+
+**Key accomplishments:**
+- Refactored scanners from Docker containers to native binary subprocesses with configurable paths
+- Production Docker builds with fail-fast config validation, multi-stage images, and resource limits
+- DigitalOcean droplet provisioned via Ansible with SSH hardening (port 2222), UFW firewall, Nginx + Let's Encrypt SSL
+- Systemd service management for auto-start on boot and crash recovery
+- Free scan pipeline validated end-to-end: scan submission, 5 scanners, email delivery via Resend
+- Paid audit pipeline validated: Stripe checkout, webhook processing, PDF report generation, email delivery
+
+**Stats:**
+- 77 files changed (+9,980 / -3,084 lines)
+- ~7,120 lines of Rust + ~1,272 lines of TypeScript
+- 3 phases, 10 plans, 31 commits
+- 3 days from start to ship (Feb 6-8, 2026)
+
+**Git range:** `feat(05-01)` → `docs(07-02)`
+
+**What's next:** Demand validation with real users, then repo scanning, continuous monitoring, and subscription tiers.
+
+---
+

@@ -78,7 +78,7 @@ Plans:
 - [x] 10-01-PLAN.md — Privacy Policy and Terms of Service static pages
 - [x] 10-02-PLAN.md — Global footer with legal links and scan form consent checkbox
 
-#### Phase 11: Mobile & UX Polish
+#### Phase 11: Mobile & UX Polish ✅
 **Goal**: Mobile-responsive design, loading states, error handling, and visual consistency across all pages
 **Depends on**: Phase 10
 **Requirements**: UX-01, UX-02, UX-03, UX-04, UX-05, UX-06
@@ -91,9 +91,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Mobile responsiveness, duplicate footer removal, and visual consistency
-- [ ] 11-02-PLAN.md — Loading skeletons, error boundaries, and stage-specific progress messages
-- [ ] 11-03-PLAN.md — Lighthouse performance optimization and visual verification checkpoint
+- [x] 11-01-PLAN.md — Mobile responsiveness, duplicate footer removal, and visual consistency
+- [x] 11-02-PLAN.md — Loading skeletons, error boundaries, and stage-specific progress messages
+- [x] 11-03-PLAN.md — Lighthouse performance optimization and visual verification checkpoint
 
 #### Phase 12: Landing Page Optimization
 **Goal**: Developer-focused copy, methodology transparency, and open-source attribution
@@ -126,7 +126,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 08 - Analytics & Tracking | v1.2 | 1/1 | Complete | 2026-02-08 |
 | 09 - SEO & Discoverability | v1.2 | 2/2 | Complete | 2026-02-08 |
 | 10 - Legal Compliance | v1.2 | 2/2 | Complete | 2026-02-08 |
-| 11 - Mobile & UX Polish | v1.2 | 0/3 | Not started | - |
+| 11 - Mobile & UX Polish | v1.2 | 3/3 | Complete | 2026-02-09 |
 | 12 - Landing Page Optimization | v1.2 | 0/? | Not started | - |
 
 ---

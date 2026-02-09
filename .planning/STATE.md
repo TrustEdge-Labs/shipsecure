@@ -1,7 +1,7 @@
 # Project State: ShipSecure
 
 **Last updated:** 2026-02-09
-**Status:** Phase 9 in progress — 1 of 2 plans complete
+**Status:** Phase 9 complete — ready for Phase 10
 
 ---
 
@@ -17,11 +17,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 9 of 12 (SEO & Discoverability)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-02-09 — Completed 09-02-PLAN.md (dynamic/transactional page metadata)
+Plan: 2 of 2 complete
+Status: Phase complete
+Last activity: 2026-02-09 — Completed Phase 9 (both SEO plans: 09-01 and 09-02)
 
-Progress: [███████████████████░░░░░░░░░░░░░] 33/? plans (v1.0 + v1.1 complete, v1.2: 1 phase done, 1 phase in progress)
+Progress: [████████████████████░░░░░░░░░░░░] 34/? plans (v1.0 + v1.1 complete, v1.2: 2/5 phases done)
 
 ---
 
@@ -39,11 +39,10 @@ Progress: [███████████████████░░░░
 - Production validation: All systems verified (free scan, paid audit, service resilience)
 
 **v1.2 (in progress):**
-- Phases completed: 1/5 (Phase 8: Analytics)
-- Phases in progress: 1/5 (Phase 9: SEO - 1/2 plans complete)
+- Phases completed: 2/5 (Phase 8: Analytics, Phase 9: SEO)
 - Phases planned: 5 (Analytics, SEO, Legal, Mobile/UX, Landing Page)
 - Requirements: 17 total (UX: 6, Legal: 3, Analytics: 2, SEO: 3, Landing: 3)
-- Requirements delivered: 4/17 (ANLYT-01, ANLYT-02, SEO-01, SEO-03)
+- Requirements delivered: 5/17 (ANLYT-01, ANLYT-02, SEO-01, SEO-02, SEO-03)
 - Coverage: 17/17 mapped (100%)
 
 ---
@@ -54,6 +53,9 @@ Progress: [███████████████████░░░░
 
 Recent decisions affecting v1.2 work:
 
+- **Phase 9**: Used Next.js metadataBase in root layout for absolute URL resolution (required for social sharing)
+- **Phase 9**: Generated OG image at edge runtime with system fonts only (avoids 500KB bundle limit)
+- **Phase 9**: Defense-in-depth robots control: both robots.txt disallow AND meta noindex for private pages
 - **Phase 9**: Used server-side layout.tsx for client component metadata (payment success page needs useEffect but must export metadata)
 - **Phase 9**: Set follow:true on payment success despite noindex (transactional page but links to homepage)
 - **Phase 8**: Used Plausible direct script (custom URL) instead of next-plausible npm package — better ad-blocker bypass, simpler integration
@@ -116,10 +118,10 @@ See PROJECT.md Key Decisions table for full history.
 ## Session Continuity
 
 **Last session:** 2026-02-09
-**Stopped at:** Phase 9 Plan 2 complete (1 of 2 plans done)
-**Resume file:** .planning/phases/09-seo-discoverability/09-02-SUMMARY.md
+**Stopped at:** Phase 9 complete (both plans executed)
+**Resume file:** None
 
-**Plan 09-02 complete.** Dynamic/transactional page metadata added. Results pages protected from search indexing, payment success has unique metadata. Next: Execute remaining Phase 9 plan(s).
+**Phase 9 complete.** SEO foundation and dynamic page metadata implemented. Landing page optimized for social sharing with OG images, JSON-LD schemas, sitemap, and robots.txt. All pages have proper metadata. Next: `/gsd:plan-phase 10` (Legal compliance)
 
 ---
 

@@ -74,6 +74,24 @@ export function ScanForm() {
         )}
       </div>
 
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            id="authorization"
+            name="authorization"
+            required
+            className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="authorization" className="text-sm text-gray-700 dark:text-gray-300">
+            I confirm I own this website or have explicit authorization from the owner to conduct security scanning. Unauthorized scanning may violate the <a href="/terms#acceptable-use" target="_blank" className="text-blue-600 dark:text-blue-400 underline">Computer Fraud and Abuse Act (CFAA)</a>.
+          </label>
+        </div>
+        {state.errors?.authorization && (
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.errors.authorization[0]}</p>
+        )}
+      </div>
+
       <button
         type="submit"
         disabled={pending}
@@ -81,6 +99,10 @@ export function ScanForm() {
       >
         {pending ? 'Starting scan...' : 'Scan Now — Free'}
       </button>
+
+      <p className="text-xs text-gray-500 text-center">
+        By submitting, you agree to our <a href="/terms" className="underline">Terms of Service</a> and <a href="/privacy" className="underline">Privacy Policy</a>.
+      </p>
     </form>
   )
 }

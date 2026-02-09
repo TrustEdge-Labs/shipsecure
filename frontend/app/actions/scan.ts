@@ -12,12 +12,19 @@ const scanSchema = z.object({
   email: z.string()
     .min(1, 'Email is required')
     .email('Please enter a valid email address'),
+  authorization: z
+    .string()
+    .transform(val => val === 'on')
+    .refine(val => val === true, {
+      message: 'You must confirm you have authorization to scan this website'
+    })
 })
 
 export interface ScanFormState {
   errors?: {
     url?: string[]
     email?: string[]
+    authorization?: string[]
     _form?: string[]
   }
   scanId?: string
@@ -30,6 +37,7 @@ export async function submitScan(
   const validatedFields = scanSchema.safeParse({
     url: formData.get('url'),
     email: formData.get('email'),
+    authorization: formData.get('authorization') ?? '',
   })
 
   if (!validatedFields.success) {

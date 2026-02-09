@@ -57,10 +57,11 @@ Plans:
   2. Sharing shipsecure.ai on Twitter/Slack/Reddit shows correct preview image, title, and description
   3. Scan results pages return noindex/nofollow headers preventing private content from appearing in search results
   4. Google Rich Results Test validates Organization and SoftwareApplication JSON-LD schemas
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 09-01: TBD
+- [ ] 09-01-PLAN.md — Landing page metadata, OG tags, JSON-LD schemas, OG image, sitemap, robots.txt
+- [ ] 09-02-PLAN.md — Results page noindex/nofollow hardening and payment success page metadata
 
 #### Phase 10: Legal Compliance
 **Goal**: Privacy Policy, Terms of Service, and consent mechanism for GDPR/CCPA and CFAA protection
@@ -120,7 +121,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 06 - Deployment Infrastructure | v1.1 | 4/4 | Complete | 2026-02-08 |
 | 07 - Production Validation | v1.1 | 2/2 | Complete | 2026-02-08 |
 | 08 - Analytics & Tracking | v1.2 | 1/1 | Complete | 2026-02-08 |
-| 09 - SEO & Discoverability | v1.2 | 0/? | Not started | - |
+| 09 - SEO & Discoverability | v1.2 | 0/2 | Not started | - |
 | 10 - Legal Compliance | v1.2 | 0/? | Not started | - |
 | 11 - Mobile & UX Polish | v1.2 | 0/? | Not started | - |
 | 12 - Landing Page Optimization | v1.2 | 0/? | Not started | - |

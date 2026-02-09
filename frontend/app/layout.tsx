@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import { Footer } from "@/components/footer";
@@ -15,13 +15,19 @@ export const metadata: Metadata = {
   description: "Ship fast, stay safe. Free security scanning for AI-generated web applications.",
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#ffffff',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <Script
           src="https://plausible.io/js/pa-tyZW93JgybTFzRD4-tmty.js"

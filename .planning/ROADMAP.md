@@ -63,7 +63,7 @@ Plans:
 - [x] 09-01-PLAN.md — Landing page metadata, OG tags, JSON-LD schemas, OG image, sitemap, robots.txt
 - [x] 09-02-PLAN.md — Results page noindex/nofollow hardening and payment success page metadata
 
-#### Phase 10: Legal Compliance
+#### Phase 10: Legal Compliance ✅
 **Goal**: Privacy Policy, Terms of Service, and consent mechanism for GDPR/CCPA and CFAA protection
 **Depends on**: Phase 9 (Privacy Policy must document analytics implementation)
 **Requirements**: LEGAL-01, LEGAL-02, LEGAL-03
@@ -75,8 +75,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — Privacy Policy and Terms of Service static pages
-- [ ] 10-02-PLAN.md — Global footer with legal links and scan form consent checkbox
+- [x] 10-01-PLAN.md — Privacy Policy and Terms of Service static pages
+- [x] 10-02-PLAN.md — Global footer with legal links and scan form consent checkbox
 
 #### Phase 11: Mobile & UX Polish
 **Goal**: Mobile-responsive design, loading states, error handling, and visual consistency across all pages
@@ -123,7 +123,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 07 - Production Validation | v1.1 | 2/2 | Complete | 2026-02-08 |
 | 08 - Analytics & Tracking | v1.2 | 1/1 | Complete | 2026-02-08 |
 | 09 - SEO & Discoverability | v1.2 | 2/2 | Complete | 2026-02-08 |
-| 10 - Legal Compliance | v1.2 | 0/2 | Not started | - |
+| 10 - Legal Compliance | v1.2 | 2/2 | Complete | 2026-02-08 |
 | 11 - Mobile & UX Polish | v1.2 | 0/? | Not started | - |
 | 12 - Landing Page Optimization | v1.2 | 0/? | Not started | - |
 

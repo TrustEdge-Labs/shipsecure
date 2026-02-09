@@ -88,10 +88,12 @@ Plans:
   3. API failures display constructive inline error messages with suggested actions (never silent failures)
   4. Spacing, colors, button styles, and typography are consistent across all pages
   5. Landing page and results page achieve Lighthouse performance score >90 on mobile
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 11-01: TBD
+- [ ] 11-01-PLAN.md — Mobile responsiveness, duplicate footer removal, and visual consistency
+- [ ] 11-02-PLAN.md — Loading skeletons, error boundaries, and stage-specific progress messages
+- [ ] 11-03-PLAN.md — Lighthouse performance optimization and visual verification checkpoint
 
 #### Phase 12: Landing Page Optimization
 **Goal**: Developer-focused copy, methodology transparency, and open-source attribution
@@ -124,7 +126,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 08 - Analytics & Tracking | v1.2 | 1/1 | Complete | 2026-02-08 |
 | 09 - SEO & Discoverability | v1.2 | 2/2 | Complete | 2026-02-08 |
 | 10 - Legal Compliance | v1.2 | 2/2 | Complete | 2026-02-08 |
-| 11 - Mobile & UX Polish | v1.2 | 0/? | Not started | - |
+| 11 - Mobile & UX Polish | v1.2 | 0/3 | Not started | - |
 | 12 - Landing Page Optimization | v1.2 | 0/? | Not started | - |
 
 ---

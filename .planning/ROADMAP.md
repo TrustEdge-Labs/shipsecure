@@ -104,10 +104,11 @@ Plans:
   2. "How it works" section explains scan methodology without marketing jargon
   3. Site footer credits Nuclei, testssl.sh, and other open-source tools used
   4. Landing page copy uses technically honest language (avoids superlatives and vague promises)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 12-01: TBD
+- [ ] 12-01-PLAN.md — Developer-focused copy rewrite, "How It Works" section, and OSS attribution in footer
+- [ ] 12-02-PLAN.md — Visual verification checkpoint for copy quality and layout
 
 ## Progress
 
@@ -127,7 +128,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 09 - SEO & Discoverability | v1.2 | 2/2 | Complete | 2026-02-08 |
 | 10 - Legal Compliance | v1.2 | 2/2 | Complete | 2026-02-08 |
 | 11 - Mobile & UX Polish | v1.2 | 3/3 | Complete | 2026-02-09 |
-| 12 - Landing Page Optimization | v1.2 | 0/? | Not started | - |
+| 12 - Landing Page Optimization | v1.2 | 0/2 | Planned | - |
 
 ---
 *Last updated: 2026-02-09*

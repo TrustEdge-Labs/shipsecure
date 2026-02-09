@@ -1,6 +1,16 @@
+'use client'
+
+import { useEffect } from 'react'
 import Link from 'next/link'
+import { usePlausible } from 'next-plausible'
 
 export default function PaymentSuccessPage() {
+  const plausible = usePlausible()
+
+  useEffect(() => {
+    plausible('Audit Purchased', { props: { value: '49', currency: 'USD' } })
+  }, [plausible])
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-8 max-w-md w-full text-center">

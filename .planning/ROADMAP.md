@@ -35,7 +35,7 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 
 **Milestone Goal:** Make shipsecure.ai credible and polished enough to launch on Hacker News — trust signals, UX polish, analytics, and discoverability basics.
 
-#### Phase 8: Analytics & Tracking
+#### Phase 8: Analytics & Tracking ✅
 **Goal**: Privacy-friendly analytics tracking page views and conversion events
 **Depends on**: Phase 7
 **Requirements**: ANLYT-01, ANLYT-02
@@ -46,7 +46,7 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 **Plans:** 1 plan
 
 Plans:
-- [ ] 08-01-PLAN.md — Plausible integration with pageview tracking, ad blocker proxy, and conversion events
+- [x] 08-01-PLAN.md — Plausible integration with pageview tracking and conversion events
 
 #### Phase 9: SEO & Discoverability
 **Goal**: Meta tags and Open Graph configuration for search engines and social sharing
@@ -119,7 +119,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 05 - Codebase Preparation | v1.1 | 4/4 | Complete | 2026-02-07 |
 | 06 - Deployment Infrastructure | v1.1 | 4/4 | Complete | 2026-02-08 |
 | 07 - Production Validation | v1.1 | 2/2 | Complete | 2026-02-08 |
-| 08 - Analytics & Tracking | v1.2 | 0/1 | Planning complete | - |
+| 08 - Analytics & Tracking | v1.2 | 1/1 | Complete | 2026-02-08 |
 | 09 - SEO & Discoverability | v1.2 | 0/? | Not started | - |
 | 10 - Legal Compliance | v1.2 | 0/? | Not started | - |
 | 11 - Mobile & UX Polish | v1.2 | 0/? | Not started | - |

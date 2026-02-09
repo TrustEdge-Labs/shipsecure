@@ -1,7 +1,7 @@
 # Project State: ShipSecure
 
 **Last updated:** 2026-02-08
-**Status:** v1.2 roadmap created — ready to plan Phase 8
+**Status:** Phase 8 complete — ready to plan Phase 9
 
 ---
 
@@ -10,18 +10,18 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Phase 8 - Analytics & Tracking
+**Current focus:** Phase 9 - SEO & Discoverability
 
 ---
 
 ## Current Position
 
-Phase: 8 of 12 (Analytics & Tracking)
-Plan: Ready to plan Phase 8
+Phase: 9 of 12 (SEO & Discoverability)
+Plan: Ready to plan Phase 9
 Status: Ready to plan
-Last activity: 2026-02-08 — v1.2 roadmap created
+Last activity: 2026-02-08 — Phase 8 complete (analytics live)
 
-Progress: [████████████████░░░░░░░░░░░░░░░░] 31/? plans (v1.0 + v1.1 complete, v1.2 starting)
+Progress: [██████████████████░░░░░░░░░░░░░░] 32/? plans (v1.0 + v1.1 complete, v1.2: 1/5 phases done)
 
 ---
 
@@ -39,8 +39,10 @@ Progress: [████████████████░░░░░░░
 - Production validation: All systems verified (free scan, paid audit, service resilience)
 
 **v1.2 (in progress):**
+- Phases completed: 1/5 (Phase 8: Analytics)
 - Phases planned: 5 (Analytics, SEO, Legal, Mobile/UX, Landing Page)
 - Requirements: 17 total (UX: 6, Legal: 3, Analytics: 2, SEO: 3, Landing: 3)
+- Requirements delivered: 2/17 (ANLYT-01, ANLYT-02)
 - Coverage: 17/17 mapped (100%)
 
 ---
@@ -51,6 +53,8 @@ Progress: [████████████████░░░░░░░
 
 Recent decisions affecting v1.2 work:
 
+- **Phase 8**: Used Plausible direct script (custom URL) instead of next-plausible npm package — better ad-blocker bypass, simpler integration
+- **Phase 8**: Analytics events use window.plausible?.() with optional chaining for resilience
 - **Phase 7**: All scanners validated working, email delivery confirmed, Stripe webhook processing verified
 - **Phase 6**: Reserved IP for DNS stability, DigitalOcean Managed PostgreSQL with doadmin user
 - **Phase 5**: Native subprocess execution for scanners (no Docker-in-Docker)
@@ -73,13 +77,13 @@ See PROJECT.md Key Decisions table for full history.
 ### Open Questions
 
 1. **Legal review timing:** When to conduct CFAA compliance review (before production launch)?
-2. **Analytics choice:** Plausible Cloud (€9/month) vs Umami self-hosted (free)?
-3. **Mobile testing:** Which real devices to test on (iPhone, Android models)?
+2. **Mobile testing:** Which real devices to test on (iPhone, Android models)?
 
 ### Active TODOs
 
 - [ ] Schedule legal review of TOS/consent flow before production launch (pre-launch)
-- [ ] Plan Phase 8: Analytics & Tracking
+- [x] ~~Plan Phase 8: Analytics & Tracking~~ (complete)
+- [ ] Plan Phase 9: SEO & Discoverability
 
 ### Blockers
 
@@ -109,10 +113,10 @@ See PROJECT.md Key Decisions table for full history.
 ## Session Continuity
 
 **Last session:** 2026-02-08
-**Stopped at:** v1.2 roadmap created, ready to plan Phase 8
+**Stopped at:** Phase 8 complete, ready to plan Phase 9
 **Resume file:** None
 
-**v1.1 milestone complete.** v1.2 roadmap ready. Next: `/gsd:plan-phase 8`
+**Phase 8 complete.** Analytics live on shipsecure.ai. Next: `/gsd:plan-phase 9`
 
 ---
 

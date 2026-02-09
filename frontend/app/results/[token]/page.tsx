@@ -22,7 +22,11 @@ export async function generateMetadata({ params }: ResultsPageProps) {
     if (!res.ok) {
       return {
         title: 'Results Not Found - ShipSecure',
-        robots: { index: false },
+        robots: {
+          index: false,
+          follow: false,
+          nocache: true,
+        },
       }
     }
 
@@ -31,12 +35,20 @@ export async function generateMetadata({ params }: ResultsPageProps) {
     return {
       title: `Security Scan: ${data.score || 'In Progress'} Grade - ShipSecure`,
       description: `Security scan results for ${data.target_url}`,
-      robots: { index: false },
+      robots: {
+        index: false,
+        follow: false,
+        nocache: true,
+      },
     }
   } catch (error) {
     return {
       title: 'Results Not Found - ShipSecure',
-      robots: { index: false },
+      robots: {
+        index: false,
+        follow: false,
+        nocache: true,
+      },
     }
   }
 }

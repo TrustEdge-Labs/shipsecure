@@ -1,4 +1,46 @@
 import { ScanForm } from '@/components/scan-form'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'ShipSecure - Security Scanning for Vibe-Coded Apps',
+  description: 'Free security scanning for AI-generated web apps. Catch vulnerabilities in vibe-coded projects before they become breaches.',
+  keywords: ['security scanning', 'vibe coding', 'web security', 'vulnerability scanner', 'AI-generated apps'],
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'ShipSecure - Security Scanning for Vibe-Coded Apps',
+    description: 'Free security scanning for AI-generated web apps. Catch vulnerabilities in vibe-coded projects before they become breaches.',
+    url: 'https://shipsecure.ai',
+    siteName: 'ShipSecure',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'ShipSecure - Security Scanning for Vibe-Coded Apps',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ShipSecure - Security Scanning for Vibe-Coded Apps',
+    description: 'Free security scanning for AI-generated web apps. Catch vulnerabilities in vibe-coded projects before they become breaches.',
+    images: ['/opengraph-image'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+}
 
 async function getScanCount(): Promise<number | null> {
   try {
@@ -17,8 +59,46 @@ async function getScanCount(): Promise<number | null> {
 export default async function Home() {
   const scanCount = await getScanCount()
 
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'ShipSecure',
+    url: 'https://shipsecure.ai',
+    description: 'Security scanning for AI-generated web applications',
+  }
+
+  const softwareApplicationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'ShipSecure',
+    applicationCategory: 'SecurityApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+      description: 'Free security scanning',
+    },
+    url: 'https://shipsecure.ai',
+    description: 'Free security scanning for vibe-coded web apps. Catch security flaws before they become breaches.',
+    featureList: [
+      'Security header analysis',
+      'TLS configuration scanning',
+      'Exposed file detection',
+      'JavaScript secret scanning',
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
+      />
       {/* Hero Section */}
       <main className="container mx-auto px-4 py-16 sm:py-24 max-w-4xl">
         <div className="text-center mb-12">

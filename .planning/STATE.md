@@ -1,7 +1,7 @@
 # Project State: TrustEdge Audit
 
-**Last updated:** 2026-02-09
-**Status:** v1.1 milestone complete
+**Last updated:** 2026-02-08
+**Status:** v1.2 milestone started — defining requirements
 
 ---
 
@@ -10,23 +10,16 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Planning next milestone
+**Current focus:** v1.2 Launch Readiness — requirements definition
 
 ---
 
 ## Current Position
 
-**Milestone:** v1.1 DigitalOcean Deployment
-**Phase:** Phase 07 - Production Validation (COMPLETE)
-**Plan:** 02 of 2 (complete)
-**Status:** v1.1 COMPLETE -- all 3 phases, 10 plans delivered
-
-**Progress:**
-```
-[████████████████████] 100% (Phases 05+06+07 complete, all 10/10 plans done)
-```
-
-**Last activity:** 2026-02-09 — Completed 07-02-PLAN.md (paid audit flow, Stripe checkout, PDF email, service resilience)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-08 — Milestone v1.2 started
 
 ---
 
@@ -136,4 +129,5 @@ None currently.
 
 **State initialized:** 2026-02-04
 **v1.1 completed:** 2026-02-09
-**Next action:** None -- v1.1 milestone complete. Consider v1.2 planning if new features needed.
+**v1.2 started:** 2026-02-08
+**Next action:** Define requirements → create roadmap

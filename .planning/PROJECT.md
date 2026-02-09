@@ -37,7 +37,17 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 ### Active
 
-(None — next milestone not yet defined)
+## Current Milestone: v1.2 Launch Readiness
+
+**Goal:** Make shipsecure.ai credible and polished enough to launch on Hacker News — trust signals, UX polish, analytics, and discoverability basics.
+
+**Target features:**
+- UX/Polish — Mobile responsiveness, loading states, error handling, visual polish
+- Trust signals — Legal pages (TOS, Privacy Policy), about/credibility section
+- Landing page optimization — Compelling developer-focused copy, clear value prop
+- Analytics — Lightweight privacy-friendly analytics (Plausible or Umami)
+- SEO basics — Meta tags, OG tags for social sharing
+- Mobile — Responsive audit and fixes across all pages
 
 ### Out of Scope
 
@@ -93,4 +103,4 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Systemd oneshot for Docker Compose | Tracks compose lifecycle cleanly, RemainAfterExit=yes | ✓ Good — restart/stop/start all work correctly |
 
 ---
-*Last updated: 2026-02-08 after v1.1 milestone*
+*Last updated: 2026-02-08 after v1.2 milestone start*

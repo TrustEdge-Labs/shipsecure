@@ -17,11 +17,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 11 of 12 (Mobile & UX Polish)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-02-09 — Completed 11-01-PLAN.md (Mobile-Responsive Layout)
+Last activity: 2026-02-09 — Completed 11-02-PLAN.md (Loading States & Error Boundaries)
 
-Progress: [███████████████████████░░░░░░░░░] 37/? plans (v1.0 + v1.1 complete, v1.2: 4/5 phases in progress)
+Progress: [████████████████████████░░░░░░░░] 38/? plans (v1.0 + v1.1 complete, v1.2: 4/5 phases in progress)
 
 ---
 
@@ -40,10 +40,10 @@ Progress: [███████████████████████
 
 **v1.2 (in progress):**
 - Phases completed: 3/5 (Phase 8: Analytics, Phase 9: SEO, Phase 10: Legal)
-- Phases in progress: 1/5 (Phase 11: Mobile/UX — 1/3 plans complete)
+- Phases in progress: 1/5 (Phase 11: Mobile/UX — 2/3 plans complete)
 - Phases planned: 5 (Analytics, SEO, Legal, Mobile/UX, Landing Page)
 - Requirements: 17 total (UX: 6, Legal: 3, Analytics: 2, SEO: 3, Landing: 3)
-- Requirements delivered: 11/17 (ANLYT-01, ANLYT-02, SEO-01, SEO-02, SEO-03, LEGAL-01, LEGAL-02, LEGAL-03, UX-01, UX-02, UX-05)
+- Requirements delivered: 13/17 (ANLYT-01, ANLYT-02, SEO-01, SEO-02, SEO-03, LEGAL-01, LEGAL-02, LEGAL-03, UX-01, UX-02, UX-03, UX-04, UX-05)
 - Coverage: 17/17 mapped (100%)
 
 ---
@@ -54,6 +54,9 @@ Progress: [███████████████████████
 
 Recent decisions affecting v1.2 work:
 
+- **Phase 11 (11-02)**: Use Next.js App Router conventions (loading.tsx, error.tsx) instead of custom loading components - better performance with built-in Suspense
+- **Phase 11 (11-02)**: Show stage descriptions only for active stage, not all stages - reduces visual clutter and focuses attention
+- **Phase 11 (11-02)**: Use min-h-[44px] for all touch targets - meets WCAG 2.1 Level AAA accessibility standard
 - **Phase 11 (11-01)**: Removed duplicate footers completely instead of hiding them - cleaner and leverages root layout flex column
 - **Phase 11 (11-01)**: Hide scanner name on mobile in FindingAccordion using "hidden sm:inline" - keeps critical info visible at 375px
 - **Phase 11 (11-01)**: Stack full-width action buttons on mobile with "w-full sm:w-auto" - better mobile UX and follows conventions
@@ -125,10 +128,10 @@ See PROJECT.md Key Decisions table for full history.
 ## Session Continuity
 
 **Last session:** 2026-02-09
-**Stopped at:** Phase 11 Plan 01 complete (11-01-PLAN.md)
-**Resume file:** .planning/phases/11-mobile-ux-polish/11-02-PLAN.md
+**Stopped at:** Phase 11 Plan 02 complete (11-02-PLAN.md)
+**Resume file:** .planning/phases/11-mobile-ux-polish/11-03-PLAN.md
 
-**Phase 11 Plan 01 complete.** Mobile-responsive layout implemented across all 6 pages and 4 results components. Removed duplicate footers from landing, privacy, and terms pages. Added responsive breakpoints (flex-col sm:flex-row) to GradeSummary and FindingAccordion. All interactive elements now have 44px minimum touch targets. Requirements UX-01 (mobile 375px), UX-02 (tablet 768px), and UX-05 (visual consistency) delivered. Next: `/gsd:execute-plan 11-02` (Hero Section & CTA Optimization)
+**Phase 11 Plan 02 complete.** Added app-wide loading skeletons (root + results) and error boundaries at multiple levels using Next.js App Router conventions. Enhanced progress checklist with stage-specific descriptive messages shown only for active stage. Improved all error states with actionable guidance and "Common causes" explanations. All touch targets now min-h-[44px] for WCAG 2.1 Level AAA compliance. Requirements UX-03 (stage-specific progress) and UX-04 (constructive error messages) delivered. Next: `/gsd:execute-plan 11-03` (final Phase 11 plan)
 
 ---
 

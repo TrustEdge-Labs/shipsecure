@@ -80,7 +80,7 @@ export default function ScanProgressPage() {
           <div className="flex items-center justify-center mb-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
-          <p className="text-center text-gray-600 dark:text-gray-400">Loading scan status...</p>
+          <p className="text-center text-gray-600 dark:text-gray-400">Connecting to scan service...</p>
         </div>
       </div>
     )
@@ -91,12 +91,15 @@ export default function ScanProgressPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-8 max-w-md w-full">
           <h1 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-4">Scan Not Found</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            The scan you're looking for doesn't exist or has expired.
+          <p className="text-gray-600 dark:text-gray-400 mb-2">
+            This scan doesn't exist or has expired. Scan results are available for 30 days after completion.
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+            If you just submitted a scan, wait a few seconds and refresh this page.
           </p>
           <a
             href="/"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center justify-center min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
             Start New Scan
           </a>
@@ -111,16 +114,19 @@ export default function ScanProgressPage() {
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-8 max-w-md w-full">
           <h1 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-4">Scan Failed</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-2">
-            Unfortunately, the scan for <span className="font-mono text-sm">{scan.target_url}</span> failed.
+            Unfortunately, the scan for <span className="font-mono text-sm break-all">{scan.target_url}</span> failed.
           </p>
           {scan.error_message && (
-            <p className="text-sm text-gray-500 dark:text-gray-500 mb-6 font-mono bg-gray-100 dark:bg-gray-800 p-3 rounded">
+            <p className="text-sm text-gray-500 dark:text-gray-500 mb-4 font-mono bg-gray-100 dark:bg-gray-800 p-3 rounded break-all">
               {scan.error_message}
             </p>
           )}
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            Common causes: the target website may be unreachable, blocking automated requests, or experiencing downtime. Try scanning again or check that the URL is accessible.
+          </p>
           <a
             href="/"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            className="inline-block min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
             Try Again
           </a>
@@ -177,7 +183,7 @@ export default function ScanProgressPage() {
         {errorCount >= 3 && isScanning && (
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
             <p className="text-sm text-yellow-800 dark:text-yellow-300">
-              Connection lost, retrying...
+              Having trouble connecting to our servers. We're still trying -- you can also refresh the page or check back later.
             </p>
           </div>
         )}

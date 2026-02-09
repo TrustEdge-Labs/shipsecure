@@ -1,891 +1,848 @@
-# Architecture Research: DigitalOcean Deployment Topology
+# Architecture Research: Launch Readiness Features
 
-**Project:** TrustEdge Audit v1.1
-**Domain:** Single-droplet deployment architecture
-**Researched:** 2026-02-06
-**Confidence:** HIGH (verified with official Docker documentation, DigitalOcean deployment guides, and nginx best practices)
+**Domain:** SaaS Security Scanner - Launch Readiness Integration
+**Researched:** 2026-02-08
+**Confidence:** HIGH
 
-## Executive Summary
+## Standard Architecture for Launch Features
 
-For TrustEdge Audit's DigitalOcean deployment, a **hybrid native/Docker topology** provides the optimal balance of performance, security, and operational simplicity on a single droplet. PostgreSQL runs natively for maximum database performance, application services (Rust backend and Next.js frontend) run in Docker containers managed by docker-compose, and Nuclei scanners run as ephemeral Docker containers spawned by the backend. Nginx sits in front as the SSL-terminating reverse proxy, systemd manages the docker-compose stack, and UFW hardens the firewall. This topology avoids Docker-in-Docker complexity while maintaining isolation for application services and scanner containers.
-
-## Recommended Service Topology
-
-### Architecture Pattern: Hybrid Native + Docker Stack
+### System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        DigitalOcean Droplet                         │
-│                        (Ubuntu 24.04 LTS)                          │
-│                                                                     │
-│  Port 443 (HTTPS)                                                  │
-│       │                                                            │
-│       ▼                                                            │
-│  ┌────────────────────────────────────────────────────┐           │
-│  │  Nginx (Native, systemd-managed)                   │           │
-│  │  - SSL termination (Let's Encrypt)                 │           │
-│  │  - Reverse proxy                                   │           │
-│  │  - Static file serving (optional)                  │           │
-│  │  Port: 443 → 80 (external to internal)            │           │
-│  └─────────────┬──────────────────┬───────────────────┘           │
-│                │                  │                                │
-│        /:3001 (frontend)    /api:3000 (backend)                   │
-│                │                  │                                │
-│                ▼                  ▼                                │
-│  ┌─────────────────────────────────────────────────────────────┐  │
-│  │         Docker Compose Stack (systemd-managed)              │  │
-│  │                                                             │  │
-│  │  ┌───────────────────────┐  ┌───────────────────────┐      │  │
-│  │  │  Frontend Container   │  │  Backend Container    │      │  │
-│  │  │  Next.js:3001        │  │  Rust/Axum:3000      │      │  │
-│  │  │  - SSR/App Router    │  │  - HTTP API          │      │  │
-│  │  │  - Static assets     │  │  - Scan orchestrator │      │  │
-│  │  │  - Server Actions    │  │  - PDF generator     │      │  │
-│  │  └───────────────────────┘  └──────────┬────────────┘      │  │
-│  │                                        │                    │  │
-│  │                                        │ docker run         │  │
-│  │                                        │ (via socket)       │  │
-│  └────────────────────────────────────────┼────────────────────┘  │
-│                                           │                       │
-│       ┌───────────────────────────────────┘                       │
-│       │                                                           │
-│       ▼                                                           │
-│  /var/run/docker.sock (bind-mounted to backend container)        │
-│       │                                                           │
-│       ▼                                                           │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │         Ephemeral Scanner Containers (Docker)               │ │
-│  │  ┌──────────────┐  ┌──────────────┐                        │ │
-│  │  │ Nuclei       │  │ testssl.sh   │  Spawned via:          │ │
-│  │  │ (--rm)       │  │ (--rm)       │  docker run --rm       │ │
-│  │  │ CIS-hardened │  │ CIS-hardened │  --read-only           │ │
-│  │  │ 120s timeout │  │ 180s timeout │  --cap-drop all        │ │
-│  │  └──────────────┘  └──────────────┘  --memory 512M          │ │
-│  │                                      --pids-limit 1000     │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-│                                                                   │
-│       ┌────────────────────────────────────┐                     │
-│       │                                    │                     │
-│       ▼                                    ▼                     │
-│  ┌────────────────────┐        ┌─────────────────────┐          │
-│  │  PostgreSQL 16     │←───────│  pgAdmin (optional) │          │
-│  │  (Native)          │        │  Docker (port 5050) │          │
-│  │  Port: 5432        │        └─────────────────────┘          │
-│  │  Data: /var/lib/   │                                         │
-│  │  postgresql/16/    │                                         │
-│  └────────────────────┘                                         │
-│                                                                   │
-│  File System Layout:                                             │
-│  /opt/trustedge/           # Application root                   │
-│  ├── docker-compose.yml    # Stack definition                   │
-│  ├── .env.production       # Secrets (DATABASE_URL, etc.)       │
-│  ├── backend/              # Backend source (if building on-box)│
-│  ├── frontend/             # Frontend source                    │
-│  ├── reports/              # PDF reports (if saved to disk)     │
-│  └── logs/                 # Application logs (optional)        │
-│                                                                   │
-│  /etc/nginx/                                                     │
-│  ├── nginx.conf            # Main config                        │
-│  ├── sites-available/                                           │
-│  │   └── trustedge        # Site config                        │
-│  └── sites-enabled/                                             │
-│      └── trustedge → ../sites-available/trustedge              │
-│                                                                   │
-│  /etc/systemd/system/                                            │
-│  └── trustedge.service     # docker-compose systemd unit        │
-│                                                                   │
-│  /etc/letsencrypt/         # SSL certificates                   │
-│                                                                   │
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Client Browser                                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │
+│  │ Analytics    │  │ Meta Tags    │  │ JSON-LD      │                  │
+│  │ Script       │  │ (OG/SEO)     │  │ Schema       │                  │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘                  │
+│         │                  │                  │                          │
+├─────────┼──────────────────┼──────────────────┼──────────────────────────┤
+│         │        Next.js Frontend (Port 3001)                            │
+│         ↓                  ↓                  ↓                          │
+│  ┌──────────────────────────────────────────────────────────────┐       │
+│  │  app/layout.tsx                                              │       │
+│  │  - <Script> component (analytics)                            │       │
+│  │  - generateMetadata() (SEO/OG tags)                          │       │
+│  │  - <script type="application/ld+json"> (JSON-LD)             │       │
+│  └──────────────────────────────────────────────────────────────┘       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │
+│  │ app/         │  │ app/privacy  │  │ app/terms    │                  │
+│  │ page.tsx     │  │ page.tsx     │  │ page.tsx     │                  │
+│  └──────────────┘  └──────────────┘  └──────────────┘                  │
+│  ┌────────────────────────────────────────────────────┐                 │
+│  │  app/globals.css (Tailwind responsive styles)      │                 │
+│  │  - Mobile-first breakpoints (sm:, md:, lg:, xl:)   │                 │
+│  │  - Dark mode support (dark:)                       │                 │
+│  └────────────────────────────────────────────────────┘                 │
+│  ┌────────────────────────────────────────────────────┐                 │
+│  │  components/                                        │                 │
+│  │  - Improved loading states (Suspense/skeleton UI)  │                 │
+│  │  - Error boundaries (error.tsx per route)          │                 │
+│  └────────────────────────────────────────────────────┘                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                      Nginx Reverse Proxy                                │
+│  - / → frontend:3001                                                    │
+│  - /api/ → backend:3000                                                 │
+│  - SSL termination (Let's Encrypt)                                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│                   Rust/Axum Backend (Port 3000)                         │
+│  - No changes required for launch features                              │
+│  - Existing API routes continue to work                                 │
+└─────────────────────────────────────────────────────────────────────────┘
+
+External Services:
+- Analytics: Plausible Cloud or Umami Self-hosted
+- Legal: Static pages (no third-party service)
+- Fonts: Google Fonts (already in use via next/font/google)
 ```
 
-### Service Responsibilities
+### Component Responsibilities
 
-| Service | Type | Port(s) | Purpose | Restart Policy |
-|---------|------|---------|---------|----------------|
-| Nginx | Native (systemd) | 443 (external), 80 (redirect) | SSL termination, reverse proxy | systemd `Restart=always` |
-| PostgreSQL | Native (systemd) | 5432 (localhost only) | Persistent data store | systemd `Restart=always` |
-| Backend | Docker (docker-compose) | 3000 (internal) | HTTP API, scan orchestrator | `restart: unless-stopped` |
-| Frontend | Docker (docker-compose) | 3001 (internal) | Next.js SSR + static assets | `restart: unless-stopped` |
-| Nuclei | Docker (ephemeral) | N/A | Security scanner (spawned per scan) | `--rm` (auto-remove) |
-| testssl.sh | Docker (ephemeral) | N/A | TLS/SSL scanner (spawned per scan) | `--rm` (auto-remove) |
+| Component | Responsibility | Typical Implementation |
+|-----------|----------------|------------------------|
+| **Analytics Script** | Track page views and events without cookies | Next.js `<Script>` component with `strategy="afterInteractive"` |
+| **SEO Metadata** | Provide title, description, OG tags for social sharing | `generateMetadata()` function in layout.tsx/page.tsx |
+| **JSON-LD Schema** | Structured data for search engines and AI | `<script type="application/ld+json">` in layout.tsx |
+| **Legal Pages** | Static privacy policy and terms of service | Next.js route pages (app/privacy/page.tsx, app/terms/page.tsx) |
+| **Responsive CSS** | Mobile-first responsive design | Tailwind CSS breakpoints (already configured) |
+| **Loading States** | Skeleton UI and loading feedback | React Suspense + loading.tsx files per route |
+| **Error Handling** | Graceful error boundaries | error.tsx files per route + try-catch in components |
 
-## Port Allocation and Internal Routing
+## Recommended Project Structure
 
-### External (Internet → Droplet)
-
-| Port | Protocol | Service | Purpose |
-|------|----------|---------|---------|
-| 443 | HTTPS | Nginx | Public HTTPS traffic (SSL-terminated) |
-| 80 | HTTP | Nginx | Redirect to HTTPS |
-| 22 | SSH | OpenSSH | Remote administration (restrict via UFW to specific IPs) |
-
-### Internal (Localhost/Docker Network)
-
-| Port | Service | Bound To | Accessible From |
-|------|---------|----------|-----------------|
-| 3000 | Backend | 127.0.0.1:3000 | Nginx only (proxy_pass) |
-| 3001 | Frontend | 127.0.0.1:3001 | Nginx only (proxy_pass) |
-| 5432 | PostgreSQL | 127.0.0.1:5432 | Backend container (via host network or db hostname) |
-
-**Firewall (UFW) Rules:**
-```bash
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp      # SSH (optionally limit to specific IPs)
-ufw allow 80/tcp      # HTTP (redirect to HTTPS)
-ufw allow 443/tcp     # HTTPS
-ufw enable
+### Current Structure (Existing)
+```
+frontend/
+├── app/
+│   ├── layout.tsx              # Root layout (MODIFY for analytics + metadata)
+│   ├── page.tsx                # Landing page (MODIFY for JSON-LD)
+│   ├── globals.css             # Global styles (REVIEW for responsive gaps)
+│   ├── results/[token]/
+│   │   └── page.tsx            # Results page (MODIFY for metadata)
+│   ├── scan/[id]/
+│   │   └── page.tsx            # Scan progress (ADD loading.tsx, error.tsx)
+│   └── payment/success/
+│       └── page.tsx            # Payment success (MODIFY for metadata)
+├── components/
+│   ├── scan-form.tsx           # (REVIEW for mobile UX)
+│   ├── results-dashboard.tsx  # (REVIEW for mobile UX)
+│   └── ...
+├── lib/
+│   └── types.ts
+└── package.json
 ```
 
-## Request Flow Diagrams
-
-### Frontend Request Flow
-
+### New Structure (After Launch Features)
 ```
-User Browser
-    │ HTTPS (443)
-    ▼
-Nginx (SSL termination)
-    │ HTTP (3001)
-    ▼
-Frontend Container (Next.js)
-    │ Server Action (POST /api/...)
-    ▼
-Backend Container (Axum)
-    │ SQL query
-    ▼
-PostgreSQL (native)
-    │ Response
-    ▼
-Backend → Frontend → Nginx → Browser
-```
-
-### API Request Flow (Direct)
-
-```
-User Browser / API Client
-    │ HTTPS POST /api/scans (443)
-    ▼
-Nginx (SSL termination)
-    │ HTTP proxy_pass (3000)
-    ▼
-Backend Container (Axum)
-    │ 1. Create scan record
-    ▼
-PostgreSQL (INSERT into scans)
-    │ 2. Spawn scan job
-    ▼
-Backend spawns tokio task
-    │ 3. Execute docker run
-    ▼
-Docker Socket (/var/run/docker.sock)
-    │ 4. Create & run Nuclei container
-    ▼
-Nuclei Container (ephemeral)
-    │ 5. Scan target URL
-    │ 6. Output JSON to stdout
-    │ 7. Container exits, auto-removed (--rm)
-    ▼
-Backend captures stdout
-    │ 8. Parse JSON findings
-    ▼
-PostgreSQL (INSERT into findings)
-    │ 9. Update scan status = 'completed'
-    ▼
-Backend → JSON response → Nginx → Browser
+frontend/
+├── app/
+│   ├── layout.tsx              # ← MODIFIED: Analytics + base metadata
+│   ├── page.tsx                # ← MODIFIED: JSON-LD schema
+│   ├── globals.css             # ← MODIFIED: Enhanced responsive styles
+│   ├── privacy/                # ← NEW: Legal page
+│   │   └── page.tsx
+│   ├── terms/                  # ← NEW: Legal page
+│   │   └── page.tsx
+│   ├── results/[token]/
+│   │   └── page.tsx            # ← MODIFIED: Per-page metadata
+│   ├── scan/[id]/
+│   │   ├── page.tsx            # ← MODIFIED: Improved error handling
+│   │   ├── loading.tsx         # ← NEW: Loading UI
+│   │   └── error.tsx           # ← NEW: Error boundary
+│   └── payment/success/
+│       ├── page.tsx            # ← MODIFIED: Metadata
+│       └── error.tsx           # ← NEW: Error boundary
+├── components/
+│   ├── analytics.tsx           # ← NEW: Analytics provider/wrapper (optional)
+│   ├── json-ld.tsx             # ← NEW: Reusable JSON-LD component
+│   ├── scan-form.tsx           # ← REVIEWED: Mobile-optimized
+│   ├── results-dashboard.tsx  # ← REVIEWED: Mobile-optimized
+│   └── ...
+├── lib/
+│   ├── types.ts
+│   ├── metadata.ts             # ← NEW: Shared metadata utilities
+│   └── schema.ts               # ← NEW: JSON-LD schema generators
+└── package.json                # ← MODIFIED: Add next-plausible or analytics dep
 ```
 
-### WebSocket Consideration (Future)
+### Structure Rationale
 
-Current architecture uses polling (`GET /api/scans/:id` every 2 seconds). If real-time scan progress is added later, Nginx must be configured to proxy WebSocket connections:
-
-```nginx
-location /api/ws {
-    proxy_pass http://127.0.0.1:3000;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-}
-```
-
-## Docker Socket Access Pattern
-
-### The Challenge
-
-TrustEdge Audit's backend must spawn Docker containers (Nuclei, testssl.sh) for security scanning. This requires access to the Docker daemon socket (`/var/run/docker.sock`).
-
-**Three approaches exist:**
-1. **Docker-in-Docker (DinD):** Run Docker daemon inside backend container (complex, security risk, high overhead)
-2. **Socket bind-mount:** Mount host's Docker socket into backend container (simple, security risk if container compromised)
-3. **Native backend:** Run backend natively, call Docker directly (no isolation for backend, more complex deployment)
-
-### Recommended: Socket Bind-Mount (Calculated Risk)
-
-**Why this choice:**
-- Backend container is trusted code (we control it)
-- Simplifies deployment (docker-compose manages everything)
-- Scanner containers are still isolated (CIS-hardened, ephemeral)
-- Risk is acceptable for MVP (single-tenant, no untrusted code in backend)
-
-**Implementation in docker-compose.yml:**
-
-```yaml
-services:
-  backend:
-    build: .
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # Read-only mount
-    user: "1000:999"  # Non-root user, docker group (GID 999)
-    environment:
-      DATABASE_URL: postgres://trustedge:${DB_PASSWORD}@host.docker.internal:5432/trustedge_prod
-```
-
-**Security Mitigations:**
-
-1. **Read-only socket mount:** Backend can spawn containers but cannot modify Docker daemon config
-2. **Non-root user:** Backend runs as UID 1000 (non-root), member of docker group (GID 999)
-3. **CIS-hardened scanner containers:** All spawned containers use 8 security flags:
-   - `--rm` (auto-remove after exit)
-   - `--read-only` (no filesystem writes)
-   - `--cap-drop all` (drop all Linux capabilities)
-   - `--user 1000:1000` (non-root inside container)
-   - `--memory 512M` (memory limit)
-   - `--pids-limit 1000` (process limit)
-   - `--cpu-shares 512` (CPU throttling)
-   - `--no-new-privileges` (prevent privilege escalation)
-4. **Timeout enforcement:** All scanner executions have hard timeouts (120s Nuclei, 180s testssl)
-5. **Network isolation:** Scanners only have outbound network access (no host network mode)
-
-**Security Risk Assessment:**
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Backend container compromised → attacker gains Docker socket access | LOW (trusted code, no user input executed) | HIGH (full host control) | Non-root user, read-only mount, minimal attack surface in backend |
-| Scanner container breakout | VERY LOW (hardened, ephemeral, no privileges) | MEDIUM (could access host filesystem) | CIS hardening, timeout enforcement, auto-removal |
-| SSRF attack via target URL → scan internal services | MEDIUM (user-controlled input) | MEDIUM (could probe internal network) | URL validation, SSRF protection in backend |
-
-**Alternative for Higher Security (Future):**
-If backend is ever compromised, consider:
-- Docker socket proxy (e.g., [Tecnativa/docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy)) to restrict API surface
-- Rootless Docker mode on host
-- Separate scanner orchestration service (backend → message queue → scanner service → Docker)
-
-## File System Layout
-
-### Application Directory: `/opt/trustedge/`
-
-Following Linux FHS conventions, third-party applications live in `/opt/`.
-
-```
-/opt/trustedge/
-├── docker-compose.yml          # Stack definition
-├── docker-compose.prod.yml     # Production overrides (optional)
-├── .env.production             # Environment variables (SECRETS!)
-│   # DATABASE_URL=postgres://trustedge:STRONG_PW@localhost:5432/trustedge_prod
-│   # RESEND_API_KEY=re_...
-│   # STRIPE_SECRET_KEY=sk_...
-│   # TRUSTEDGE_BASE_URL=https://trustedge.audit
-├── backend/
-│   ├── Dockerfile
-│   ├── Cargo.toml
-│   ├── Cargo.lock
-│   ├── src/
-│   └── migrations/             # Database migrations (SQLx)
-├── frontend/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── next.config.ts
-│   ├── app/                    # Next.js App Router
-│   └── public/                 # Static assets
-├── reports/                    # PDF reports (if saved to disk)
-│   # NOTE: v1.0 generates PDFs in-memory for email, but may save here on failure
-└── logs/                       # Application logs (optional)
-    ├── backend.log
-    └── frontend.log
-```
-
-**Permissions:**
-```bash
-sudo chown -R 1000:1000 /opt/trustedge
-sudo chmod 700 /opt/trustedge/.env.production  # Secrets file
-sudo chmod 755 /opt/trustedge
-```
-
-### Nginx Configuration: `/etc/nginx/`
-
-```
-/etc/nginx/
-├── nginx.conf                  # Main config (usually untouched)
-├── sites-available/
-│   └── trustedge               # Site-specific config
-└── sites-enabled/
-    └── trustedge → ../sites-available/trustedge  # Symlink
-```
-
-**Example `/etc/nginx/sites-available/trustedge`:**
-
-```nginx
-# Redirect HTTP → HTTPS
-server {
-    listen 80;
-    listen [::]:80;
-    server_name trustedge.audit www.trustedge.audit;
-    return 301 https://$server_name$request_uri;
-}
-
-# Main HTTPS server
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name trustedge.audit www.trustedge.audit;
-
-    # SSL certificates (Let's Encrypt via certbot)
-    ssl_certificate /etc/letsencrypt/live/trustedge.audit/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/trustedge.audit/privkey.pem;
-
-    # SSL configuration (Mozilla Intermediate)
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:...';
-    ssl_prefer_server_ciphers off;
-
-    # Security headers
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    # Backend API
-    location /api/ {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Timeouts (scans take 30s-3min)
-        proxy_connect_timeout 10s;
-        proxy_send_timeout 300s;
-        proxy_read_timeout 300s;
-    }
-
-    # Frontend (everything else)
-    location / {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Timeouts
-        proxy_connect_timeout 10s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-
-    # Optional: Serve static assets directly (if frontend exports static build)
-    # location /_next/static/ {
-    #     alias /opt/trustedge/frontend/.next/static/;
-    #     expires 1y;
-    #     add_header Cache-Control "public, immutable";
-    # }
-}
-```
-
-### Systemd Service: `/etc/systemd/system/trustedge.service`
-
-```ini
-[Unit]
-Description=TrustEdge Audit Application Stack
-Requires=docker.service postgresql.service
-After=docker.service postgresql.service network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-WorkingDirectory=/opt/trustedge
-ExecStart=/usr/bin/docker-compose up -d
-ExecStop=/usr/bin/docker-compose down
-TimeoutStartSec=300
-TimeoutStopSec=15
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-**Key settings:**
-- `Requires=postgresql.service`: PostgreSQL must be running before stack starts
-- `Type=oneshot` + `RemainAfterExit=yes`: Service runs docker-compose command once, then systemd tracks it as active
-- `Restart=on-failure`: Automatically restart if docker-compose fails
-- `TimeoutStartSec=300`: Allow 5 minutes for pulling images and starting containers
-
-### PostgreSQL Data: `/var/lib/postgresql/16/`
-
-Native PostgreSQL installation stores data in standard location. Managed by PostgreSQL's own systemd service.
-
-```
-/var/lib/postgresql/16/main/
-├── base/                       # Database files
-├── pg_wal/                     # Write-ahead log
-├── pg_stat/                    # Statistics
-└── ...
-```
-
-**Backup strategy (recommended):**
-```bash
-# Daily backup via cron
-0 2 * * * pg_dump -U postgres trustedge_prod | gzip > /opt/trustedge/backups/db-$(date +\%Y\%m\%d).sql.gz
-```
-
-### SSL Certificates: `/etc/letsencrypt/`
-
-Managed by Certbot (Let's Encrypt client).
-
-```
-/etc/letsencrypt/
-├── live/
-│   └── trustedge.audit/
-│       ├── fullchain.pem       # Certificate + chain
-│       ├── privkey.pem         # Private key
-│       ├── cert.pem            # Certificate only
-│       └── chain.pem           # CA chain
-└── renewal/
-    └── trustedge.audit.conf    # Auto-renewal config
-```
-
-Certbot systemd timer (`certbot.timer`) runs twice daily to check for renewals. Nginx automatically reloads on certificate renewal.
-
-## Deployment Build Order
-
-Phases should be structured to address dependencies in this order:
-
-### Phase 1: Base Infrastructure Setup
-**What:** Provision droplet, harden OS, install prerequisites
-**Tasks:**
-1. Create DigitalOcean droplet (Ubuntu 24.04 LTS, 2 vCPU, 2GB RAM minimum)
-2. SSH key authentication, disable password auth
-3. Install: `docker`, `docker-compose`, `postgresql-16`, `nginx`, `certbot`, `ufw`
-4. Enable UFW with ports 22, 80, 443
-5. Configure unattended-upgrades for security patches
-
-**Verification:** `docker --version`, `psql --version`, `nginx -v`, `ufw status`
-
-### Phase 2: Database Setup
-**What:** Initialize PostgreSQL, create database and user
-**Tasks:**
-1. Start PostgreSQL: `sudo systemctl enable --now postgresql`
-2. Create database user and database:
-   ```sql
-   CREATE USER trustedge WITH PASSWORD 'STRONG_PASSWORD';
-   CREATE DATABASE trustedge_prod OWNER trustedge;
-   ```
-3. Configure `pg_hba.conf` to allow localhost connections
-4. Test connection: `psql -U trustedge -d trustedge_prod -h localhost`
-
-**Verification:** Backend can connect via `DATABASE_URL`
-
-### Phase 3: Application Deployment
-**What:** Deploy backend and frontend as Docker containers
-**Tasks:**
-1. Create `/opt/trustedge/` directory structure
-2. Copy `docker-compose.yml`, `backend/`, `frontend/` to droplet (via `rsync` or `git pull`)
-3. Create `.env.production` with secrets:
-   - `DATABASE_URL=postgres://trustedge:PW@localhost:5432/trustedge_prod`
-   - `RESEND_API_KEY=...`
-   - `STRIPE_SECRET_KEY=...`
-   - `TRUSTEDGE_BASE_URL=https://trustedge.audit`
-4. Build and start containers:
-   ```bash
-   cd /opt/trustedge
-   docker-compose build
-   docker-compose up -d
-   ```
-5. Run database migrations (SQLx):
-   ```bash
-   docker-compose exec backend trustedge_audit migrate
-   ```
-
-**Verification:** `curl http://localhost:3000/health`, `curl http://localhost:3001/`
-
-### Phase 4: Nginx Reverse Proxy
-**What:** Configure Nginx to proxy requests to backend/frontend
-**Tasks:**
-1. Create `/etc/nginx/sites-available/trustedge` (see config above)
-2. Enable site: `sudo ln -s /etc/nginx/sites-available/trustedge /etc/nginx/sites-enabled/`
-3. Disable default site: `sudo rm /etc/nginx/sites-enabled/default`
-4. Test config: `sudo nginx -t`
-5. Start Nginx: `sudo systemctl enable --now nginx`
-
-**Verification:** `curl http://DROPLET_IP/` (should return frontend HTML)
-
-### Phase 5: SSL Setup
-**What:** Install Let's Encrypt SSL certificate
-**Tasks:**
-1. Point DNS A record `trustedge.audit` to droplet IP (wait for propagation)
-2. Install certificate:
-   ```bash
-   sudo certbot --nginx -d trustedge.audit -d www.trustedge.audit
-   ```
-3. Certbot automatically updates Nginx config with SSL settings
-4. Test auto-renewal: `sudo certbot renew --dry-run`
-
-**Verification:** `https://trustedge.audit/` loads with valid certificate
-
-### Phase 6: Systemd Service Management
-**What:** Manage docker-compose stack via systemd
-**Tasks:**
-1. Create `/etc/systemd/system/trustedge.service` (see config above)
-2. Reload systemd: `sudo systemctl daemon-reload`
-3. Enable service: `sudo systemctl enable trustedge`
-4. Test manual start/stop:
-   ```bash
-   sudo systemctl stop trustedge
-   sudo systemctl start trustedge
-   sudo systemctl status trustedge
-   ```
-5. Reboot droplet, verify services auto-start
-
-**Verification:** After reboot, `https://trustedge.audit/` is accessible
-
-### Phase 7: Monitoring and Logging
-**What:** Set up basic monitoring and log aggregation
-**Tasks:**
-1. Configure docker-compose logging driver (json-file with rotation):
-   ```yaml
-   services:
-     backend:
-       logging:
-         driver: "json-file"
-         options:
-           max-size: "10m"
-           max-file: "3"
-   ```
-2. Set up log rotation for Nginx: `/etc/logrotate.d/nginx`
-3. Optional: Install monitoring (Netdata, Prometheus, or DigitalOcean Monitoring Agent)
-4. Set up alerting for disk space, memory, CPU
-
-**Verification:** Logs are rotating, disk usage is stable
+- **app/privacy/ and app/terms/**: Static route pages for legal content. No database or API required. SEO-friendly URLs (/privacy, /terms).
+- **app/*/loading.tsx**: Next.js convention for route-level loading states. Automatically shown during navigation.
+- **app/*/error.tsx**: Next.js convention for route-level error boundaries. Catches errors in that route segment.
+- **components/analytics.tsx**: Optional abstraction for analytics provider (useful if switching between Plausible/Umami).
+- **components/json-ld.tsx**: Reusable component for rendering JSON-LD scripts without hydration issues.
+- **lib/metadata.ts**: Centralized metadata generation (avoid duplication across pages).
+- **lib/schema.ts**: Centralized JSON-LD schema definitions (Organization, WebSite, SoftwareApplication).
 
 ## Architectural Patterns
 
-### Pattern 1: Database-as-Queue (Scan Orchestration)
+### Pattern 1: Analytics Integration with Next.js Script Component
 
-**What:** Use PostgreSQL as job queue for scan orchestration instead of Redis/RabbitMQ
+**What:** Use Next.js `<Script>` component to load analytics scripts with optimized loading strategy.
 
-**When to use:** MVP with low-to-medium scan volume (<1000 scans/day)
+**When to use:** For any third-party script (analytics, chat widgets, etc.) that isn't critical for initial render.
 
 **Trade-offs:**
-- **Pros:** Simpler deployment (no additional service), ACID guarantees, easy debugging (SQL queries)
-- **Cons:** Not optimized for high-throughput queues, polling overhead, potential lock contention at scale
+- **Pros:** Optimized loading, defers script execution until appropriate time, prevents blocking page hydration
+- **Cons:** Slightly more verbose than raw `<script>` tags, requires understanding of loading strategies
 
-**Implementation:**
-```rust
-// Backend polls for pending scan jobs
-loop {
-    let jobs = sqlx::query!("
-        SELECT id FROM scan_jobs
-        WHERE status = 'pending'
-        ORDER BY created_at ASC
-        LIMIT 5
-        FOR UPDATE SKIP LOCKED
-    ")
-    .fetch_all(&pool).await?;
+**Example:**
+```typescript
+// app/layout.tsx
+import Script from 'next/script'
 
-    for job in jobs {
-        tokio::spawn(execute_scan(job.id, pool.clone()));
-    }
-
-    tokio::time::sleep(Duration::from_secs(2)).await;
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <head>
+        {/* Plausible Analytics */}
+        <Script
+          strategy="afterInteractive"
+          data-domain="shipsecure.ai"
+          src="https://plausible.io/js/script.js"
+        />
+      </head>
+      <body>{children}</body>
+    </html>
+  )
 }
 ```
 
-**When to migrate:** When scan volume exceeds 1000/day or polling causes database CPU spikes
+**Alternatives:**
+- **next-plausible library**: Provides `PlausibleProvider` wrapper with built-in proxying to bypass ad blockers
+- **@next/third-parties**: Official Next.js library for Google Analytics, Google Tag Manager (but not Plausible/Umami)
 
-### Pattern 2: In-Process Worker Pool (Scan Concurrency)
+**Recommendation:** Use next-plausible if choosing Plausible (provides proxy support). Use Script component directly for Umami.
 
-**What:** Use tokio semaphore to limit concurrent scan executions within single backend process
+### Pattern 2: Metadata Generation with generateMetadata()
 
-**When to use:** Single-server deployment with predictable resource limits
+**What:** Use Next.js App Router's `generateMetadata()` function to generate dynamic metadata per page.
+
+**When to use:** For SEO meta tags, Open Graph tags, Twitter cards that need to be dynamic based on route parameters or data.
 
 **Trade-offs:**
-- **Pros:** Simple, efficient (no inter-process communication), easy to tune (semaphore count)
-- **Cons:** Single point of failure (backend crash = all scans fail), no horizontal scaling
+- **Pros:** Server-side rendering, automatic deduplication, type-safe with TypeScript, supports async data fetching
+- **Cons:** Separate from static `metadata` export (can't mix), requires understanding of Next.js metadata API
 
-**Implementation:**
-```rust
-// Limit to 5 concurrent scans
-static SCAN_SEMAPHORE: Semaphore = Semaphore::const_new(5);
+**Example:**
+```typescript
+// app/results/[token]/page.tsx
+import { Metadata } from 'next'
 
-async fn execute_scan(scan_id: Uuid, pool: PgPool) -> Result<()> {
-    let _permit = SCAN_SEMAPHORE.acquire().await?;
-    // Spawn scanner containers, collect findings
-    // Permit is released when function exits
+export async function generateMetadata({ params }): Promise<Metadata> {
+  const { token } = params
+
+  return {
+    title: 'Security Scan Results - ShipSecure',
+    description: 'Review your security scan findings and recommendations',
+    openGraph: {
+      title: 'Security Scan Results - ShipSecure',
+      description: 'Free security scan completed',
+      url: `https://shipsecure.ai/results/${token}`,
+      type: 'website',
+      images: [
+        {
+          url: 'https://shipsecure.ai/og-results.png',
+          width: 1200,
+          height: 630,
+          alt: 'ShipSecure Security Scan Results',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'Security Scan Results - ShipSecure',
+      description: 'Free security scan completed',
+      images: ['https://shipsecure.ai/og-results.png'],
+    },
+  }
 }
 ```
 
-**When to migrate:** When horizontal scaling is needed (multiple backend instances across droplets)
+**Static Metadata Alternative:**
+```typescript
+// For pages without dynamic data
+export const metadata: Metadata = {
+  title: 'Privacy Policy - ShipSecure',
+  description: 'Privacy policy for ShipSecure security scanning service',
+}
+```
 
-### Pattern 3: Ephemeral Scanner Containers (Isolation)
+**Shared Metadata Utility:**
+```typescript
+// lib/metadata.ts
+export function createMetadata(page: string): Metadata {
+  const titles = {
+    home: 'ShipSecure - Security Scanning for Vibe-Coded Apps',
+    privacy: 'Privacy Policy - ShipSecure',
+    terms: 'Terms of Service - ShipSecure',
+  }
 
-**What:** Spawn scanner containers per scan with `--rm` flag, auto-removed after execution
+  return {
+    title: titles[page],
+    description: 'Ship fast, stay safe. Free security scanning for AI-generated web applications.',
+    openGraph: {
+      siteName: 'ShipSecure',
+      // ... shared config
+    },
+  }
+}
+```
 
-**When to use:** Always (for security and resource efficiency)
+### Pattern 3: JSON-LD Schema with Client Component Wrapper
+
+**What:** Render JSON-LD structured data using a client component that prevents hydration mismatch.
+
+**When to use:** For all pages where you want search engines to understand the content type (Organization, WebSite, SoftwareApplication, etc.).
 
 **Trade-offs:**
-- **Pros:** Perfect isolation per scan, no container accumulation, no state leakage between scans
-- **Cons:** Image pull overhead (mitigated by pre-pulling images), slight startup latency (200-500ms)
+- **Pros:** SEO benefits (rich results), AI/search engine understanding, no performance impact
+- **Cons:** Requires client component wrapper to prevent React hydration issues, verbose JSON structure
 
-**Implementation:**
-```rust
-let args = vec![
-    "run", "--rm",           // Auto-remove after exit
-    "--read-only",           // No filesystem writes
-    "--cap-drop", "all",     // Drop all capabilities
-    "--user", "1000:1000",   // Non-root user
-    "--memory", "512M",      // Memory limit
-    "--pids-limit", "1000",  // Process limit
-    "--cpu-shares", "512",   // CPU throttling
-    "--no-new-privileges",   // Prevent privilege escalation
-    "projectdiscovery/nuclei:latest",
-    "-u", target_url,
-    "-jsonl", "-silent",
-];
-Command::new("docker").args(args).output().await?
+**Example:**
+```typescript
+// components/json-ld.tsx
+'use client'
+
+import { useEffect } from 'react'
+
+interface JsonLdProps {
+  data: object
+}
+
+export function JsonLd({ data }: JsonLdProps) {
+  useEffect(() => {
+    // Only run on client to prevent hydration mismatch
+  }, [])
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  )
+}
 ```
 
-**When to optimize:** Pre-pull scanner images during deployment, consider keeping 1-2 warm containers
+**Usage:**
+```typescript
+// app/page.tsx
+import { JsonLd } from '@/components/json-ld'
 
-## Anti-Patterns
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'ShipSecure',
+  applicationCategory: 'SecurityApplication',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+}
 
-### Anti-Pattern 1: Docker-in-Docker (DinD)
-
-**What people do:** Run Docker daemon inside backend container to spawn scanners
-
-**Why it's wrong:**
-- Requires privileged mode (`--privileged`), full security bypass
-- Complex networking (nested NAT)
-- High overhead (daemon inside daemon)
-- Difficult debugging (logs nested two levels deep)
-
-**Do this instead:** Bind-mount Docker socket from host (as recommended above)
-
-### Anti-Pattern 2: Exposing PostgreSQL Port Publicly
-
-**What people do:** Bind PostgreSQL to `0.0.0.0:5432` for "convenience"
-
-**Why it's wrong:**
-- Direct exposure to internet attacks (brute force, SQL injection via psql)
-- No need for external access (backend is on same host)
-- Violates least-privilege principle
-
-**Do this instead:** Bind PostgreSQL to `127.0.0.1:5432`, firewall blocks external access
-
-### Anti-Pattern 3: Running Backend/Frontend as Root
-
-**What people do:** Deploy Docker containers with `user: root` for "simplicity"
-
-**Why it's wrong:**
-- Container breakout = root on host
-- Violates least-privilege principle
-- Unnecessary risk (applications don't need root)
-
-**Do this instead:** Run as non-root user (UID 1000) in containers:
-```dockerfile
-# In Dockerfile
-RUN useradd -m -u 1000 appuser
-USER appuser
+export default function Home() {
+  return (
+    <>
+      <JsonLd data={schema} />
+      {/* page content */}
+    </>
+  )
+}
 ```
 
-### Anti-Pattern 4: Storing Secrets in Git
+**Alternative (Simple):**
+```typescript
+// For static pages without hydration concerns
+export default function Home() {
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
+      {/* page content */}
+    </>
+  )
+}
+```
 
-**What people do:** Commit `.env` file with `DATABASE_URL`, `STRIPE_SECRET_KEY` to Git
+### Pattern 4: Loading States with Suspense and Skeleton UI
 
-**Why it's wrong:**
-- Secrets leaked in Git history forever (even if file is deleted later)
-- Public repos = instant compromise
-- Private repos still vulnerable (any collaborator can see)
+**What:** Use Next.js loading.tsx convention and React Suspense to show skeleton UI during data fetching.
 
-**Do this instead:**
-- `.env.production` only on server, never committed
-- Use `.env.example` with placeholder values in Git
-- Consider secret management service (HashiCorp Vault, DigitalOcean Secrets) for larger teams
+**When to use:** For any page that fetches data server-side or client-side and needs loading feedback.
 
-### Anti-Pattern 5: No Resource Limits on Scanner Containers
+**Trade-offs:**
+- **Pros:** Better UX, prevents layout shift, shows progress, reduces perceived loading time
+- **Cons:** Requires designing skeleton UI, slightly more code
 
-**What people do:** Spawn scanner containers without `--memory`, `--cpu-shares`, `--pids-limit`
+**Example:**
+```typescript
+// app/scan/[id]/loading.tsx
+export default function Loading() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+    </div>
+  )
+}
+```
 
-**Why it's wrong:**
-- Scanner gone rogue can consume all host resources
-- OOM killer may kill PostgreSQL or backend instead
-- DoS via malicious target URL triggering resource-intensive scan
+**Error Handling:**
+```typescript
+// app/scan/[id]/error.tsx
+'use client'
 
-**Do this instead:** Always set resource limits (as shown in Pattern 3)
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error
+  reset: () => void
+}) {
+  return (
+    <div className="p-6 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+      <h2 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
+        Something went wrong
+      </h2>
+      <p className="text-red-600 dark:text-red-400 mb-4">{error.message}</p>
+      <button
+        onClick={reset}
+        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+      >
+        Try again
+      </button>
+    </div>
+  )
+}
+```
+
+### Pattern 5: Responsive Design with Tailwind Mobile-First Breakpoints
+
+**What:** Use Tailwind's mobile-first breakpoint system (sm:, md:, lg:, xl:) for responsive layouts.
+
+**When to use:** Always. Default to mobile layout, progressively enhance for larger screens.
+
+**Trade-offs:**
+- **Pros:** Mobile-first forces simplicity, easier to scale up than down, matches user behavior (most traffic is mobile)
+- **Cons:** Requires rethinking desktop-first designs, may feel counterintuitive initially
+
+**Example:**
+```typescript
+// Mobile-first component
+<div className="flex flex-col gap-4 md:flex-row md:gap-6 lg:gap-8">
+  {/* Stacks vertically on mobile, horizontal on tablet+ */}
+</div>
+
+<button className="w-full py-3 md:w-auto md:px-6">
+  {/* Full-width on mobile, auto-width on tablet+ */}
+</button>
+```
+
+**Tailwind Breakpoints:**
+- Default (no prefix): 0px - 640px (mobile)
+- `sm:` 640px+ (large mobile)
+- `md:` 768px+ (tablet)
+- `lg:` 1024px+ (desktop)
+- `xl:` 1280px+ (large desktop)
+- `2xl:` 1536px+ (extra large desktop)
+
+## Data Flow
+
+### Analytics Event Flow
+
+```
+User Action (page view, button click)
+    ↓
+Next.js Script Component (afterInteractive strategy)
+    ↓
+Analytics Script Loads (Plausible/Umami)
+    ↓
+Event Sent to Analytics Service
+    ↓
+Analytics Dashboard (external)
+```
+
+**Note:** No backend integration required. Analytics is pure client-side.
+
+### Metadata/SEO Flow
+
+```
+Request to Page
+    ↓
+Next.js Server (generateMetadata() runs)
+    ↓
+HTML with <meta> tags generated
+    ↓
+Browser receives HTML (no client-side JS needed for SEO)
+    ↓
+Search Engine Crawler sees meta tags
+```
+
+**Note:** Metadata is server-rendered. No runtime overhead.
+
+### Legal Pages Flow
+
+```
+User clicks "Privacy Policy" link
+    ↓
+Browser navigates to /privacy
+    ↓
+Next.js renders app/privacy/page.tsx (static)
+    ↓
+HTML returned to browser (no API calls)
+```
+
+**Note:** Legal pages are static. No database or backend involvement.
 
 ## Scaling Considerations
 
-### 0-100 Scans/Day (MVP: Single Droplet)
+| Scale | Architecture Adjustments |
+|-------|--------------------------|
+| 0-10k users | All launch features work as-is. No changes needed. Analytics can handle this scale easily. |
+| 10k-100k users | Consider self-hosting Umami if using cloud analytics (cost optimization). Add CDN for static assets. Consider edge caching for legal pages (though not necessary with Next.js static optimization). |
+| 100k+ users | Analytics self-hosted becomes cost-effective. Consider adding real user monitoring (RUM) for performance insights. May want to separate analytics database from main database if self-hosting Umami with PostgreSQL. |
 
-**Current architecture is optimal:**
-- 2 vCPU, 2GB RAM DigitalOcean droplet ($18/month)
-- PostgreSQL handles <10 concurrent scans easily
-- 5 concurrent scanner containers fit in memory
-- No bottlenecks expected
+### Scaling Priorities
 
-**Estimated costs:**
-- Droplet: $18/month
-- Bandwidth: ~10GB/month (free tier covers)
-- **Total: ~$18/month**
+1. **First bottleneck:** Analytics cost (if using Plausible cloud at high traffic). **Fix:** Self-host Umami on same DigitalOcean droplet (minimal overhead).
+2. **Second bottleneck:** Legal page load time (unlikely, but possible if traffic spikes). **Fix:** Static pages are already optimized. If needed, add Cloudflare CDN in front of Nginx.
 
-### 100-1000 Scans/Day (Scale Up: Larger Droplet)
+## Anti-Patterns
 
-**Bottleneck:** CPU (scanner containers are CPU-intensive)
+### Anti-Pattern 1: Blocking Scripts in <head>
 
-**Solution:** Upgrade droplet to 4 vCPU, 8GB RAM ($72/month)
-- Increase `SCAN_SEMAPHORE` to 10 concurrent scans
-- Add connection pooling to PostgreSQL (pgbouncer)
-- No architecture changes required
+**What people do:** Add analytics scripts directly in <head> without async/defer or Script component.
 
-**Estimated costs:**
-- Droplet: $72/month
-- **Total: ~$72/month**
+**Why it's wrong:** Blocks page rendering, slows down First Contentful Paint (FCP), hurts Core Web Vitals.
 
-### 1000-10000 Scans/Day (Scale Out: Multi-Droplet)
+**Do this instead:** Use Next.js `<Script>` component with `strategy="afterInteractive"` or `strategy="lazyOnload"`.
 
-**Bottleneck:** Single backend process, database connection contention
+### Anti-Pattern 2: Client-Side-Only Metadata
 
-**Solution:** Split into multiple droplets:
-1. **Database droplet:** PostgreSQL + pgbouncer (dedicated)
-2. **Backend droplet(s):** Multiple backend instances, round-robin load balancing
-3. **Frontend droplet:** Nginx + Next.js (can colocate with load balancer)
-4. **Load balancer:** DigitalOcean Load Balancer ($12/month)
+**What people do:** Use React hooks (useEffect) to set document.title and meta tags client-side.
 
-**Architecture changes:**
-- Migrate from database-as-queue to Redis-based job queue
-- Add distributed locking (Redis) to prevent duplicate scan execution
-- Horizontal scaling: 2-4 backend droplets behind load balancer
+**Why it's wrong:** Search engine crawlers see original HTML without metadata. Social media link previews fail. SEO suffers.
 
-**Estimated costs:**
-- DB droplet: $72/month (4 vCPU, 8GB)
-- Backend droplets: $144/month (2 × $72)
-- Frontend + LB droplet: $18/month
-- Load Balancer: $12/month
-- **Total: ~$246/month**
+**Do this instead:** Use Next.js `generateMetadata()` or static `metadata` export for server-side rendering.
 
-### 10000+ Scans/Day (Kubernetes or Managed Services)
+### Anti-Pattern 3: Hardcoded JSON-LD Without Component Wrapper
 
-**At this scale, consider:**
-- DigitalOcean Kubernetes (DOKS) for orchestration
-- Managed PostgreSQL (DigitalOcean Managed Database)
-- Managed Redis (DigitalOcean Managed Cache)
-- Object storage (DigitalOcean Spaces) for PDF reports
-- CDN (Cloudflare) for static assets
+**What people do:** Directly render `<script type="application/ld+json">` in server components without client wrapper.
 
-**Architecture becomes microservices:**
-- API gateway (Nginx Ingress or Traefik)
-- Backend pods (auto-scaling 5-20 replicas)
-- Scanner service (separate pods, auto-scaling)
-- Background job processor (separate service)
+**Why it's wrong:** Can cause React hydration mismatch errors in some Next.js setups. JSON stringification may differ between server and client.
+
+**Do this instead:** Use client component wrapper (JsonLd component) that prevents hydration issues.
+
+### Anti-Pattern 4: Desktop-First Responsive Design
+
+**What people do:** Design for desktop first, then try to make it work on mobile with `max-width` media queries.
+
+**Why it's wrong:** Mobile layouts get bloated with overrides. Harder to simplify complex desktop UI for mobile. Most users are on mobile.
+
+**Do this instead:** Design mobile-first with Tailwind's min-width breakpoints. Add complexity progressively for larger screens.
+
+### Anti-Pattern 5: No Loading States
+
+**What people do:** Show blank screen or spinner during data fetching without indicating what's loading.
+
+**Why it's wrong:** Poor UX. Users don't know if page is broken or loading. Increases bounce rate.
+
+**Do this instead:** Use skeleton UI (Tailwind animate-pulse) that mimics content layout. Show specific loading messages ("Analyzing security headers...").
+
+### Anti-Pattern 6: Copy-Paste Legal Pages
+
+**What people do:** Copy another site's privacy policy and terms of service.
+
+**Why it's wrong:** Copyright infringement (privacy policies are copyrighted). Legal liability if terms don't match your actual practices. GDPR/CCPA violations if inaccurate.
+
+**Do this instead:** Use legal page generator (Termly, iubenda) or hire lawyer. Customize for your specific data practices.
 
 ## Integration Points
 
 ### External Services
 
-| Service | Integration Pattern | Configuration | Notes |
-|---------|---------------------|---------------|-------|
-| PostgreSQL | Direct connection via `sqlx` | `DATABASE_URL` env var | Native on host, backend connects via localhost |
-| Docker | Socket bind-mount + `Command::new("docker")` | `/var/run/docker.sock` mounted | Backend spawns containers via host Docker |
-| Resend (Email) | HTTP API via `reqwest` | `RESEND_API_KEY` env var | Used for PDF report delivery |
-| Stripe (Payments) | HTTP API via `stripe-rust` | `STRIPE_SECRET_KEY` env var | Webhook endpoint at `/api/payments/webhook` |
-| SSL Labs API | HTTP API via `reqwest` | No auth, rate-limited | Used for TLS grading (testssl.sh alternative) |
+| Service | Integration Pattern | Notes |
+|---------|---------------------|-------|
+| **Plausible Analytics** | Script tag in layout.tsx via Script component | Cloud: script.js from plausible.io. Self-hosted: your domain/js/script.js. Use next-plausible for proxy support. |
+| **Umami Analytics** | Script tag in layout.tsx via Script component | Self-hosted only. Requires PostgreSQL database (can share with main app). Provides npm package `@umami/analytics` for events. |
+| **Google Fonts** | Already integrated via next/font/google | No changes needed. Inter font already loaded in layout.tsx. |
+| **Legal Page Generators** | Manual copy-paste or API integration | Termly/iubenda provide embed codes or static HTML. Manual copy to Next.js page.tsx works fine. |
 
 ### Internal Boundaries
 
-| Boundary | Communication | Protocol | Notes |
-|----------|---------------|----------|-------|
-| Frontend ↔ Backend | HTTP API | REST (JSON) | `NEXT_PUBLIC_BACKEND_URL=http://localhost:3000` |
-| Backend ↔ PostgreSQL | PostgreSQL wire protocol | SQL via `sqlx` | Connection pooling (max 20 connections) |
-| Backend ↔ Docker | Unix socket | Docker API | Spawn containers, stream logs |
-| Nginx ↔ Backend | HTTP reverse proxy | `proxy_pass` | Timeouts: 300s for scans |
-| Nginx ↔ Frontend | HTTP reverse proxy | `proxy_pass` | Standard timeouts |
+| Boundary | Communication | Notes |
+|----------|---------------|-------|
+| **Frontend ↔ Backend** | No changes required | Launch features are frontend-only. Existing API routes (/api/v1/*) unaffected. |
+| **Nginx ↔ Frontend** | Proxy to frontend:3001 for / | Legal pages served via same route (e.g., https://shipsecure.ai/privacy → frontend). |
+| **Analytics ↔ Frontend** | Client-side only | Analytics script loads on client. No server-side involvement. If self-hosting Umami, separate service. |
+| **Metadata ↔ Backend** | Optional API call for dynamic data | If results page metadata needs scan details, fetch via existing backend API during generateMetadata(). |
 
-## Security Hardening Checklist
+## New Components vs Modified Components
 
-- [ ] UFW enabled with minimal ports (22, 80, 443)
-- [ ] SSH password authentication disabled, key-only
-- [ ] PostgreSQL bound to localhost only (`listen_addresses = 'localhost'`)
-- [ ] Docker socket mounted read-only to backend container
-- [ ] Backend/frontend containers run as non-root user (UID 1000)
-- [ ] Scanner containers CIS-hardened (8 security flags)
-- [ ] Secrets in `.env.production`, never committed to Git
-- [ ] Nginx security headers (HSTS, X-Frame-Options, CSP)
-- [ ] SSL/TLS A+ grade (Mozilla Intermediate profile)
-- [ ] Unattended security updates enabled (`unattended-upgrades`)
-- [ ] Log rotation configured (Nginx, Docker, PostgreSQL)
-- [ ] Rate limiting on API endpoints (backend or Nginx level)
-- [ ] SSRF protection in backend (URL validation, blocklist RFC 1918)
-- [ ] Fail2ban or similar for SSH brute force protection (optional)
+### New Components (Build from Scratch)
 
-## Performance Optimization Checklist
+| Component | File Path | Purpose |
+|-----------|-----------|---------|
+| Privacy Policy Page | `app/privacy/page.tsx` | Static legal page with privacy policy text |
+| Terms of Service Page | `app/terms/page.tsx` | Static legal page with terms of service text |
+| JSON-LD Wrapper | `components/json-ld.tsx` | Reusable client component for JSON-LD schema |
+| Loading UI (Scan Page) | `app/scan/[id]/loading.tsx` | Skeleton UI for scan progress page |
+| Error Boundary (Scan Page) | `app/scan/[id]/error.tsx` | Error UI for scan progress page |
+| Error Boundary (Payment) | `app/payment/success/error.tsx` | Error UI for payment success page |
+| Metadata Utilities | `lib/metadata.ts` | Shared metadata generation functions |
+| Schema Utilities | `lib/schema.ts` | JSON-LD schema generators (Organization, SoftwareApplication, etc.) |
 
-- [ ] PostgreSQL connection pooling (max 20 connections)
-- [ ] PostgreSQL indexes on frequently queried columns (`scans.id`, `findings.scan_id`)
-- [ ] Docker images pre-pulled (`docker-compose pull` during deployment)
-- [ ] Nginx gzip compression enabled for text assets
-- [ ] Nginx caching for static assets (if Next.js static export used)
-- [ ] Semaphore tuned for concurrent scans (start with 5, increase if CPU allows)
-- [ ] Scanner container memory limits tuned (512M is conservative, may decrease)
-- [ ] Database vacuuming scheduled (PostgreSQL autovacuum enabled by default)
+### Modified Components (Enhance Existing)
 
-## Comparison Matrix: Deployment Topologies
+| Component | File Path | Changes |
+|-----------|-----------|---------|
+| Root Layout | `app/layout.tsx` | ADD: Analytics Script component. MODIFY: Base metadata (title template, OG defaults). ADD: JSON-LD Organization schema. |
+| Landing Page | `app/page.tsx` | ADD: JSON-LD SoftwareApplication schema. MODIFY: Metadata (already has some, enhance OG tags). REVIEW: Responsive layout (already mobile-first, ensure polish). |
+| Results Page | `app/results/[token]/page.tsx` | ADD: generateMetadata() for dynamic OG tags with scan results. REVIEW: Error handling (currently minimal). |
+| Scan Progress Page | `app/scan/[id]/page.tsx` | IMPROVE: Error handling (set loading=false on API errors). ADD: Better loading states (currently shows polling progress). |
+| Global Styles | `app/globals.css` | REVIEW: Ensure all responsive breakpoints covered. ADD: Any missing mobile-first styles. |
+| Scan Form Component | `components/scan-form.tsx` | REVIEW: Mobile UX (input sizes, button touch targets). Already has loading state (good). |
+| Results Dashboard | `components/results-dashboard.tsx` | REVIEW: Mobile layout (grouping toggles, accordion on small screens). Already responsive (good). |
 
-| Topology | PostgreSQL | App Containers | Scanner Execution | Complexity | Performance | Security |
-|----------|------------|----------------|-------------------|------------|-------------|----------|
-| **Hybrid (Recommended)** | Native | Docker | Docker (socket mount) | Medium | High (DB native) | Good (CIS-hardened scanners) |
-| All Docker (docker-compose) | Docker | Docker | Docker-in-Docker (DinD) | Low | Medium (DB overhead) | Poor (requires privileged) |
-| All Native | Native | Native binaries | Docker (native Docker CLI) | High | Highest (no overhead) | Best (no socket mount risk) |
-| Kubernetes (overkill for MVP) | Managed DB | K8s Pods | K8s Jobs | Very High | High (auto-scaling) | Best (RBAC, network policies) |
+## Build Order
 
-**Recommendation:** **Hybrid topology** balances all factors for single-droplet MVP.
+### Phase 1: Analytics (Low Risk, High Value)
+
+**Why first:** Analytics doesn't affect existing functionality. Can deploy independently. Provides immediate user insights.
+
+1. **Add analytics dependency**: `npm install next-plausible` (if Plausible) or configure Umami
+2. **Modify app/layout.tsx**: Add Script component for analytics
+3. **Test**: Verify analytics events fire in browser dev tools (Network tab)
+4. **Deploy**: Push to production, verify in analytics dashboard
+
+**Dependencies:** None. Standalone.
+
+**Estimated effort:** 1-2 hours (including testing)
+
+### Phase 2: SEO Metadata (Low Risk, High Value)
+
+**Why second:** Improves social sharing immediately. No dependencies on Phase 1.
+
+1. **Modify app/layout.tsx**: Enhance base metadata with title template and OG defaults
+2. **Add lib/metadata.ts**: Create shared metadata utilities
+3. **Modify app/page.tsx**: Add full metadata (already has some)
+4. **Add generateMetadata() to app/results/[token]/page.tsx**: Dynamic OG tags for scan results
+5. **Add generateMetadata() to app/payment/success/page.tsx**: Payment success metadata
+6. **Test**: Use Open Graph debugger (Facebook, Twitter, LinkedIn) to verify OG tags
+7. **Deploy**: Push to production, verify social previews
+
+**Dependencies:** None. Standalone.
+
+**Estimated effort:** 3-4 hours (including OG image creation if not using placeholder)
+
+### Phase 3: JSON-LD Schema (Low Risk, Medium Value)
+
+**Why third:** SEO benefit is incremental. No user-facing changes. Can be done after metadata.
+
+1. **Create components/json-ld.tsx**: Client wrapper for JSON-LD
+2. **Create lib/schema.ts**: Schema generators (Organization, SoftwareApplication, WebSite)
+3. **Modify app/layout.tsx**: Add Organization schema
+4. **Modify app/page.tsx**: Add SoftwareApplication schema
+5. **Test**: Use Google Rich Results Test to verify schema
+6. **Deploy**: Push to production, verify in Google Search Console (takes days/weeks to index)
+
+**Dependencies:** None. Standalone.
+
+**Estimated effort:** 2-3 hours
+
+### Phase 4: Legal Pages (Low Risk, Essential)
+
+**Why fourth:** Required for GDPR/CCPA compliance but not urgent if no EU/CA traffic yet. Static pages are low risk.
+
+1. **Create app/privacy/page.tsx**: Privacy policy page with static content
+2. **Create app/terms/page.tsx**: Terms of service page with static content
+3. **Modify app/page.tsx footer**: Add links to /privacy and /terms
+4. **Review existing pages**: Ensure footer links exist on all pages
+5. **Test**: Navigate to /privacy and /terms, verify rendering
+6. **Deploy**: Push to production
+
+**Dependencies:** Legal text (from lawyer or generator). If not ready, can use placeholder and update later.
+
+**Estimated effort:** 2-3 hours (excluding legal text creation, which is external)
+
+### Phase 5: Responsive CSS Polish (Medium Risk, Medium Value)
+
+**Why fifth:** Existing site is already responsive (using Tailwind). This is polish, not critical path.
+
+1. **Audit existing pages**: Test on real mobile devices (iOS, Android) and Chrome DevTools
+2. **Identify gaps**: Note any layout breaks, small text, tiny buttons, overflow issues
+3. **Fix issues**: Update Tailwind classes (e.g., `text-sm md:text-base`, `py-2 md:py-3`)
+4. **Test**: Verify fixes on multiple viewports (320px, 375px, 768px, 1024px)
+5. **Deploy**: Push to production, test on real devices
+
+**Dependencies:** None. Standalone. (But benefits from completing Phases 1-4 first so analytics tracks any bounce rate improvements.)
+
+**Estimated effort:** 4-6 hours (depends on number of issues found)
+
+### Phase 6: UX Improvements (Medium Risk, High Value)
+
+**Why sixth:** Improves user experience but touches existing components. Should be done after analytics is live to measure impact.
+
+1. **Create app/scan/[id]/loading.tsx**: Skeleton UI for scan progress
+2. **Create app/scan/[id]/error.tsx**: Error boundary with retry button
+3. **Create app/payment/success/error.tsx**: Error boundary for payment page
+4. **Modify app/scan/[id]/page.tsx**: Improve error handling (currently sets loading=false but no user-friendly message)
+5. **Review components/scan-form.tsx**: Already has good loading state, verify mobile UX
+6. **Review components/results-dashboard.tsx**: Test mobile layout (grouping toggles, accordions)
+7. **Test**: Trigger errors (invalid URLs, network failures) and verify error UI
+8. **Deploy**: Push to production, monitor error rates in analytics
+
+**Dependencies:** Phase 1 (analytics) should be live to measure before/after UX metrics.
+
+**Estimated effort:** 4-6 hours
+
+## Build Order Summary
+
+```
+Phase 1: Analytics (1-2h)
+    ↓
+Phase 2: SEO Metadata (3-4h)
+    ↓
+Phase 3: JSON-LD Schema (2-3h)
+    ↓
+Phase 4: Legal Pages (2-3h, excluding legal text)
+    ↓
+Phase 5: Responsive CSS Polish (4-6h)
+    ↓
+Phase 6: UX Improvements (4-6h)
+
+Total: 16-24 hours
+```
+
+**Critical Path:** Analytics → SEO Metadata (can be done in any order, but analytics first provides tracking for subsequent phases)
+
+**Optional/Deferrable:** JSON-LD Schema (nice-to-have), Responsive CSS Polish (if existing layout is acceptable)
+
+**Blockers:** Legal Pages depend on legal text availability (external). Can use placeholder.
+
+## Integration with Existing Architecture
+
+### No Backend Changes Required
+
+All launch readiness features are **frontend-only**. The Rust/Axum backend does not need any modifications.
+
+**Reason:** Analytics, SEO metadata, JSON-LD, legal pages, responsive CSS, and UX improvements are all client-side or static rendering concerns.
+
+**Existing backend API routes continue to work unchanged:**
+- `POST /api/v1/scans` (scan submission)
+- `GET /api/v1/scans/:id` (scan status polling)
+- `GET /api/v1/scans/:id/findings` (results)
+- `POST /api/v1/checkout` (Stripe checkout)
+- `POST /api/v1/webhooks/stripe` (Stripe webhooks)
+- `GET /api/v1/stats/scan-count` (social proof)
+
+### Nginx Configuration
+
+**Current setup (from docker-compose.prod.yml and known Nginx config):**
+- `/api/*` → proxied to backend:3000
+- `/*` → proxied to frontend:3001
+
+**No changes needed.**
+
+Legal pages (`/privacy`, `/terms`) will be served by frontend:3001 via Next.js routing. Nginx doesn't need specific rules.
+
+### Docker Compose Changes
+
+**Minimal changes:**
+
+1. **Frontend environment variables** (if using cloud analytics):
+   ```yaml
+   # docker-compose.prod.yml
+   frontend:
+     environment:
+       NEXT_PUBLIC_PLAUSIBLE_DOMAIN: shipsecure.ai
+       # OR for Umami:
+       NEXT_PUBLIC_UMAMI_WEBSITE_ID: xxxxxxxx
+       NEXT_PUBLIC_UMAMI_HOST: https://analytics.shipsecure.ai
+   ```
+
+2. **Optional: Self-hosted Umami** (if chosen):
+   ```yaml
+   # docker-compose.prod.yml
+   umami:
+     image: ghcr.io/umami-software/umami:postgresql-latest
+     environment:
+       DATABASE_URL: ${UMAMI_DATABASE_URL}
+       DATABASE_TYPE: postgresql
+       APP_SECRET: ${UMAMI_APP_SECRET}
+     ports:
+       - "127.0.0.1:3002:3000"
+     depends_on:
+       - db
+   ```
+
+   Then configure Nginx to proxy `/analytics/*` to `umami:3000` (or use subdomain like `analytics.shipsecure.ai`).
+
+**If using cloud analytics (Plausible):** No Docker changes. Just environment variables for Next.js.
+
+### Deployment Process
+
+**Current process (from v1.1 milestones):**
+1. Build Docker images locally or via GitHub Actions
+2. Push to GHCR
+3. SSH to DigitalOcean droplet
+4. Pull images
+5. `docker compose -f docker-compose.prod.yml down`
+6. `docker compose -f docker-compose.prod.yml up -d`
+7. Verify via https://shipsecure.ai
+
+**No changes needed for launch features.** Follow existing deployment process.
+
+**Additional step (one-time for legal pages):**
+- Ensure footer component includes links to `/privacy` and `/terms` before deploying
+
+## Risk Assessment
+
+| Feature | Risk Level | Mitigation |
+|---------|------------|------------|
+| Analytics | LOW | No user-facing changes. Script loads asynchronously. If analytics service is down, site continues working. Use `strategy="afterInteractive"` to prevent blocking. |
+| SEO Metadata | LOW | Pure HTML `<meta>` tags. No JavaScript runtime dependency. If metadata is wrong, site still works (just bad social previews). Test with OG debuggers before deploy. |
+| JSON-LD Schema | LOW | Search engines ignore invalid schema. No user-facing impact. Test with Google Rich Results Test. |
+| Legal Pages | LOW | Static pages. No dynamic data. Risk is legal accuracy (not technical). Use placeholder and update with lawyer-reviewed text later. |
+| Responsive CSS | MEDIUM | Could break layouts if Tailwind classes conflict. Mitigate: Test on real devices before deploy. Have rollback plan. |
+| UX Improvements | MEDIUM | Touches existing components. Could introduce bugs. Mitigate: Comprehensive testing. Deploy UX changes after analytics is live (to measure impact). |
+
+**Overall risk: LOW to MEDIUM.** Most features are additive (analytics, metadata, legal pages) with minimal risk of breaking existing functionality.
+
+## Monitoring and Validation
+
+### Post-Deploy Checks
+
+| Feature | Validation Method | Expected Result |
+|---------|-------------------|------------------|
+| Analytics | Check analytics dashboard for live page views | Page views appear within 1-2 minutes |
+| SEO Metadata | Use Facebook Sharing Debugger, Twitter Card Validator, LinkedIn Post Inspector | OG tags render correctly with title, description, image |
+| JSON-LD | Use Google Rich Results Test | Schema validates without errors |
+| Legal Pages | Navigate to /privacy and /terms | Pages load without errors, content renders |
+| Responsive CSS | Test on real mobile devices (iOS, Android) | No horizontal scroll, readable text, tappable buttons (44px min) |
+| UX Improvements | Trigger errors (network disconnect during scan), check loading states | Error boundaries render, loading skeletons show, retry buttons work |
+
+### Analytics Events to Track (Optional)
+
+If implementing event tracking (beyond page views):
+- Scan form submission (`scan_started`)
+- Scan completion (`scan_completed`)
+- Paid audit button click (`upgrade_clicked`)
+- Stripe checkout initiation (`checkout_started`)
+- Payment success (`payment_completed`)
+
+**Implementation:** Use `window.plausible()` or `window.umami.track()` in client components.
 
 ## Sources
 
-### Docker Security and Socket Access
-- [Docker Security - OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html) — Authoritative security best practices
-- [Protect the Docker daemon socket | Docker Docs](https://docs.docker.com/engine/security/protect-access/) — Official guidance on socket access
-- [Docker Security Best Practices | Better Stack Community](https://betterstack.com/community/guides/scaling-docker/docker-security-best-practices/) — Comprehensive hardening guide
-- [Bind mounts | Docker Docs](https://docs.docker.com/engine/storage/bind-mounts/) — Official bind mount documentation
+### Next.js Metadata & SEO
+- [Functions: generateMetadata | Next.js](https://nextjs.org/docs/app/api-reference/functions/generate-metadata)
+- [Getting Started: Metadata and OG images | Next.js](https://nextjs.org/docs/app/getting-started/metadata-and-og-images)
+- [How to Configure SEO in Next.js 16 (the Right Way)](https://jsdevspace.substack.com/p/how-to-configure-seo-in-nextjs-16)
+- [Next.js SEO Optimization Guide (2026 Edition)](https://www.djamware.com/post/697a19b07c935b6bb054313e/next-js-seo-optimization-guide--2026-edition)
 
-### DigitalOcean Deployment
-- [Deploying multiple dockerized apps to a single DigitalOcean droplet using docker-compose contexts | Daniel Wachtel's Blog](https://danielwachtel.com/devops/deploying-multiple-dockerized-apps-digitalocean-docker-compose-contexts) — Multi-app deployment patterns
-- [Deploying Your Web App to DigitalOcean with Docker Compose | Medirelay](https://medirelay.com/blog/127-deploy-webapp-digitalocean-docker-compose/) — Production deployment guide
-- [How To Use the Docker 1-Click Install on DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-use-the-docker-1-click-install-on-digitalocean) — Droplet provisioning
+### Analytics Integration
+- [How to add the script to your NextJS site | Plausible docs](https://plausible.io/docs/nextjs-integration)
+- [GitHub - 4lejandrito/next-plausible](https://github.com/4lejandrito/next-plausible)
+- [How to Setup and Integrate Umami to Your Next.js Site](https://dev.to/yehezkielgunawan/how-to-setup-and-integrate-umami-to-your-nextjs-site-ahf)
+- [Using the Umami Analytics Provider in Next.js](https://makerkit.dev/docs/next-supabase-turbo/analytics/umami-analytics-provider)
 
-### Nginx Reverse Proxy
-- [How to Nginx Reverse Proxy with Docker Compose - Gcore](https://gcore.com/learning/reverse-proxy-with-docker-compose) — Nginx + Docker patterns
-- [How to use Nginx with Docker Compose effectively with examples](https://geshan.com.np/blog/2024/03/nginx-docker-compose/) — Configuration examples
-- [Deploying a Next.js App on HTTPS with Docker Using NGINX as a Reverse Proxy - Collabnix](https://collabnix.com/deploying-a-next-js-app-on-https-with-docker-using-nginx-as-a-reverse-proxy/) — Next.js-specific patterns
+### Next.js Script Component
+- [Components: Script Component | Next.js](https://nextjs.org/docs/app/api-reference/components/script)
+- [Optimizing third-party script loading in Next.js | Chrome for Developers](https://developer.chrome.com/blog/script-component)
+- [A Next.js package for managing third-party libraries | Chrome for Developers](https://developer.chrome.com/blog/next-third-parties)
 
-### PostgreSQL Performance
-- [Docker vs Native PostgreSQL: Impact on Database Performance](https://secnep.com/docker-vs-native-postgresql-performance-comparison/) — Performance benchmarks
-- [Benchmark PostgreSQL on all three systems: Docker versus native | ITNEXT](https://itnext.io/benchmark-postgresql-docker-versus-native-2dde6b5a8552) — Detailed comparison
+### JSON-LD & Structured Data
+- [Guides: JSON-LD | Next.js](https://nextjs.org/docs/app/guides/json-ld)
+- [Implementing JSON-LD in Next.js for SEO](https://www.wisp.blog/blog/implementing-json-ld-in-nextjs-for-seo)
+- [Add Structured Data to your Next.js site with JSON-LD](https://mikebifulco.com/posts/structured-data-json-ld-for-next-js-sites)
 
-### Systemd and Docker Compose
-- [Running Docker Compose as a systemd Service: A Comprehensive Guide](https://bootvar.com/systemd-service-for-docker-compose/) — Systemd integration patterns
-- [Start containers automatically | Docker Docs](https://docs.docker.com/engine/containers/start-containers-automatically/) — Restart policies
-- [Docker compose as a systemd unit](https://gist.github.com/mosquito/b23e1c1e5723a7fd9e6568e5cf91180f) — Example service file
+### Privacy & GDPR Compliance
+- [Best Privacy-Compliant Analytics Tools for 2026](https://www.mitzu.io/post/best-privacy-compliant-analytics-tools-for-2026)
+- [The 9 best GDPR-compliant analytics tools](https://posthog.com/blog/best-gdpr-compliant-analytics-tools)
+- [Plausible vs Umami: Which One Is Right for Your Website Analytics?](https://vemetric.com/blog/plausible-vs-umami)
 
-### Linux Filesystem Conventions
-- [Understanding and Utilizing the Linux `/opt` Folder — linuxvox.com](https://linuxvox.com/blog/linux-opt-folder/) — FHS /opt best practices
-- [What Is /Opt In Linux? (The Ultimate Guide) | Unixmen](https://www.unixmen.com/what-is-opt-in-linux-the-ultimate-guide/) — Directory structure conventions
+### Legal Pages
+- [Using Termageddon with React and Next.js](https://termageddon.com/using-termageddon-with-react-and-next-js/)
+- [Privacy Policy for Next.js: How To Create One](https://termly.io/resources/articles/privacy-policy-for-nextjs/)
+
+### Responsive Design & Tailwind
+- [Responsive design - Core concepts - Tailwind CSS](https://tailwindcss.com/docs/responsive-design)
+- [Install Tailwind CSS with Next.js](https://tailwindcss.com/docs/guides/nextjs)
+- [Breakpoint: Responsive Design Breakpoints in 2025](https://www.browserstack.com/guide/responsive-design-breakpoints)
+- [Responsive Design Breakpoints: 2025 Playbook](https://dev.to/gerryleonugroho/responsive-design-breakpoints-2025-playbook-53ih)
+
+### UX & Error Handling
+- [Leveraging Suspense and Error Boundaries in Next.js 15](https://medium.com/@sureshdotariya/leveraging-suspense-and-error-boundaries-in-next-js-034aff10df4f)
+- [Best Practices for Loading States in Next.js](https://www.getfishtank.com/insights/best-practices-for-loading-states-in-nextjs)
+- [Next.js Error Handling Patterns](https://betterstack.com/community/guides/scaling-nodejs/error-handling-nextjs/)
+- [Next.js 15: Error Handling best practices](https://devanddeliver.com/blog/frontend/next-js-15-error-handling-best-practices-for-code-and-routes)
 
 ---
-
-*Architecture research for: TrustEdge Audit DigitalOcean Deployment*
-*Researched: 2026-02-06*
-*Confidence: HIGH (verified with official documentation and production deployment guides)*
+*Architecture research for: Launch Readiness Features Integration*
+*Researched: 2026-02-08*

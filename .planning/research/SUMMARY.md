@@ -1,412 +1,260 @@
 # Project Research Summary
 
-**Note:** This research was conducted for the original v1.0 Render deployment. As of v1.1, TrustEdge deploys to DigitalOcean. See .planning/phases/05-codebase-preparation/ for migration context.
-
-**Project:** TrustEdge Audit
-**Domain:** Security scanning SaaS for AI-generated web applications
-**Researched:** 2026-02-04
-**Confidence:** MEDIUM
+**Project:** ShipSecure v1.2 Launch Readiness
+**Domain:** SaaS security scanner - launch readiness for Hacker News
+**Researched:** 2026-02-08
+**Confidence:** HIGH
 
 ## Executive Summary
 
-TrustEdge Audit is a security scanning SaaS specifically targeting AI-generated web applications (Cursor, Bolt, Lovable output). Based on research into security scanning platforms, the recommended approach is a Rust backend with containerized scanner tools, PostgreSQL for data persistence, and Next.js frontend, deployed on Render. This architecture balances performance, safety, and operational simplicity while avoiding the complexity of enterprise-grade monitoring tools.
+ShipSecure v1.2 focuses on launch readiness features for a successful Hacker News launch. The core product (free URL scan + paid audit) is already built and deployed. This milestone adds the polish, trust signals, analytics, and SEO that transform a working MVP into a credible public launch.
 
-The product differentiates itself by targeting non-security developers who need to ship safely but lack security expertise. Unlike competitors (Snyk, Detectify) that focus on continuous monitoring for security teams, TrustEdge offers one-time audits with vibe-code-specific detection and plain-language remediation. The free tier provides immediate value (basic scans via email), while the paid tier ($99-299) delivers comprehensive audits with manual review and PDF reports.
+The recommended approach is **minimal stack additions + frontend-only polish**. Next.js built-in features (Metadata API, Script component, Tailwind responsiveness) eliminate the need for most external libraries. The only new dependencies are analytics (Plausible Cloud recommended for fast setup) and toast notifications (Sonner). All features are frontend-only — no backend changes required. Total estimated effort: 16-24 hours across 6 phases.
 
-Critical risks center on credibility: false positives will kill the brand immediately, and legal liability (CFAA compliance) requires careful TOS/consent design. Performance is essential — scans taking over 2 minutes will cause user abandonment. The recommended mitigation is strict confidence filtering for findings, legal review before launch, parallel scanner execution, and aggressive caching of external API calls (especially SSL Labs).
+Key risks center on legal liability (unauthorized scanning under CFAA) and Hacker News community dynamics (vote-ring detection, signup friction, marketing language). Both are addressable through explicit consent mechanisms, honest solo-founder positioning, and friction-free free tier. Mobile responsiveness and Core Web Vitals are critical — 53% of users abandon sites loading slower than 3 seconds. CSS-only responsive design prevents hydration mismatches while ensuring mobile performance.
 
 ## Key Findings
 
 ### Recommended Stack
 
-**Backend:** Rust with Axum provides idiomatic async/await patterns, excellent for I/O-bound scanning workloads. Axum's tower middleware ecosystem handles auth, rate limiting, and tracing better than Actix-web's actor model complexity. SQLx enables compile-time query verification without ORM bloat.
+Launch readiness requires minimal new dependencies. Next.js 16.1.6's built-in Metadata API eliminates need for SEO libraries. Tailwind CSS 4 already provides responsive utilities. The primary additions are privacy-friendly analytics and UX polish components.
 
 **Core technologies:**
-- **Axum + Tokio**: HTTP server and async runtime — simpler than Actix-web, better ecosystem fit
-- **PostgreSQL + SQLx**: Data persistence with JSONB for flexible scanner output — compile-time query checking, native async
-- **bollard**: Docker API client for containerized scanner isolation — Rust-native, handles Nuclei/testssl.sh containers
-- **Next.js 14 (App Router)**: Frontend with SSR for results pages — chosen by founder, excellent DX
-- **Resend**: Email delivery for scan results — better DX than AWS SES, generous free tier
-- **printpdf**: PDF report generation — pure Rust, no Chrome dependency
-- **Database-as-queue**: PostgreSQL polling for job orchestration — avoids Redis complexity for MVP
+- **Plausible Analytics (hosted)**: Privacy-friendly analytics without cookies — €9/month, minimal setup, no cookie banners required. Alternative: Umami self-hosted (free with existing PostgreSQL).
+- **Sonner**: Modern toast notifications — lightweight, TypeScript-first, works seamlessly with Next.js Server Components.
+- **Next.js Metadata API (built-in)**: SEO meta tags, OpenGraph, Twitter cards — no external dependencies needed, TypeScript support, automatic deduplication.
+- **Tailwind CSS breakpoints (existing)**: Mobile-first responsive design — already installed, no additional libraries needed.
 
-**Critical version requirements:**
-- Axum 0.7.x with tower-http for middleware
-- SQLx 0.8.x with postgres, json, uuid features
-- Next.js 14.x App Router (stable)
-
-**Confidence:** MEDIUM for version numbers (based on Jan 2025 training data), HIGH for architectural patterns.
+**What NOT to use:**
+- `next-seo` package: Obsolete for Next.js 15+, built-in Metadata API supersedes it entirely.
+- Google Analytics: Privacy invasion, cookie banners required, contradicts "privacy-first security" positioning for developer audience.
+- Heavy UI libraries: Chakra/Material-UI add bundle bloat; Tailwind utilities cover all needs for this simple interface.
 
 ### Expected Features
 
-**Must have (table stakes):**
-- SSL/TLS configuration scan (certificate validity, protocol versions, cipher suites)
-- Security headers check (CSP, HSTS, X-Frame-Options, X-Content-Type-Options)
-- Basic OWASP Top 10 checks (XSS, injection points)
-- Severity scoring (Critical/High/Medium/Low)
-- Email delivery of results (no signup friction for free tier)
-- Clear pass/fail visual status
-- Response time under 5 minutes
-- Remediation links to fixing issues
+Launch readiness features split into table stakes (credibility killers if missing) and differentiators (competitive advantage for HN launch).
 
-**Should have (competitive differentiators):**
-- Framework detection (Next.js, Vite, CRA patterns)
-- No-jargon explanations for non-security developers
-- Copy-paste code fixes specific to detected framework
-- Basic vibe-code pattern detection (common AI scaffolding issues)
-- Manual expert review for paid tier
-- PDF report (professional, shareable with stakeholders)
-- Video walkthrough of findings (5-10 min recording)
-- Compliance framework mapping (SOC 2, GDPR basics)
+**Must have (table stakes):**
+- Mobile responsive design — 7.49B mobile users globally; HN users browse on mobile; non-negotiable in 2026.
+- Loading states with visual feedback — "Scanning headers...", "Running Nuclei templates..." vs silent spinner.
+- Graceful error handling — Constructive messages ("Unable to reach URL. Check firewall rules?") vs silent failures.
+- Privacy Policy — GDPR/CCPA requirement; email collection legally requires disclosure; must cover analytics, Stripe, data retention.
+- Terms of Service — Legal protection for service misuse; must cover acceptable use, liability limits, CFAA compliance, audit scope disclaimers.
+- SEO meta tags (title, description) — Search engines and social platforms expect these server-rendered.
+- Open Graph tags — Social shares (Twitter/HN/Reddit) need preview images; missing = unprofessional appearance.
+- Privacy-friendly analytics — Need to measure launch traffic; cookieless = better for dev audience; explicit "no tracking" statement differentiates from competitors.
+
+**Should have (competitive):**
+- Founder credibility section — 40+ years cybersecurity experience is huge trust signal; About page or landing section with photo, bio, LinkedIn.
+- Transparent "How it works" section — Developers trust products they understand; list scanners used (Nuclei, testssl.sh, custom probes).
+- Real-time scan insights — Show scan progress ("Testing CSP headers...", "Found 3 issues so far") instead of generic spinner; reduces perceived wait time.
+- Example scan results — Public demo results URL shows what users get without running own scan; reduces friction for skeptical devs.
 
 **Defer (v2+):**
-- Scan history dashboard (requires user accounts)
-- Progress tracking across rescans
-- Shareable security badge
-- One-click fix PRs (requires GitHub integration)
-- Real-time monitoring/alerts (different market)
-
-**Confidence:** MEDIUM (based on competitor analysis through early 2025).
+- User accounts / scan history — Massive scope (auth, sessions, password reset); free tier explicitly avoids signup; consider for Pro tier only.
+- Live chat support — Founder burnout; 24/7 expectation; email support with 24hr SLA sufficient for launch.
+- Real-time WebSocket updates — Polling works fine for 30-60s scans; websockets add deployment complexity for marginal UX gain.
+- SOC 2 / ISO certifications — $20K-50K cost + 3-6 months; overkill for bootstrapped MVP; founder credibility + transparent methodology sufficient.
 
 ### Architecture Approach
 
-Security scanning SaaS follows a producer-consumer pattern with clear separation between web API, job orchestration, scanner execution, and result processing. The recommended architecture uses an in-process worker pool (tokio tasks) polling PostgreSQL for pending jobs, executing scanners (mix of in-process Rust and containerized tools), normalizing findings to a common schema, and delivering results via email/PDF.
+All launch readiness features are **frontend-only modifications**. The Rust/Axum backend requires no changes. This approach minimizes risk and deployment complexity while maximizing speed to launch.
 
 **Major components:**
-1. **Web API (Axum)** — HTTP request handling, scan creation, status polling, results retrieval
-2. **Database (PostgreSQL)** — Persistent storage with tables for scans, scan_jobs, findings, users, payments
-3. **Scanner Orchestrator (Rust worker pool)** — Job queue processing with semaphore-based concurrency control (max 5 concurrent)
-4. **Scanner Execution Layer** — Mix of in-process (headers, secrets) and containerized (TLS, Nuclei) scanners
-5. **Findings Processing** — Parse scanner output, normalize to common schema, deduplicate, score severity
-6. **Frontend (Next.js)** — Landing page (SSG), results dashboard (SSR), polling for scan status
-7. **Email Service (Resend)** — Transactional emails with templates for free/paid tiers
-8. **PDF Generator (printpdf)** — Professional reports for paid tier
+1. **Analytics Integration** — Next.js Script component loads tracking script asynchronously; no backend involvement; client-side only with afterInteractive strategy to prevent blocking page hydration.
+2. **Metadata Generation** — Next.js generateMetadata() function produces server-rendered meta tags for SEO/OG; no client-side rendering; search crawlers and social bots see tags immediately.
+3. **Legal Pages** — Static route pages (app/privacy/page.tsx, app/terms/page.tsx) with no database or API dependencies; SEO-friendly URLs; markdown or JSX content.
+4. **Responsive CSS** — Tailwind mobile-first breakpoints (sm:, md:, lg:) applied to existing components; CSS-only approach prevents hydration mismatches; same DOM tree, different styles per viewport.
+5. **Loading States & Error Boundaries** — Next.js loading.tsx and error.tsx conventions per route; skeleton UI with animate-pulse; error boundaries with retry buttons.
+6. **JSON-LD Schema** — Client component wrapper for structured data to prevent hydration issues; Organization, SoftwareApplication, WebSite schemas for search engine understanding.
 
-**Key patterns:**
-- Async job queue (create scan, return immediately, poll for status)
-- Graceful scanner failure (partial results better than none)
-- Idempotent job processing (reprocessing same job produces same result)
-- Timeout enforcement (5 min hard limit per scanner)
-- Container security (non-root user, resource limits, network isolation)
-
-**Confidence:** HIGH (producer-consumer pattern is standard for scanning SaaS).
+**Key integration points:**
+- Nginx: No changes needed; /privacy and /terms served by frontend via Next.js routing.
+- Docker: Only change is optional environment variables for analytics (NEXT_PUBLIC_PLAUSIBLE_DOMAIN or NEXT_PUBLIC_UMAMI_WEBSITE_ID).
+- Database: No schema changes; analytics stored externally (Plausible cloud) or in separate Umami instance if self-hosting.
 
 ### Critical Pitfalls
 
-1. **False Positive Epidemic** — Scanner produces too many false positives, users lose trust immediately and never return. Prevention: strict confidence filtering, validation layer, manual review of first 100 scans before launch, explainability for every finding.
+**1. Unauthorized Scanning Legal Liability (CRITICAL)**
+Users initiate scans against websites they don't own, ShipSecure becomes liable under Computer Fraud and Abuse Act (CFAA). Prevention: explicit consent checkbox before scan ("I confirm I own this website or have written authorization"), TOS must state scanning third-party assets without authorization is prohibited and may violate 18 U.S.C. § 1030, liability disclaimer stating user is solely responsible.
 
-2. **Legal Liability Landmine** — Scanning websites without proper authorization creates CFAA exposure and potential lawsuits. Prevention: TOS acceptance even for "no signup" free tier, explicit consent ("you confirm you own or have authorization"), result privacy (auto-expire after 30 days), legal review BEFORE launch.
+**2. Show HN Post Flagged or Ignored (HIGH)**
+HN submission flagged as spam, buried by vote-ring detection, or ignored due to poor presentation. Prevention: title format "Show HN: ShipSecure – Security scanner for AI-generated apps", free tier must work without signup (HN guideline), technical and modest language (no superlatives), personal username (not "shipsecure"), no vote coordination, clear one-sentence description in first comment.
 
-3. **SSL Labs API Abuse → IP Ban** — Aggressive use of SSL Labs API gets entire platform IP-banned, breaking core TLS scanning. Prevention: read API terms thoroughly, aggressive caching (24-48 hours), single-threaded requests with delays, fallback to testssl.sh container.
+**3. Hydration Mismatch from Viewport-Dependent Rendering (HIGH)**
+Server renders one component tree, client renders different tree based on viewport size, causing React hydration errors and broken interactivity on mobile. Prevention: use CSS-driven responsiveness instead of branching markup based on viewport; same DOM tree with different styles via Tailwind breakpoints; never use window.innerWidth or navigator.userAgent during initial render.
 
-4. **Scanner Itself is Insecure** — Security tool has vulnerabilities (SSRF, container escape, code injection). Prevention: SSRF protection (blocklist localhost, internal IPs, cloud metadata endpoints), container hardening (non-root, read-only FS, resource limits), input sanitization (never pass user input to shell), secret redaction in logs.
+**4. SEO Meta Tags Missing or Hydration-Broken (MEDIUM)**
+Open Graph preview shows "No preview available" when shared on Twitter/Slack; meta tags rendered client-side only, invisible to crawlers. Prevention: use Next.js generateMetadata() for server-rendered tags, OG image must be absolute URL (https://shipsecure.ai/og-image.png), verify size is 1200x630px, test with Twitter Card Validator and Facebook Sharing Debugger.
 
-5. **Performance Death Spiral** — Scans take 5+ minutes, users abandon, product feels broken. Prevention: parallel scanner execution (tokio), streaming results as they arrive, progress indicators, timeouts (30-60s per scanner), container pre-warming on Render.
-
-**Additional moderate pitfalls:**
-- Race to bottom pricing (security SaaS commands premium, research Snyk/GitGuardian pricing)
-- Async complexity explosion (use scanner trait abstraction from day 1)
-- Report quality mismatch (test remediation steps, use plain language)
-- Database bloat (retention policy: delete free scans after 7-30 days)
-- Free tier abuse (require email, rate limit to 2-3 scans/domain/week)
-
-**Confidence:** HIGH for false positives and performance (universal patterns), MEDIUM for legal (needs attorney), MEDIUM for SSL Labs (needs API docs verification).
+**5. Mobile Performance Testing Only in DevTools (MEDIUM)**
+Site feels fast in Chrome DevTools responsive mode but slow and janky on real mobile devices; Core Web Vitals fail on actual phones. Prevention: test on real devices (iPhone, Android), use next/image with sizes prop for responsive srcset, measure Core Web Vitals with PageSpeed Insights mobile profile (target: LCP < 2.5s, CLS < 0.1), always specify width/height on images.
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure follows dependency order and risk mitigation:
+Based on research, suggested 6-phase structure ordered by risk/dependency and designed to provide quick feedback loops:
 
-### Phase 1: Core Infrastructure + Simple Scanner
-**Rationale:** Establish foundation before adding complexity. Start with simplest scanner (headers) to validate end-to-end flow before containerized scanners.
+### Phase 1: Analytics Integration
+**Rationale:** Lowest risk, highest value, no dependencies. Analytics provides immediate user insights without affecting existing functionality. Can deploy independently and provides tracking for subsequent phases to measure impact.
 
-**Delivers:**
-- PostgreSQL schema (scans, scan_jobs, findings tables)
-- Rust backend skeleton (Axum, SQLx, health check)
-- Headers scanner (in-process, reqwest-based)
-- POST /api/scans and GET /api/scans/:id endpoints
-- Worker loop polling for pending jobs
-- Deployed to Render
+**Delivers:** Plausible Cloud analytics tracking page views and custom events (scan_started, scan_completed, upgrade_clicked, payment_completed). Privacy-friendly, cookieless, no banner required. Dashboard access for launch metrics.
 
-**Addresses (from FEATURES.md):**
-- Security headers check (table stakes)
-- Severity scoring (table stakes)
+**Addresses:** Table stakes feature (analytics expected for any serious launch); differentiator (privacy-first positioning resonates with developer audience).
 
-**Avoids (from PITFALLS.md):**
-- Async complexity explosion — establish scanner trait abstraction upfront
-- Database bloat — include retention policy in initial schema
+**Avoids:** CSP conflicts (configure CSP with Plausible domains before integration), analytics database misconfiguration (using cloud = no Docker/database issues).
 
-**Research flag:** Standard patterns, no additional research needed.
+**Estimated effort:** 1-2 hours
 
 ---
 
-### Phase 2: Frontend MVP + Email Delivery
-**Rationale:** Enable end-to-end user experience before adding more scanners. Users need to see results and receive emails to validate value proposition.
+### Phase 2: SEO & Open Graph Metadata
+**Rationale:** Improves social sharing immediately. No dependencies on Phase 1. Quick win that makes product look professional when shared on HN/Twitter/Slack.
 
-**Delivers:**
-- Next.js landing page with URL + email form
-- Polling mechanism (GET /api/scans/:id every 2s)
-- Results page displaying findings
-- Resend integration for email delivery
-- Free tier email template (summary + link)
-- Deployed to Render
+**Delivers:** Server-rendered meta tags (title, description) and Open Graph tags (og:title, og:description, og:image, og:url) on landing page, results page, payment success page. 1200x630px OG image created. Twitter Card validation passing.
 
-**Addresses (from FEATURES.md):**
-- Email delivery of results (table stakes)
-- Clear pass/fail visual status (table stakes)
-- Mobile-friendly results (table stakes)
-- Response time under 5 minutes (table stakes)
+**Addresses:** Table stakes features (SEO meta tags, Open Graph tags) — missing = broken social shares and poor search visibility.
 
-**Avoids (from PITFALLS.md):**
-- Performance death spiral — implement polling, progress indicators
-- Legal liability — add TOS acceptance checkbox before scan
-- Free tier abuse — require email, implement basic rate limiting
+**Uses:** Next.js built-in Metadata API (no new dependencies).
 
-**Research flag:** Standard patterns, no additional research needed.
+**Avoids:** Client-side meta tags pitfall (use generateMetadata() for server-rendering), hydration issues (metadata is pure HTML, no JS dependency).
+
+**Estimated effort:** 3-4 hours (including OG image creation)
 
 ---
 
-### Phase 3: Additional Scanners (TLS, Secrets, Files)
-**Rationale:** Expand scanning capabilities once infrastructure and UX proven. Introduces containerized scanners (testssl.sh, Nuclei).
+### Phase 3: Legal Pages & Consent Mechanism
+**Rationale:** Required for GDPR/CCPA compliance and CFAA liability protection. Must be in place before public launch. Blocking legal risk.
 
-**Delivers:**
-- TLS scanner (testssl.sh in container via bollard)
-- Secrets scanner (regex-based, in-process)
-- File scanner (Nuclei in container)
-- Findings normalization for each scanner
-- Deduplication logic
-- Parallel scanner execution (tokio)
+**Delivers:** Privacy Policy page (/privacy) covering email collection, Stripe PII, analytics opt-out, data retention, GDPR/CCPA rights. Terms of Service page (/terms) covering acceptable use, liability limits, CFAA compliance clause, scan authorization requirements, audit scope disclaimers. Consent checkbox on scan form: "I confirm I own this website or have written authorization to scan it." Footer links on all pages.
 
-**Addresses (from FEATURES.md):**
-- SSL/TLS configuration scan (table stakes)
-- Known vulnerability detection (table stakes)
-- Basic XSS/injection checks (table stakes)
+**Addresses:** Table stakes features (Privacy Policy, Terms of Service); critical pitfall (unauthorized scanning legal liability — CFAA clause + consent checkbox).
 
-**Avoids (from PITFALLS.md):**
-- SSL Labs API abuse — implement testssl.sh as fallback, cache results
-- Scanner security — SSRF protection, container hardening, non-root users
-- False positive epidemic — strict confidence filtering, validation layer
+**Avoids:** Generic TOS template gaps (include security scanning specifics, CFAA clause, user responsibility for authorization), no consent mechanism (explicit checkbox required before scan).
 
-**Research flag:** NEEDS PHASE RESEARCH
-- SSL Labs API: rate limits, terms, caching strategy
-- Container security: Render Docker support, resource limits
-- Scanner tool selection: testssl.sh vs alternatives, Nuclei template customization
+**Estimated effort:** 2-3 hours (excluding legal text creation, which is external — use Termly/iubenda generator as starting point, customize for ShipSecure)
 
 ---
 
-### Phase 4: Framework Detection + Copy-Paste Fixes
-**Rationale:** Differentiation features that make TrustEdge valuable for non-security developers. Requires existing scan results to test against.
+### Phase 4: JSON-LD Structured Data
+**Rationale:** SEO benefit is incremental. No user-facing changes. Can be done after basic metadata. Helps search engines and AI understand what ShipSecure is.
 
-**Delivers:**
-- Framework detection (Next.js, Vite, CRA patterns)
-- Remediation playbook mapping (YAML-based)
-- Copy-paste code fixes per framework
-- No-jargon explanations
-- Enhanced results page with remediation tabs
+**Delivers:** JSON-LD schemas for Organization (founder/company info), SoftwareApplication (product details, pricing), and WebSite (sitemap). Client component wrapper to prevent hydration issues. Validated with Google Rich Results Test.
 
-**Addresses (from FEATURES.md):**
-- Framework detection (differentiator)
-- Copy-paste fixes (differentiator)
-- No-jargon explanations (differentiator)
-- Remediation links (table stakes)
+**Addresses:** SEO enhancement (not table stakes, but improves search visibility and AI understanding).
 
-**Avoids (from PITFALLS.md):**
-- Report quality mismatch — test remediation steps, use plain language
-- False positives — context-aware detection reduces noise
+**Uses:** Next.js built-in support for JSON-LD; client component wrapper pattern from ARCHITECTURE.md.
 
-**Research flag:** NEEDS PHASE RESEARCH
-- Framework fingerprinting: detection patterns for Next.js, Vite, CRA
-- Remediation templates: framework-specific code examples
-- Vibe-code patterns: common AI scaffolding issues
+**Avoids:** Hydration mismatch from JSON-LD (use client component wrapper).
+
+**Estimated effort:** 2-3 hours
 
 ---
 
-### Phase 5: Payments + Paid Tier Scanning
-**Rationale:** Monetization after free tier provides value. Paid tier requires all free features plus deeper scanning.
+### Phase 5: Mobile Responsiveness & UX Polish
+**Rationale:** Existing site is already responsive (using Tailwind) but needs audit and polish. Should be done after analytics is live to measure before/after improvements. Medium risk because it touches existing components.
 
-**Delivers:**
-- Stripe integration (checkout session, webhook)
-- Tier-based scan logic (free vs paid)
-- Deeper scanning for paid tier (more comprehensive checks)
-- Paid tier email template
-- Payment tracking in database
+**Delivers:** Mobile-responsive layout verified on real devices (iPhone, Android). Loading states with skeleton UI and scan progress messages ("Scanning headers...", "Running Nuclei templates..."). Error boundaries with constructive error messages and retry buttons. Consistent visual design across all pages (spacing, colors, button sizes). Core Web Vitals validated (LCP < 2.5s, CLS < 0.1, mobile PageSpeed Insights score > 90).
 
-**Addresses (from FEATURES.md):**
-- Paid audit: manual review prep (differentiator)
-- Priority email support (differentiator)
+**Addresses:** Table stakes features (mobile responsive design, loading states, graceful error handling, consistent visual design); critical pitfall (hydration mismatch — CSS-only responsive approach); critical pitfall (mobile performance testing — real device validation).
 
-**Avoids (from PITFALLS.md):**
-- Race to bottom pricing — research security SaaS pricing before setting
-- Free tier abuse — implement tier enforcement
+**Uses:** Tailwind CSS mobile-first breakpoints (existing), Next.js loading.tsx and error.tsx conventions, Sonner toast notifications (NEW dependency).
 
-**Research flag:** Standard Stripe patterns, no additional research needed.
+**Avoids:** Viewport-dependent rendering (CSS-only approach, same DOM tree), mobile performance issues (real device testing, next/image with sizes prop), missing viewport meta tag (verify correct placement in layout.tsx).
+
+**Estimated effort:** 6-8 hours (includes audit, fixes, testing on real devices)
 
 ---
 
-### Phase 6: PDF Reports + Manual Review
-**Rationale:** Paid tier deliverable after payment flow established. Manual review requires all scanners operational.
+### Phase 6: Landing Page & Founder Credibility
+**Rationale:** Must align with Show HN guidelines. Should be done last to benefit from all previous polish (analytics, SEO, mobile, legal). Focuses on copy and messaging for developer audience.
 
-**Delivers:**
-- printpdf integration
-- PDF report template (executive summary, findings, remediation roadmap)
-- GET /api/scans/:id/pdf endpoint
-- PDF caching in database
-- Manual review workflow (for founder)
-- Video walkthrough recording workflow
+**Delivers:** Landing page copy optimized for technical audience. Clear headline: "ShipSecure — Security Scanner for AI-Generated Apps". Subheadline: "Free scan in 60 seconds. No signup required." Benefits over features: "Finds SQL injection, XSS, SSRF" not "Powered by Nuclei". About page with founder photo, bio (40+ years cybersecurity at Bose, Ford, TrustEdge Labs), LinkedIn link, honest solo founder story ("I built this because..."). Transparent "How it works" section listing scanners used. Example scan results publicly accessible without signup.
 
-**Addresses (from FEATURES.md):**
-- PDF report (differentiator)
-- Manual expert review (differentiator)
-- Video walkthrough (differentiator)
-- Compliance-speak translation (differentiator)
+**Addresses:** Differentiator features (founder credibility, transparent methodology, example results); critical pitfall (Show HN post flagged — free tier works without signup, modest language, personal story); critical pitfall (landing page copy too technical or too vague — clear outcome-focused headline).
 
-**Avoids (from PITFALLS.md):**
-- Report quality mismatch — professional design, tested remediation steps
-- Performance — cache PDFs, don't regenerate on every request
+**Avoids:** Marketing language (no superlatives, technical and modest), signup friction (free tier fully functional without account), vague value prop (specific outcomes: "Finds SQL injection, XSS, SSRF in 60 seconds").
 
-**Research flag:** Standard patterns, no additional research needed.
-
----
-
-### Phase 7: Dashboard + Scan History
-**Rationale:** User accounts and history after paid tier proven. Enables retention and upsell.
-
-**Delivers:**
-- User authentication (JWT or session)
-- Dashboard page (list user's scans)
-- Scan history with comparison
-- Rescan functionality
-- Progress tracking dashboard
-
-**Addresses (from FEATURES.md):**
-- Scan history (deferred to v2)
-- Progress tracking dashboard (differentiator)
-
-**Avoids (from PITFALLS.md):**
-- Database bloat — pagination, compression of old scans
-
-**Research flag:** Standard auth patterns, no additional research needed.
+**Estimated effort:** 3-4 hours (copy writing, About page creation, example scan generation)
 
 ---
 
 ### Phase Ordering Rationale
 
-**Dependency-driven:**
-- Phase 1 before 2: Infrastructure required for frontend
-- Phase 2 before 3: UX validation before expanding scanners
-- Phase 3 before 4: Scan results needed to build framework detection
-- Phase 5 before 6: Payment flow before paid deliverables
-- Phase 6 before 7: Core paid features before dashboard polish
+1. **Analytics first** provides tracking for all subsequent phases to measure impact (bounce rate improvements, conversion rate changes).
+2. **SEO next** is quick win with immediate benefit for social sharing; no dependencies.
+3. **Legal pages early** to address blocking legal risk before public launch; content can be refined later but framework must be in place.
+4. **JSON-LD after basic SEO** provides incremental benefit without user-facing urgency.
+5. **Mobile responsiveness before landing page** ensures copy changes are tested in polished, responsive UI.
+6. **Landing page last** benefits from all previous polish and can focus purely on messaging/positioning.
 
-**Risk mitigation:**
-- Legal review happens before Phase 2 launch (TOS, consent)
-- False positive prevention starts in Phase 3 (confidence filtering)
-- Performance optimization throughout (parallel execution, timeouts, caching)
+**Critical path:** Analytics → SEO → Legal (blocking for launch) → Mobile (blocking for credibility) → Landing Page (blocking for HN launch). JSON-LD is optional/deferrable.
 
-**Grouping logic:**
-- Phases 1-2: MVP foundation (infrastructure + UX)
-- Phases 3-4: Free tier feature completeness (scanners + differentiation)
-- Phases 5-6: Paid tier implementation (monetization + deliverables)
-- Phase 7: Retention features (dashboard, history)
+**Dependency chain:**
+- Mobile responsiveness requires loading states (error states are part of loading flow).
+- Privacy Policy requires analytics implementation (must disclose what's tracked).
+- Landing page requires mobile responsiveness (mobile exposes design inconsistencies).
+- Hacker News launch requires all phases complete (missing any table stakes feature = credibility hit).
 
 ### Research Flags
 
-**Phases needing deeper research during planning:**
-- **Phase 3 (Additional Scanners):** SSL Labs API documentation, container security on Render, scanner tool selection and configuration
-- **Phase 4 (Framework Detection):** Framework fingerprinting patterns, vibe-code detection heuristics, remediation template creation
+**Phases with standard patterns (skip research-phase):**
+- **Phase 1 (Analytics):** Well-documented Plausible/Umami integration; official Next.js Script component patterns; no research needed.
+- **Phase 2 (SEO):** Next.js Metadata API is official, well-documented; standard Open Graph patterns; no research needed.
+- **Phase 3 (Legal):** Use legal template generators (Termly, iubenda); standard TOS/Privacy Policy structures; no technical research needed (legal review is external).
+- **Phase 4 (JSON-LD):** Schema.org documentation is comprehensive; Next.js has built-in JSON-LD support; no research needed.
+- **Phase 5 (Mobile):** Tailwind responsive patterns well-documented; Next.js loading/error conventions standard; no research needed.
+- **Phase 6 (Landing):** Copy writing is creative work, not technical research; HN guidelines are published; no research needed.
 
-**Phases with standard patterns (skip /gsd:research-phase):**
-- **Phase 1:** Standard Rust backend setup, PostgreSQL schema design
-- **Phase 2:** Standard Next.js + React patterns, email integration
-- **Phase 5:** Standard Stripe integration patterns
-- **Phase 6:** Standard PDF generation, template design
-- **Phase 7:** Standard auth + dashboard patterns
+**No phases require deeper research.** All patterns are well-established, documented, and validated through multiple sources. Implementation can proceed directly to execution.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | MEDIUM | Version numbers based on Jan 2025 training data; architectural patterns HIGH confidence |
-| Features | MEDIUM | Based on competitor analysis through early 2025; table stakes patterns HIGH confidence |
-| Architecture | HIGH | Producer-consumer pattern is standard for scanning SaaS; Rust async patterns well-understood |
-| Pitfalls | MEDIUM-HIGH | False positives and performance are universal patterns (HIGH); legal and SSL Labs need verification (MEDIUM) |
+| Stack | HIGH | Next.js built-in features verified via official docs; Plausible/Umami integration patterns validated across multiple sources; Sonner widely adopted with clear documentation. All recommendations backed by official sources or community consensus. |
+| Features | MEDIUM | Feature priorities validated through SaaS launch checklists, HN launch postmortems, and UX research; specific to ShipSecure context (security scanner for developers) but applicable patterns confirmed across multiple similar launches. Table stakes vs differentiators split informed by competitor analysis and HN community feedback. |
+| Architecture | HIGH | Next.js App Router patterns (Metadata API, Script component, loading/error conventions) are official, stable features with extensive documentation. Frontend-only approach verified as sufficient for all launch features. Docker/Nginx integration patterns confirmed via existing v1.1 deployment. |
+| Pitfalls | MEDIUM | CFAA legal liability confirmed via US Department of Justice guidance and similar security tool TOS analysis. HN community dynamics validated through Show HN guidelines and postmortem discussions. Hydration mismatch, CSP conflicts, and mobile performance pitfalls validated through Next.js official docs and developer experience reports. Some pitfalls are inferred from general patterns rather than ShipSecure-specific incidents. |
 
-**Overall confidence:** MEDIUM
+**Overall confidence:** HIGH for technical implementation (stack, architecture); MEDIUM for feature priorities and pitfall predictions (validated through research but not ShipSecure-specific testing).
 
 ### Gaps to Address
 
-**Requires verification before implementation:**
+**Legal text accuracy:** Legal pages research identifies structure and required clauses (CFAA, GDPR, CCPA) but actual legal text should be reviewed by lawyer. Mitigation: use Termly/iubenda generators as starting point, customize for ShipSecure specifics, note "legal review recommended before accepting payments" in Phase 3 plan.
 
-1. **SSL Labs API:** Current rate limits, terms of service, what triggers bans
-   - Action: Read https://github.com/ssllabs/ssllabs-scan/wiki/Documentation
-   - Impact: Phase 3 scanner implementation
+**Hacker News community reception:** Show HN pitfalls are based on guidelines and postmortem analysis but actual reception depends on product-market fit and timing. Mitigation: follow all HN guidelines strictly (no vote coordination, modest language, free tier without signup), soft launch to r/websec or smaller communities first for feedback, prepare for negative comments by having founder respond thoughtfully.
 
-2. **CFAA compliance:** Specific legal requirements for security scanning services
-   - Action: Consult attorney specializing in CFAA/cybersecurity law
-   - Impact: PRE-MVP requirement (TOS, consent flow)
+**Mobile performance on production infrastructure:** Research validates patterns but actual Core Web Vitals on DigitalOcean deployment with Nginx proxy may differ from development. Mitigation: test with PageSpeed Insights on production URL after Phase 5 deployment, real device testing on cellular connection (not just wifi).
 
-3. **Render platform:** Container resource limits, Docker-in-Docker support, cold start characteristics
-   - Action: Read https://render.com/docs/docker and test deployment
-   - Impact: Phase 1 deployment, Phase 3 containerized scanners
+**Analytics GDPR compliance:** Plausible/Umami are cookieless and GDPR-compliant but Privacy Policy must accurately reflect data flows. Mitigation: Plausible documentation provides GDPR-compliant privacy policy language; include in Phase 3 legal text generation.
 
-4. **Security SaaS pricing:** Market rates for comparable products
-   - Action: Research Snyk, GitGuardian, Aikido Security pricing
-   - Impact: Phase 5 pricing decisions
-
-5. **Rust crate versions:** Current stable versions of Axum, SQLx, bollard, etc.
-   - Action: Check crates.io for latest releases
-   - Impact: Phase 1 dependency selection
-
-**Assumptions needing validation:**
-
-- PostgreSQL polling queue is sufficient for <1000 scans/day (may need Redis at scale)
-- printpdf produces professional-quality reports (may need WeasyPrint alternative)
-- Render free tier supports Docker workloads (may require paid plan)
-- $99-299 one-time audit pricing is defensible (needs market validation)
-- Framework detection via HTML/JS pattern matching is feasible (needs prototyping)
-
-**Known unknowns for future phases:**
-
-- Container image caching on Render (affects scanner cold start time)
-- PostgreSQL connection pool size optimization for Render
-- PDF report size limits (affects database BYTEA storage strategy)
-- Scanner timeout tuning (95th percentile runtime per scanner type)
-- Optimal concurrency limit (when to switch from in-process to separate worker service)
+**Founder credibility positioning:** 40+ years experience is strong trust signal but requires authentic storytelling. Mitigation: draft About page copy in founder's voice, avoid corporate language, include personal motivation for building ShipSecure (CVE-2025-48757 catalyst mentioned in memory), link to LinkedIn for verification.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- STACK.md: Rust/Axum/PostgreSQL patterns, container orchestration
-- ARCHITECTURE.md: Producer-consumer patterns for scanning SaaS, job queue design
-- PITFALLS.md: False positives, legal liability, performance patterns
+- Next.js Official Documentation (Metadata API, Script component, App Router conventions) — All architectural patterns validated via official Vercel docs
+- Plausible Analytics Documentation (Next.js integration, CSP configuration) — Official integration guide
+- Umami Analytics GitHub (self-hosting, Docker setup) — Official repository
+- Tailwind CSS Documentation (responsive design, breakpoints) — Official Tailwind Labs docs
+- US Department of Justice CFAA Guidance (18 U.S.C. § 1030) — Legal compliance requirements
+- Hacker News Show HN Guidelines — Community rules for launches
+- Schema.org (JSON-LD structured data) — Official structured data vocabulary
 
 ### Secondary (MEDIUM confidence)
-- FEATURES.md: Competitor analysis (Snyk, Detectify, Mozilla Observatory) through early 2025
-- Training data: Security scanning platform architectures as of January 2025
+- SaaS launch checklists (Orb, DevSquad, Default) — Best practices aggregated from multiple SaaS launches
+- Privacy-compliant analytics comparisons (Mitzu, Vemetric) — Plausible vs Umami feature/cost analysis
+- Next.js SEO optimization guides (2026 editions) — Community best practices for App Router SEO
+- HN launch postmortems (Show HN reached front page, successful launches) — Community-shared experiences
+- Developer tool UX research (Evil Martians, NN/G) — Developer audience expectations
+- Core Web Vitals optimization guides (web.dev, LogRocket) — Performance best practices
+- Landing page copywriting research (LandingPageFlow, ZenithCopy) — Conversion optimization patterns
 
-### Tertiary (LOW confidence - needs validation)
-- Render platform capabilities (Docker support, resource limits)
-- SSL Labs API rate limits (training data suggests 1 scan/host/hour)
-- Current version numbers for Rust crates (Axum 0.7.x, SQLx 0.8.x)
-- Security SaaS pricing benchmarks ($99-299 suggested range)
-
-### Recommended authoritative sources for validation:
-- https://docs.rs (Rust crate documentation)
-- https://nextjs.org/docs (Next.js official docs)
-- https://stripe.com/docs (Stripe API docs)
-- https://render.com/docs (Render deployment guides)
-- https://github.com/tokio-rs/axum (Axum examples)
-- https://github.com/ssllabs/ssllabs-scan/wiki/Documentation (SSL Labs API)
-- OWASP Scanner Guidance (scanner deployment best practices)
+### Tertiary (LOW confidence)
+- Generic SaaS security certifications (SOC 2, ISO) — Cost/timeline estimates (wide variance depending on provider)
+- UI/UX design trends for 2026 — Aesthetic preferences (subjective, not critical for launch)
+- AI-powered explanations in security tools — Emerging pattern, limited adoption data
 
 ---
-
-**Research completed:** 2026-02-04
-**Ready for roadmap:** Yes
-
-**Next steps:**
-1. Legal review of TOS/consent flow (CRITICAL, PRE-MVP)
-2. Verify Render Docker support and resource limits
-3. Research SSL Labs API documentation
-4. Validate security SaaS pricing with competitor analysis
-5. Check current stable versions of Rust dependencies
-6. Create roadmap based on suggested 7-phase structure
+*Research completed: 2026-02-08*
+*Ready for roadmap: yes*

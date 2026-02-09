@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import PlausibleProvider from "next-plausible";
 import "./globals.css";
 
 const inter = Inter({
@@ -19,6 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <PlausibleProvider domain="shipsecure.ai" trackOutboundLinks />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
       </body>

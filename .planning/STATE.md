@@ -1,7 +1,7 @@
 # Project State: ShipSecure
 
 **Last updated:** 2026-02-09
-**Status:** Phase 10 in progress — Legal Compliance
+**Status:** Phase 11 in progress — Mobile & UX Polish
 
 ---
 
@@ -10,18 +10,18 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Phase 10 complete — ready for Phase 11
+**Current focus:** Phase 11 in progress — Mobile-responsive layout complete (11-01)
 
 ---
 
 ## Current Position
 
-Phase: 10 of 12 (Legal Compliance)
-Plan: 2 of 2 complete
-Status: Phase complete
-Last activity: 2026-02-09 — Completed Phase 10 (both plans: 10-01 and 10-02)
+Phase: 11 of 12 (Mobile & UX Polish)
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-02-09 — Completed 11-01-PLAN.md (Mobile-Responsive Layout)
 
-Progress: [██████████████████████░░░░░░░░░░] 36/? plans (v1.0 + v1.1 complete, v1.2: 3/5 phases done)
+Progress: [███████████████████████░░░░░░░░░] 37/? plans (v1.0 + v1.1 complete, v1.2: 4/5 phases in progress)
 
 ---
 
@@ -40,9 +40,10 @@ Progress: [██████████████████████░
 
 **v1.2 (in progress):**
 - Phases completed: 3/5 (Phase 8: Analytics, Phase 9: SEO, Phase 10: Legal)
+- Phases in progress: 1/5 (Phase 11: Mobile/UX — 1/3 plans complete)
 - Phases planned: 5 (Analytics, SEO, Legal, Mobile/UX, Landing Page)
 - Requirements: 17 total (UX: 6, Legal: 3, Analytics: 2, SEO: 3, Landing: 3)
-- Requirements delivered: 8/17 (ANLYT-01, ANLYT-02, SEO-01, SEO-02, SEO-03, LEGAL-01, LEGAL-02, LEGAL-03)
+- Requirements delivered: 11/17 (ANLYT-01, ANLYT-02, SEO-01, SEO-02, SEO-03, LEGAL-01, LEGAL-02, LEGAL-03, UX-01, UX-02, UX-05)
 - Coverage: 17/17 mapped (100%)
 
 ---
@@ -53,6 +54,9 @@ Progress: [██████████████████████░
 
 Recent decisions affecting v1.2 work:
 
+- **Phase 11 (11-01)**: Removed duplicate footers completely instead of hiding them - cleaner and leverages root layout flex column
+- **Phase 11 (11-01)**: Hide scanner name on mobile in FindingAccordion using "hidden sm:inline" - keeps critical info visible at 375px
+- **Phase 11 (11-01)**: Stack full-width action buttons on mobile with "w-full sm:w-auto" - better mobile UX and follows conventions
 - **Phase 10**: Footer implemented as server component (no "use client" needed) with flexbox layout for bottom-pinning
 - **Phase 10**: Authorization checkbox uses Zod transform to convert HTML "on" value to boolean before validation
 - **Phase 10**: Authorization consent is frontend-only gate (not sent to backend API)
@@ -121,10 +125,10 @@ See PROJECT.md Key Decisions table for full history.
 ## Session Continuity
 
 **Last session:** 2026-02-09
-**Stopped at:** Phase 10 complete (both plans: 10-01 and 10-02)
-**Resume file:** None
+**Stopped at:** Phase 11 Plan 01 complete (11-01-PLAN.md)
+**Resume file:** .planning/phases/11-mobile-ux-polish/11-02-PLAN.md
 
-**Phase 10 complete.** Legal compliance implemented: Privacy Policy (/privacy) and Terms of Service (/terms) with CFAA authorization language, global footer with legal links on all pages, and authorization consent checkbox on scan form. All GDPR/CCPA/CFAA requirements met. Next: `/gsd:plan-phase 11` (Mobile/UX improvements)
+**Phase 11 Plan 01 complete.** Mobile-responsive layout implemented across all 6 pages and 4 results components. Removed duplicate footers from landing, privacy, and terms pages. Added responsive breakpoints (flex-col sm:flex-row) to GradeSummary and FindingAccordion. All interactive elements now have 44px minimum touch targets. Requirements UX-01 (mobile 375px), UX-02 (tablet 768px), and UX-05 (visual consistency) delivered. Next: `/gsd:execute-plan 11-02` (Hero Section & CTA Optimization)
 
 ---
 

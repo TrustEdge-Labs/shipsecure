@@ -90,7 +90,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
@@ -100,7 +100,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
       />
       {/* Hero Section */}
-      <main className="container mx-auto px-4 py-16 sm:py-24 max-w-4xl">
+      <main className="container mx-auto px-4 py-16 sm:py-24 max-w-4xl bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
             Ship fast, stay safe.
@@ -173,13 +173,6 @@ export default async function Home() {
           </div>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-800 py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>&copy; {new Date().getFullYear()} ShipSecure</p>
-        </div>
-      </footer>
-    </div>
+    </>
   )
 }

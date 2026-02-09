@@ -11,8 +11,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-      <main className="container mx-auto px-4 py-16 max-w-4xl">
+    <main className="container mx-auto px-4 py-16 pb-8 max-w-4xl bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
         <div className="mb-8">
           <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-900 dark:text-gray-100">
             Privacy Policy
@@ -296,13 +295,5 @@ export default function PrivacyPolicy() {
           </a>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-800 py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>&copy; {new Date().getFullYear()} ShipSecure</p>
-        </div>
-      </footer>
-    </div>
   )
 }

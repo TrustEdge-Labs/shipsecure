@@ -1,7 +1,7 @@
 # Project State: TrustEdge Audit
 
 **Last updated:** 2026-02-09
-**Status:** v1.1 IN PROGRESS
+**Status:** v1.1 COMPLETE
 
 ---
 
@@ -10,23 +10,23 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Production validation
+**Current focus:** v1.1 complete -- all production validation passed
 
 ---
 
 ## Current Position
 
 **Milestone:** v1.1 DigitalOcean Deployment
-**Phase:** Phase 07 - Production Validation (IN PROGRESS)
-**Plan:** 01 of 2 (complete)
-**Status:** In progress — Plan 01 complete, Plan 02 pending
+**Phase:** Phase 07 - Production Validation (COMPLETE)
+**Plan:** 02 of 2 (complete)
+**Status:** v1.1 COMPLETE -- all 3 phases, 10 plans delivered
 
 **Progress:**
 ```
-[██████████████████░░] 90% (Phases 05+06 complete, Phase 07: 1/2 plans done)
+[████████████████████] 100% (Phases 05+06+07 complete, all 10/10 plans done)
 ```
 
-**Last activity:** 2026-02-09 — Completed 07-01-PLAN.md (infrastructure validation, fonts, scanner validation, email delivery)
+**Last activity:** 2026-02-09 — Completed 07-02-PLAN.md (paid audit flow, Stripe checkout, PDF email, service resilience)
 
 ---
 
@@ -37,11 +37,12 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 - Plans completed: 23/23
 - Requirements delivered: 23/23 (100%)
 
-**v1.1 (active):**
-- Phases completed: 2/3
-- Plans completed: 9/10 (Phase 05: 4/4, Phase 06: 4/4, Phase 07: 1/2)
+**v1.1 (complete):**
+- Phases completed: 3/3
+- Plans completed: 10/10 (Phase 05: 4/4, Phase 06: 4/4, Phase 07: 2/2)
 - Requirements delivered: 8/8 (CLEAN-01, INFRA-01, INFRA-02, INFRA-03, PROXY-01, PROXY-02, PROC-01, SEC-01)
 - Requirements mapped: 8/8 (100%)
+- Production validation: All systems verified (free scan, paid audit, service resilience)
 
 ---
 
@@ -51,6 +52,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 | Decision | Rationale | Phase | Date |
 |----------|-----------|-------|------|
+| Container crash requires manual systemctl restart | Restart policies removed from docker-compose.prod.yml by design; systemd manages lifecycle, not Docker | 07-02 | 2026-02-09 |
+| Stripe keys in production .env only | Test-mode keys configured directly on server, never committed to repo (security best practice) | 07-02 | 2026-02-09 |
 | 0-finding scanners valid when target lacks triggering characteristics | testphp.vulnweb.com is legacy PHP; js_secrets, vibecode, and tls scanners ran successfully but correctly found nothing | 07-01 | 2026-02-09 |
 | CI rebuild + manual deploy for font assets | Fonts must be in Docker image for backend PDF generation; commit -> push -> GH Actions -> SSH pull -> restart | 07-01 | 2026-02-09 |
 | Reserved IP for static DNS | IP survives droplet destroy/recreate, no DNS changes needed | 06-04 | 2026-02-08 |
@@ -97,8 +100,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 - [x] Complete 06-01 through 06-04 (Deployment Infrastructure) - DONE 2026-02-08
 - [x] Set up Resend account and configure RESEND_API_KEY for email delivery - DONE 2026-02-08
 - [x] Download and install Liberation Sans fonts in fonts/ directory - DONE 2026-02-09
+- [x] Set up Stripe account (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) - DONE 2026-02-09
 - [ ] Schedule legal review of TOS/consent flow before production launch (pre-launch)
-- [ ] Set up Stripe account (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) (pre-launch)
 
 ### Blockers
 
@@ -117,19 +120,20 @@ None currently.
 - **CI/CD:** GitHub Actions builds -> GHCR images; manual deploy via SSH
 - **Scanners:** All 5 validated working (security_headers, tls, exposed_files, js_secrets, vibecode)
 - **Email:** Resend (scans@shipsecure.ai) - delivery confirmed working
+- **Payments:** Stripe (test-mode keys configured, webhook at /api/v1/webhooks/stripe)
 
 ---
 
 ## Session Continuity
 
 **Last session:** 2026-02-09
-**Stopped at:** Phase 07 Plan 01 complete. Infrastructure validated, scanners working, email delivery confirmed.
-**Resume file:** .planning/phases/07-production-validation/07-01-SUMMARY.md
+**Stopped at:** v1.1 COMPLETE. All 10 plans across 3 phases delivered. Production fully validated.
+**Resume file:** .planning/phases/07-production-validation/07-02-SUMMARY.md
 
-**Starting next session:**
-Phase 07 Plan 02 -- remaining production validation tasks (paid audit flow, smoke tests, or whatever 07-02 covers).
+**v1.1 milestone complete.** No remaining plans.
 
 ---
 
 **State initialized:** 2026-02-04
-**Next action:** Execute Phase 07 Plan 02
+**v1.1 completed:** 2026-02-09
+**Next action:** None -- v1.1 milestone complete. Consider v1.2 planning if new features needed.

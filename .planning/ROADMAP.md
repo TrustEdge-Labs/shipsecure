@@ -48,7 +48,7 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 Plans:
 - [x] 08-01-PLAN.md — Plausible integration with pageview tracking and conversion events
 
-#### Phase 9: SEO & Discoverability
+#### Phase 9: SEO & Discoverability ✅
 **Goal**: Meta tags and Open Graph configuration for search engines and social sharing
 **Depends on**: Phase 8
 **Requirements**: SEO-01, SEO-02, SEO-03
@@ -60,8 +60,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Landing page metadata, OG tags, JSON-LD schemas, OG image, sitemap, robots.txt
-- [ ] 09-02-PLAN.md — Results page noindex/nofollow hardening and payment success page metadata
+- [x] 09-01-PLAN.md — Landing page metadata, OG tags, JSON-LD schemas, OG image, sitemap, robots.txt
+- [x] 09-02-PLAN.md — Results page noindex/nofollow hardening and payment success page metadata
 
 #### Phase 10: Legal Compliance
 **Goal**: Privacy Policy, Terms of Service, and consent mechanism for GDPR/CCPA and CFAA protection
@@ -121,7 +121,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 06 - Deployment Infrastructure | v1.1 | 4/4 | Complete | 2026-02-08 |
 | 07 - Production Validation | v1.1 | 2/2 | Complete | 2026-02-08 |
 | 08 - Analytics & Tracking | v1.2 | 1/1 | Complete | 2026-02-08 |
-| 09 - SEO & Discoverability | v1.2 | 0/2 | Not started | - |
+| 09 - SEO & Discoverability | v1.2 | 2/2 | Complete | 2026-02-08 |
 | 10 - Legal Compliance | v1.2 | 0/? | Not started | - |
 | 11 - Mobile & UX Polish | v1.2 | 0/? | Not started | - |
 | 12 - Landing Page Optimization | v1.2 | 0/? | Not started | - |

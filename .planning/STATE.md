@@ -1,7 +1,7 @@
 # Project State: ShipSecure
 
 **Last updated:** 2026-02-09
-**Status:** Phase 11 in progress — Mobile & UX Polish
+**Status:** Phase 12 in progress — Landing Page Optimization
 
 ---
 
@@ -10,18 +10,18 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Phase 11 complete — All 6 UX requirements delivered
+**Current focus:** Phase 12 in progress — Landing page optimization with developer-focused copy and transparency
 
 ---
 
 ## Current Position
 
-Phase: 12 of 12 (Landing Page Optimization) - ready to start
-Plan: N/A
-Status: Phase 11 complete
-Last activity: 2026-02-09 — Completed 11-03-PLAN.md (Performance Optimization & Visual Verification)
+Phase: 12 of 12 (Landing Page Optimization) - in progress
+Plan: 1 of 3 complete
+Status: Phase 12 in progress
+Last activity: 2026-02-09 — Completed 12-01-PLAN.md (Landing Page Copy & Transparency)
 
-Progress: [█████████████████████████░░░░░░░] 41/? plans (v1.0 + v1.1 complete, v1.2: 4/5 phases complete)
+Progress: [██████████████████████████░░░░░░] 42/? plans (v1.0 + v1.1 complete, v1.2: 5/5 phases started)
 
 ---
 
@@ -40,10 +40,10 @@ Progress: [███████████████████████
 
 **v1.2 (in progress):**
 - Phases completed: 4/5 (Phase 8: Analytics, Phase 9: SEO, Phase 10: Legal, Phase 11: Mobile/UX)
-- Phases remaining: 1/5 (Phase 12: Landing Page)
+- Phases in progress: 1/5 (Phase 12: Landing Page - 1/3 plans complete)
 - Phases planned: 5 (Analytics, SEO, Legal, Mobile/UX, Landing Page)
 - Requirements: 17 total (UX: 6, Legal: 3, Analytics: 2, SEO: 3, Landing: 3)
-- Requirements delivered: 19/17 (ANLYT-01, ANLYT-02, SEO-01, SEO-02, SEO-03, LEGAL-01, LEGAL-02, LEGAL-03, UX-01, UX-02, UX-03, UX-04, UX-05, UX-06)
+- Requirements delivered: 20/17 (ANLYT-01, ANLYT-02, SEO-01, SEO-02, SEO-03, LEGAL-01, LEGAL-02, LEGAL-03, UX-01, UX-02, UX-03, UX-04, UX-05, UX-06, LAND-01, LAND-02, LAND-03)
 - Coverage: 17/17 mapped (100%)
 
 ---
@@ -54,6 +54,9 @@ Progress: [███████████████████████
 
 Recent decisions affecting v1.2 work:
 
+- **Phase 12 (12-01)**: Footer attribution over separate credits page - inline footer attribution is always visible and follows OSS best practices
+- **Phase 12 (12-01)**: 3-step How It Works with expandable methodology - progressive disclosure balances quick overview with technical depth option
+- **Phase 12 (12-01)**: Developer-focused headline over marketing slogan - "Security scanning for AI-generated web apps" clearly states product purpose and target audience
 - **Phase 11 (11-03)**: Use Next.js viewport export instead of meta tag - App Router prefers exported config object
 - **Phase 11 (11-03)**: Add suppressHydrationWarning to html tag - prevents browser extension DOM modifications from causing hydration warnings
 - **Phase 11 (11-02)**: Use Next.js App Router conventions (loading.tsx, error.tsx) instead of custom loading components - better performance with built-in Suspense
@@ -130,14 +133,17 @@ See PROJECT.md Key Decisions table for full history.
 ## Session Continuity
 
 **Last session:** 2026-02-09
-**Stopped at:** Phase 11 complete (all 3 plans executed)
-**Resume file:** Ready for Phase 12
+**Stopped at:** Phase 12 Plan 01 complete
+**Resume file:** .planning/phases/12-landing-page-optimization/12-02-PLAN.md (next)
 
-**Phase 11 Mobile & UX Polish complete.** All 6 UX requirements delivered across 3 plans:
-- Plan 01: Mobile-responsive layouts, duplicate footer removal, 44px touch targets (commits 28567af, ebe67dc)
-- Plan 02: Loading states, error boundaries, stage-specific progress messages (commits 149311b, 2ebc3d8)
-- Plan 03: Lighthouse optimization with viewport config and hydration suppression (commit 78a15ab)
-User verified all mobile layouts at 375px and 768px viewports, approved all visual work. Ready to proceed to Phase 12 (Landing Page Optimization).
+**Phase 12 Plan 01 (Landing Page Copy & Transparency) complete.** All 3 landing page requirements delivered (LAND-01, LAND-02, LAND-03):
+- Developer-focused headline: "Security scanning for AI-generated web apps"
+- Enhanced feature descriptions with technical specifics (SSL Labs API, 20+ paths, AWS/Stripe patterns)
+- "How it works" section: 3-step visual flow + expandable methodology details
+- Footer OSS attribution: Nuclei (MIT, ProjectDiscovery) and testssl.sh (GPLv2)
+- All copy is technically honest with no marketing superlatives
+- Commits: 4d4d6d3 (landing page), 180a7e9 (footer attribution)
+Ready to proceed to Phase 12 Plan 02.
 
 ---
 

@@ -72,10 +72,11 @@ Plans:
   2. Terms of Service page exists at /terms covering acceptable use, CFAA scanning authorization requirements, liability limits, and refund policy
   3. Scan submission form requires explicit consent checkbox before submitting ("I confirm I own this website or have authorization to scan it")
   4. All site pages display footer with links to Privacy Policy and Terms of Service
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 10-01: TBD
+- [ ] 10-01-PLAN.md — Privacy Policy and Terms of Service static pages
+- [ ] 10-02-PLAN.md — Global footer with legal links and scan form consent checkbox
 
 #### Phase 11: Mobile & UX Polish
 **Goal**: Mobile-responsive design, loading states, error handling, and visual consistency across all pages
@@ -122,9 +123,9 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 07 - Production Validation | v1.1 | 2/2 | Complete | 2026-02-08 |
 | 08 - Analytics & Tracking | v1.2 | 1/1 | Complete | 2026-02-08 |
 | 09 - SEO & Discoverability | v1.2 | 2/2 | Complete | 2026-02-08 |
-| 10 - Legal Compliance | v1.2 | 0/? | Not started | - |
+| 10 - Legal Compliance | v1.2 | 0/2 | Not started | - |
 | 11 - Mobile & UX Polish | v1.2 | 0/? | Not started | - |
 | 12 - Landing Page Optimization | v1.2 | 0/? | Not started | - |
 
 ---
-*Last updated: 2026-02-08*
+*Last updated: 2026-02-09*

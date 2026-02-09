@@ -1,6 +1,6 @@
 # Project State: TrustEdge Audit
 
-**Last updated:** 2026-02-08
+**Last updated:** 2026-02-09
 **Status:** v1.1 IN PROGRESS
 
 ---
@@ -17,16 +17,16 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ## Current Position
 
 **Milestone:** v1.1 DigitalOcean Deployment
-**Phase:** Phase 06 - Deployment Infrastructure (COMPLETE)
-**Plan:** 04 of 4 (all complete)
-**Status:** Complete — ready for Phase 07
+**Phase:** Phase 07 - Production Validation (IN PROGRESS)
+**Plan:** 01 of 2 (complete)
+**Status:** In progress — Plan 01 complete, Plan 02 pending
 
 **Progress:**
 ```
-[████████████████    ] 80% (Phases 05+06 complete, Phase 07 pending)
+[██████████████████░░] 90% (Phases 05+06 complete, Phase 07: 1/2 plans done)
 ```
 
-**Last activity:** 2026-02-08 — Phase 06 complete. Production live at https://shipsecure.ai
+**Last activity:** 2026-02-09 — Completed 07-01-PLAN.md (infrastructure validation, fonts, scanner validation, email delivery)
 
 ---
 
@@ -39,7 +39,7 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 **v1.1 (active):**
 - Phases completed: 2/3
-- Plans completed: 8/8 (Phase 05: 4/4, Phase 06: 4/4)
+- Plans completed: 9/10 (Phase 05: 4/4, Phase 06: 4/4, Phase 07: 1/2)
 - Requirements delivered: 8/8 (CLEAN-01, INFRA-01, INFRA-02, INFRA-03, PROXY-01, PROXY-02, PROC-01, SEC-01)
 - Requirements mapped: 8/8 (100%)
 
@@ -51,6 +51,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 | Decision | Rationale | Phase | Date |
 |----------|-----------|-------|------|
+| 0-finding scanners valid when target lacks triggering characteristics | testphp.vulnweb.com is legacy PHP; js_secrets, vibecode, and tls scanners ran successfully but correctly found nothing | 07-01 | 2026-02-09 |
+| CI rebuild + manual deploy for font assets | Fonts must be in Docker image for backend PDF generation; commit -> push -> GH Actions -> SSH pull -> restart | 07-01 | 2026-02-09 |
 | Reserved IP for static DNS | IP survives droplet destroy/recreate, no DNS changes needed | 06-04 | 2026-02-08 |
 | doadmin for managed PostgreSQL | DigitalOcean managed DB doesn't grant CREATE on public schema to non-admin users | 06-04 | 2026-02-08 |
 | Skip vault encryption | vault.yml is gitignored; encryption adds friction with no security benefit | 06-04 | 2026-02-08 |
@@ -78,8 +80,8 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 | DigitalOcean over Render | Full Docker access on droplet, no Docker-in-Docker limitation for Nuclei | v1.1 | 2026-02-06 |
 | Single droplet architecture | Sufficient for MVP scale (hundreds of scans/day), split to worker later if needed | v1.1 | 2026-02-06 |
 | Nuclei as subprocess | Install Nuclei binary directly, execute as subprocess (not Docker container) | v1.1 Phase 05 | 2026-02-06 |
-| 3-phase roadmap structure | Preparation → Infrastructure → Validation naturally groups 8 deployment requirements | v1.1 | 2026-02-06 |
-| claim_pending_scan already built | db/scans.rs has SELECT FOR UPDATE SKIP LOCKED — escape hatch for future worker split | v1.0 | 2026-02-05 |
+| 3-phase roadmap structure | Preparation -> Infrastructure -> Validation naturally groups 8 deployment requirements | v1.1 | 2026-02-06 |
+| claim_pending_scan already built | db/scans.rs has SELECT FOR UPDATE SKIP LOCKED -- escape hatch for future worker split | v1.0 | 2026-02-05 |
 
 ### Open Questions
 
@@ -94,7 +96,7 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 - [x] Complete 05-04 (Documentation Cleanup) - DONE 2026-02-07
 - [x] Complete 06-01 through 06-04 (Deployment Infrastructure) - DONE 2026-02-08
 - [x] Set up Resend account and configure RESEND_API_KEY for email delivery - DONE 2026-02-08
-- [ ] Download and install Liberation Sans fonts in fonts/ directory (pre-launch, needed for PDF reports)
+- [x] Download and install Liberation Sans fonts in fonts/ directory - DONE 2026-02-09
 - [ ] Schedule legal review of TOS/consent flow before production launch (pre-launch)
 - [ ] Set up Stripe account (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) (pre-launch)
 
@@ -109,23 +111,25 @@ None currently.
 - **Domain:** https://shipsecure.ai
 - **IP:** 45.55.120.175 (DigitalOcean Reserved IP)
 - **SSH:** `ssh -p 2222 deploy@shipsecure.ai`
-- **SSL:** Let's Encrypt, auto-renewal via certbot timer
+- **SSL:** Let's Encrypt, auto-renewal via certbot timer (expires May 9, 2026)
 - **Containers:** trustedge-backend:3000, trustedge-frontend:3001 (bound to 127.0.0.1)
 - **Database:** DigitalOcean Managed PostgreSQL (doadmin user)
-- **CI/CD:** GitHub Actions builds → GHCR images; manual deploy via SSH
+- **CI/CD:** GitHub Actions builds -> GHCR images; manual deploy via SSH
+- **Scanners:** All 5 validated working (security_headers, tls, exposed_files, js_secrets, vibecode)
+- **Email:** Resend (scans@shipsecure.ai) - delivery confirmed working
 
 ---
 
 ## Session Continuity
 
-**Last session:** 2026-02-08
-**Stopped at:** Phase 06 complete. Production deployed and verified.
-**Resume file:** .planning/phases/06-deployment-infrastructure/06-04-SUMMARY.md
+**Last session:** 2026-02-09
+**Stopped at:** Phase 07 Plan 01 complete. Infrastructure validated, scanners working, email delivery confirmed.
+**Resume file:** .planning/phases/07-production-validation/07-01-SUMMARY.md
 
 **Starting next session:**
-Phase 07 (Production Validation) — end-to-end verification of all scan workflows in production.
+Phase 07 Plan 02 -- remaining production validation tasks (paid audit flow, smoke tests, or whatever 07-02 covers).
 
 ---
 
 **State initialized:** 2026-02-04
-**Next action:** Plan and execute Phase 07 (Production Validation)
+**Next action:** Execute Phase 07 Plan 02

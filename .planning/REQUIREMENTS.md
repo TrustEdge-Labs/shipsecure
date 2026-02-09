@@ -74,29 +74,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UX-01 | — | Pending |
-| UX-02 | — | Pending |
-| UX-03 | — | Pending |
-| UX-04 | — | Pending |
-| UX-05 | — | Pending |
-| UX-06 | — | Pending |
-| LEGAL-01 | — | Pending |
-| LEGAL-02 | — | Pending |
-| LEGAL-03 | — | Pending |
-| ANLYT-01 | — | Pending |
-| ANLYT-02 | — | Pending |
-| SEO-01 | — | Pending |
-| SEO-02 | — | Pending |
-| SEO-03 | — | Pending |
-| LAND-01 | — | Pending |
-| LAND-02 | — | Pending |
-| LAND-03 | — | Pending |
+| UX-01 | Phase 11 | Pending |
+| UX-02 | Phase 11 | Pending |
+| UX-03 | Phase 11 | Pending |
+| UX-04 | Phase 11 | Pending |
+| UX-05 | Phase 11 | Pending |
+| UX-06 | Phase 11 | Pending |
+| LEGAL-01 | Phase 10 | Pending |
+| LEGAL-02 | Phase 10 | Pending |
+| LEGAL-03 | Phase 10 | Pending |
+| ANLYT-01 | Phase 8 | Pending |
+| ANLYT-02 | Phase 8 | Pending |
+| SEO-01 | Phase 9 | Pending |
+| SEO-02 | Phase 9 | Pending |
+| SEO-03 | Phase 9 | Pending |
+| LAND-01 | Phase 12 | Pending |
+| LAND-02 | Phase 12 | Pending |
+| LAND-03 | Phase 12 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17
+- Mapped to phases: 17
+- Unmapped: 0
+- Coverage: 100%
 
 ---
 *Requirements defined: 2026-02-08*
-*Last updated: 2026-02-08 after initial definition*
+*Last updated: 2026-02-08 after roadmap creation*

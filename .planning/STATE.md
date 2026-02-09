@@ -1,7 +1,7 @@
-# Project State: TrustEdge Audit
+# Project State: ShipSecure
 
 **Last updated:** 2026-02-08
-**Status:** v1.2 milestone started — defining requirements
+**Status:** v1.2 roadmap created — ready to plan Phase 8
 
 ---
 
@@ -10,16 +10,18 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.2 Launch Readiness — requirements definition
+**Current focus:** Phase 8 - Analytics & Tracking
 
 ---
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-08 — Milestone v1.2 started
+Phase: 8 of 12 (Analytics & Tracking)
+Plan: Ready to plan Phase 8
+Status: Ready to plan
+Last activity: 2026-02-08 — v1.2 roadmap created
+
+Progress: [████████████████░░░░░░░░░░░░░░░░] 31/? plans (v1.0 + v1.1 complete, v1.2 starting)
 
 ---
 
@@ -33,9 +35,13 @@ Last activity: 2026-02-08 — Milestone v1.2 started
 **v1.1 (complete):**
 - Phases completed: 3/3
 - Plans completed: 10/10 (Phase 05: 4/4, Phase 06: 4/4, Phase 07: 2/2)
-- Requirements delivered: 8/8 (CLEAN-01, INFRA-01, INFRA-02, INFRA-03, PROXY-01, PROXY-02, PROC-01, SEC-01)
-- Requirements mapped: 8/8 (100%)
+- Requirements delivered: 8/8 (100%)
 - Production validation: All systems verified (free scan, paid audit, service resilience)
+
+**v1.2 (in progress):**
+- Phases planned: 5 (Analytics, SEO, Legal, Mobile/UX, Landing Page)
+- Requirements: 17 total (UX: 6, Legal: 3, Analytics: 2, SEO: 3, Landing: 3)
+- Coverage: 17/17 mapped (100%)
 
 ---
 
@@ -43,62 +49,45 @@ Last activity: 2026-02-08 — Milestone v1.2 started
 
 ### Key Decisions
 
-| Decision | Rationale | Phase | Date |
-|----------|-----------|-------|------|
-| Container crash requires manual systemctl restart | Restart policies removed from docker-compose.prod.yml by design; systemd manages lifecycle, not Docker | 07-02 | 2026-02-09 |
-| Stripe keys in production .env only | Test-mode keys configured directly on server, never committed to repo (security best practice) | 07-02 | 2026-02-09 |
-| 0-finding scanners valid when target lacks triggering characteristics | testphp.vulnweb.com is legacy PHP; js_secrets, vibecode, and tls scanners ran successfully but correctly found nothing | 07-01 | 2026-02-09 |
-| CI rebuild + manual deploy for font assets | Fonts must be in Docker image for backend PDF generation; commit -> push -> GH Actions -> SSH pull -> restart | 07-01 | 2026-02-09 |
-| Reserved IP for static DNS | IP survives droplet destroy/recreate, no DNS changes needed | 06-04 | 2026-02-08 |
-| doadmin for managed PostgreSQL | DigitalOcean managed DB doesn't grant CREATE on public schema to non-admin users | 06-04 | 2026-02-08 |
-| Skip vault encryption | vault.yml is gitignored; encryption adds friction with no security benefit | 06-04 | 2026-02-08 |
-| ShipSecure branding everywhere user-facing | Product brand is ShipSecure; repo name trustedge-audit is internal only | 06-04 | 2026-02-08 |
-| Nuclei installed on host (not in Docker image) | Installed to /usr/local/bin via Ansible task for PATH availability and faster execution without Docker overhead | 06-03 | 2026-02-07 |
-| Extended timeouts for scan endpoints | Backend /api/ location has 300s read timeout (vs 60s for frontend) since Nuclei scans can take 30s-3min | 06-03 | 2026-02-07 |
-| Systemd oneshot service pattern for Docker Compose | Type=oneshot with RemainAfterExit=yes tracks docker compose as active, cleaner than forking with PID tracking | 06-03 | 2026-02-07 |
-| HTTP-only to HTTPS progression for Certbot | Deploy initial HTTP-only Nginx config with ACME challenge support, then replace with full HTTPS config after certificate obtained | 06-03 | 2026-02-07 |
-| UFW SSH allow rule before firewall enable | SSH port must be allowed in UFW before enabling firewall to prevent immediate lockout | 06-02 | 2026-02-07 |
-| Ansible handlers in playbook not task files | import_tasks doesn't support handlers in imported files, must define in playbook | 06-02 | 2026-02-07 |
-| 3-play Ansible structure for SSH port transition | Play 1: create droplet as root@22; Play 2: security hardening changes SSH to 2222; Play 3: app setup as deploy@2222 | 06-01 | 2026-02-07 |
-| Remove restart policies from docker-compose.prod.yml | Systemd manages Docker Compose lifecycle, mixing restart policies causes conflicts | 06-01 | 2026-02-07 |
-| Bind containers to 127.0.0.1 only in production | Nginx on host proxies to backend:3000 and frontend:3001, no direct external access to containers | 06-01 | 2026-02-07 |
-| Disable db service via replicas: 0 | Using DigitalOcean Managed PostgreSQL, cleaner than removing service definition entirely | 06-01 | 2026-02-07 |
-| Complete configuration table in README | Document all 12 environment variables with required/optional designation for single-source reference | 05-04 | 2026-02-07 |
-| Migration context notes for historical research | Add notes to research docs instead of rewriting to preserve historical context while preventing confusion | 05-04 | 2026-02-07 |
-| Preserve Render as scan target platform | TrustEdge scans apps hosted on Render - legitimate feature, only cleanup is TrustEdge's own hosting | 05-04 | 2026-02-07 |
-| Docker Compose override pattern for production | docker-compose.prod.yml overrides base config with environment-specific settings (remove ports, add restart policies, resource limits) | 05-03 | 2026-02-07 |
-| Dynamic Nuclei version from GitHub API | Build-time resolution ensures latest scanner without manual updates | 05-03 | 2026-02-07 |
-| Template hot-reload in dev only | Development mounts templates as volume, production uses baked-in templates | 05-03 | 2026-02-07 |
-| Resource limits for production containers | Backend: 2 CPU/2G RAM (scanner-intensive), Frontend/DB: 1 CPU/1G RAM each | 05-03 | 2026-02-07 |
-| Binary path resolution via env vars with PATH fallback | Allows explicit override for production while still working in dev environments via PATH | 05-01 | 2026-02-07 |
-| Temp file output capture instead of stdout | Avoids stdout buffering deadlocks for large JSON output (Nuclei can produce >64KB) | 05-01 | 2026-02-07 |
-| Graceful degradation when scanner binaries not found | Dev environments may not have scanners installed, app should still start and serve other features | 05-01 | 2026-02-07 |
-| DigitalOcean over Render | Full Docker access on droplet, no Docker-in-Docker limitation for Nuclei | v1.1 | 2026-02-06 |
-| Single droplet architecture | Sufficient for MVP scale (hundreds of scans/day), split to worker later if needed | v1.1 | 2026-02-06 |
-| Nuclei as subprocess | Install Nuclei binary directly, execute as subprocess (not Docker container) | v1.1 Phase 05 | 2026-02-06 |
-| 3-phase roadmap structure | Preparation -> Infrastructure -> Validation naturally groups 8 deployment requirements | v1.1 | 2026-02-06 |
-| claim_pending_scan already built | db/scans.rs has SELECT FOR UPDATE SKIP LOCKED -- escape hatch for future worker split | v1.0 | 2026-02-05 |
+Recent decisions affecting v1.2 work:
+
+- **Phase 7**: All scanners validated working, email delivery confirmed, Stripe webhook processing verified
+- **Phase 6**: Reserved IP for DNS stability, DigitalOcean Managed PostgreSQL with doadmin user
+- **Phase 5**: Native subprocess execution for scanners (no Docker-in-Docker)
+- **v1.2 Planning**: 5-phase structure derived from requirements (Analytics → SEO → Legal → Mobile → Landing)
+
+See PROJECT.md Key Decisions table for full history.
+
+### v1.2 Phase Structure Rationale
+
+**Phase 8 (Analytics)**: First because it provides tracking for all subsequent improvements; lowest risk, no dependencies.
+
+**Phase 9 (SEO)**: Second because it's quick win for social sharing; no dependency on analytics.
+
+**Phase 10 (Legal)**: Third because Privacy Policy must document analytics implementation; blocking legal risk before launch.
+
+**Phase 11 (Mobile/UX)**: Fourth because it touches existing components; should be done after analytics live to measure improvements.
+
+**Phase 12 (Landing)**: Last because it benefits from all previous polish and can focus purely on messaging.
 
 ### Open Questions
 
 1. **Legal review timing:** When to conduct CFAA compliance review (before production launch)?
-2. **SSL Labs API:** Current rate limits and caching strategy?
+2. **Analytics choice:** Plausible Cloud (€9/month) vs Umami self-hosted (free)?
+3. **Mobile testing:** Which real devices to test on (iPhone, Android models)?
 
 ### Active TODOs
 
-- [x] Complete 05-01 (Scanner Native Binary Execution) - DONE 2026-02-07
-- [x] Complete 05-02 (Environment Configuration) - DONE 2026-02-07
-- [x] Complete 05-03 (Docker Configuration) - DONE 2026-02-07
-- [x] Complete 05-04 (Documentation Cleanup) - DONE 2026-02-07
-- [x] Complete 06-01 through 06-04 (Deployment Infrastructure) - DONE 2026-02-08
-- [x] Set up Resend account and configure RESEND_API_KEY for email delivery - DONE 2026-02-08
-- [x] Download and install Liberation Sans fonts in fonts/ directory - DONE 2026-02-09
-- [x] Set up Stripe account (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) - DONE 2026-02-09
 - [ ] Schedule legal review of TOS/consent flow before production launch (pre-launch)
+- [ ] Plan Phase 8: Analytics & Tracking
 
 ### Blockers
 
-None currently.
+**v1.2 Launch Readiness (from research):**
+- Legal text accuracy: Privacy Policy and TOS require legal review before launch
+- CFAA liability: Consent mechanism must be explicit before accepting payments
+- Hacker News guidelines: Free tier must work without signup, avoid marketing language
+- Mobile testing: Must test on real devices (iPhone, Android) not just DevTools
 
 ---
 
@@ -119,15 +108,15 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-09
-**Stopped at:** v1.1 COMPLETE. All 10 plans across 3 phases delivered. Production fully validated.
-**Resume file:** .planning/phases/07-production-validation/07-02-SUMMARY.md
+**Last session:** 2026-02-08
+**Stopped at:** v1.2 roadmap created, ready to plan Phase 8
+**Resume file:** None
 
-**v1.1 milestone complete.** No remaining plans.
+**v1.1 milestone complete.** v1.2 roadmap ready. Next: `/gsd:plan-phase 8`
 
 ---
 
 **State initialized:** 2026-02-04
-**v1.1 completed:** 2026-02-09
+**v1.0 completed:** 2026-02-06
+**v1.1 completed:** 2026-02-08
 **v1.2 started:** 2026-02-08
-**Next action:** Define requirements → create roadmap

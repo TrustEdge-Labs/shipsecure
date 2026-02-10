@@ -48,7 +48,16 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 ### Active
 
-(None — planning next milestone)
+## Current Milestone: v1.3 Brand Identity
+
+**Goal:** Give ShipSecure a proper visual identity — logo, refined color system, branded favicon, header navbar, and clean SVG icons — so the product looks as credible as it is.
+
+**Target features:**
+- SVG logo mark + wordmark (light/dark mode)
+- Branded favicon (SVG + ICO)
+- Refined blue color palette with design tokens
+- Header/navbar component with logo
+- Replace emoji feature icons with clean SVGs
 
 ### Out of Scope
 
@@ -114,4 +123,4 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Auto CI/CD deploy via SSH | appleboy/ssh-action after image builds | ✓ Good — push to main triggers full build and deploy |
 
 ---
-*Last updated: 2026-02-10 after v1.2 milestone complete*
+*Last updated: 2026-02-09 after v1.3 milestone started*

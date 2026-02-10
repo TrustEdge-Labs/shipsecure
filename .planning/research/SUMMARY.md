@@ -1,260 +1,226 @@
 # Project Research Summary
 
-**Project:** ShipSecure v1.2 Launch Readiness
-**Domain:** SaaS security scanner - launch readiness for Hacker News
-**Researched:** 2026-02-08
-**Confidence:** HIGH
+**Project:** ShipSecure — Brand Identity Integration
+**Domain:** Visual brand identity for developer-focused security SaaS
+**Researched:** 2026-02-09
+**Confidence:** HIGH (stack/architecture), MEDIUM (features)
 
 ## Executive Summary
 
-ShipSecure v1.2 focuses on launch readiness features for a successful Hacker News launch. The core product (free URL scan + paid audit) is already built and deployed. This milestone adds the polish, trust signals, analytics, and SEO that transform a working MVP into a credible public launch.
+ShipSecure needs professional brand identity elements to transition from a working prototype to a credible security product. Research shows developer-focused SaaS products prioritize minimal, geometric logos that scale to favicon sizes, monochromatic color systems with single accent colors, and consistent SVG icon systems. The recommended approach leverages existing Next.js 16 and Tailwind CSS v4 capabilities with only one new dependency (lucide-react for icons).
 
-The recommended approach is **minimal stack additions + frontend-only polish**. Next.js built-in features (Metadata API, Script component, Tailwind responsiveness) eliminate the need for most external libraries. The only new dependencies are analytics (Plausible Cloud recommended for fast setup) and toast notifications (Sonner). All features are frontend-only — no backend changes required. Total estimated effort: 16-24 hours across 6 phases.
+The critical path involves: (1) establishing design tokens first to avoid color regression, (2) building logo component with proper dark mode support using `currentColor`, (3) refactoring layout structure before adding header to prevent layout shift cascade, then (4) systematic icon migration. This order prevents the three most severe pitfalls: dark mode breakage from token migration, layout shift from header insertion, and SSR hydration issues with logo rendering.
 
-Key risks center on legal liability (unauthorized scanning under CFAA) and Hacker News community dynamics (vote-ring detection, signup friction, marketing language). Both are addressable through explicit consent mechanisms, honest solo-founder positioning, and friction-free free tier. Mobile responsiveness and Core Web Vitals are critical — 53% of users abandon sites loading slower than 3 seconds. CSS-only responsive design prevents hydration mismatches while ensuring mobile performance.
+Key risk is incomplete color token migration causing a split codebase where some components use semantic tokens and others use raw Tailwind classes. Mitigation requires tracking migration progress per component and blocking phase completion until 100% migration is verified. The existing 17 components with dark mode classes must be migrated carefully to avoid white-on-white text, invisible inputs, or broken severity badges.
 
 ## Key Findings
 
 ### Recommended Stack
 
-Launch readiness requires minimal new dependencies. Next.js 16.1.6's built-in Metadata API eliminates need for SEO libraries. Tailwind CSS 4 already provides responsive utilities. The primary additions are privacy-friendly analytics and UX polish components.
+**Zero-dependency approach:** The existing stack (Next.js 16 + Tailwind CSS v4) already provides everything needed except icons. Native SVG rendering eliminates the need for `@svgr/webpack` or `react-svg-loader`. Tailwind v4's `@theme` directive replaces external design token libraries like Style Dictionary. Next.js Metadata API handles favicon generation without additional tools.
 
 **Core technologies:**
-- **Plausible Analytics (hosted)**: Privacy-friendly analytics without cookies — €9/month, minimal setup, no cookie banners required. Alternative: Umami self-hosted (free with existing PostgreSQL).
-- **Sonner**: Modern toast notifications — lightweight, TypeScript-first, works seamlessly with Next.js Server Components.
-- **Next.js Metadata API (built-in)**: SEO meta tags, OpenGraph, Twitter cards — no external dependencies needed, TypeScript support, automatic deduplication.
-- **Tailwind CSS breakpoints (existing)**: Mobile-first responsive design — already installed, no additional libraries needed.
+- **Lucide React (^0.468.0)**: Icon component library — 1400+ tree-shakeable icons, 1-2KB per icon, TypeScript-native, consistent 24px design system
+- **Tailwind CSS v4 @theme**: Design tokens — Native CSS custom properties, full IntelliSense, no additional dependencies
+- **Native SVG components**: Logo rendering — Zero dependencies, full TypeScript support, React Server Components compatible
+- **Next.js Metadata API**: Favicon generation — Built-in multi-format support using Sharp (already a Next.js dependency)
 
-**What NOT to use:**
-- `next-seo` package: Obsolete for Next.js 15+, built-in Metadata API supersedes it entirely.
-- Google Analytics: Privacy invasion, cookie banners required, contradicts "privacy-first security" positioning for developer audience.
-- Heavy UI libraries: Chakra/Material-UI add bundle bloat; Tailwind utilities cover all needs for this simple interface.
+**What NOT to add:** `@svgr/webpack` (Next.js handles natively), `react-icons` (poor tree-shaking, 10-20KB per icon), `tailwindcss-themer` (replaced by v4 @theme), Font Awesome (legacy CSS approach, 50KB+ base), `styled-components`/`emotion` (conflicts with Tailwind).
 
 ### Expected Features
 
-Launch readiness features split into table stakes (credibility killers if missing) and differentiators (competitive advantage for HN launch).
-
 **Must have (table stakes):**
-- Mobile responsive design — 7.49B mobile users globally; HN users browse on mobile; non-negotiable in 2026.
-- Loading states with visual feedback — "Scanning headers...", "Running Nuclei templates..." vs silent spinner.
-- Graceful error handling — Constructive messages ("Unable to reach URL. Check firewall rules?") vs silent failures.
-- Privacy Policy — GDPR/CCPA requirement; email collection legally requires disclosure; must cover analytics, Stripe, data retention.
-- Terms of Service — Legal protection for service misuse; must cover acceptable use, liability limits, CFAA compliance, audit scope disclaimers.
-- SEO meta tags (title, description) — Search engines and social platforms expect these server-rendered.
-- Open Graph tags — Social shares (Twitter/HN/Reddit) need preview images; missing = unprofessional appearance.
-- Privacy-friendly analytics — Need to measure launch traffic; cookieless = better for dev audience; explicit "no tracking" statement differentiates from competitors.
+- Logo/Wordmark — Professional credibility, brand recognition
+- Favicon (multi-size, dark mode) — Browser tab identification
+- Consistent Icon System — Visual coherence using SVG instead of emoji
+- Header/Navbar with Logo — Primary brand touchpoint
+- Defined Color System — Design tokens for visual consistency and WCAG AA compliance
+- Hover/Focus States — Accessibility and interactive feedback
+- Responsive Logo Behavior — Icon-only at mobile, full wordmark at desktop
 
 **Should have (competitive):**
-- Founder credibility section — 40+ years cybersecurity experience is huge trust signal; About page or landing section with photo, bio, LinkedIn.
-- Transparent "How it works" section — Developers trust products they understand; list scanners used (Nuclei, testssl.sh, custom probes).
-- Real-time scan insights — Show scan progress ("Testing CSP headers...", "Found 3 issues so far") instead of generic spinner; reduces perceived wait time.
-- Example scan results — Public demo results URL shows what users get without running own scan; reduces friction for skeptical devs.
+- Branded OG Images — Add logo overlay to existing opengraph-image.tsx
+- Geometric/Technical Logo — Communicates precision and security
+- Monochromatic + Accent — Blue accent on neutral base, matches modern dev tools
 
 **Defer (v2+):**
-- User accounts / scan history — Massive scope (auth, sessions, password reset); free tier explicitly avoids signup; consider for Pro tier only.
-- Live chat support — Founder burnout; 24/7 expectation; email support with 24hr SLA sufficient for launch.
-- Real-time WebSocket updates — Polling works fine for 30-60s scans; websockets add deployment complexity for marginal UX gain.
-- SOC 2 / ISO certifications — $20K-50K cost + 3-6 months; overkill for bootstrapped MVP; founder credibility + transparent methodology sufficient.
+- Animated Logo — Adds complexity, not essential for credibility
+- Custom Iconography — High effort, Lucide provides 1400+ icons
+- SVG Scroll Animations — Polish feature, defer until core identity proven
+- Gradient Accents — Can be added incrementally after token system established
+
+**Anti-features to avoid:**
+- Mascot/character logo (too playful for security)
+- Multiple brand colors (cluttered, unfocused)
+- Lowercase-only wordmark (reduces readability)
+- Overly complex logo (won't scale to 16x16px favicon)
+- Custom icon fonts (performance and accessibility issues)
+- Serif typography (reduces technical feel)
 
 ### Architecture Approach
 
-All launch readiness features are **frontend-only modifications**. The Rust/Axum backend requires no changes. This approach minimizes risk and deployment complexity while maximizing speed to launch.
+Incremental, non-breaking integration using Tailwind v4 `@theme` for design tokens, native SVG components with `currentColor` for theme support, and file-based favicon conventions. Color migration happens in parallel: add tokens WITHOUT removing existing classes first, migrate components one-by-one with dark mode verification, then remove legacy classes only after 100% migration confirmed.
 
 **Major components:**
-1. **Analytics Integration** — Next.js Script component loads tracking script asynchronously; no backend involvement; client-side only with afterInteractive strategy to prevent blocking page hydration.
-2. **Metadata Generation** — Next.js generateMetadata() function produces server-rendered meta tags for SEO/OG; no client-side rendering; search crawlers and social bots see tags immediately.
-3. **Legal Pages** — Static route pages (app/privacy/page.tsx, app/terms/page.tsx) with no database or API dependencies; SEO-friendly URLs; markdown or JSX content.
-4. **Responsive CSS** — Tailwind mobile-first breakpoints (sm:, md:, lg:) applied to existing components; CSS-only approach prevents hydration mismatches; same DOM tree, different styles per viewport.
-5. **Loading States & Error Boundaries** — Next.js loading.tsx and error.tsx conventions per route; skeleton UI with animate-pulse; error boundaries with retry buttons.
-6. **JSON-LD Schema** — Client component wrapper for structured data to prevent hydration issues; Organization, SoftwareApplication, WebSite schemas for search engine understanding.
 
-**Key integration points:**
-- Nginx: No changes needed; /privacy and /terms served by frontend via Next.js routing.
-- Docker: Only change is optional environment variables for analytics (NEXT_PUBLIC_PLAUSIBLE_DOMAIN or NEXT_PUBLIC_UMAMI_WEBSITE_ID).
-- Database: No schema changes; analytics stored externally (Plausible cloud) or in separate Umami instance if self-hosting.
+1. **Design Token System** — Tailwind v4 `@theme` in globals.css defining semantic tokens (brand-primary, surface-primary, text-secondary, border-subtle) with explicit dark mode overrides via `@media (prefers-color-scheme: dark)`
+
+2. **Logo Component** — SVG component with variants (full/icon/wordmark), sizes (sm/md/lg/xl), uses `currentColor` for fills to inherit text color, includes aria-label and role="img", never uses `<img>` tag
+
+3. **Header/Navbar** — Sticky positioned (z-index: 1020), fixed 64px height, logo left + nav center + CTA right, hides nav on mobile, defines `--header-height` CSS variable for spacing calculations
+
+4. **Icon System** — Lucide React components with consistent sizing (w-5 h-5 for decorative, w-6 h-6 standalone), `currentColor` for theme support, proper aria attributes (aria-hidden for decorative, aria-label for standalone)
+
+5. **Favicon Configuration** — Dynamic generation via app/icon.tsx using ImageResponse, SVG favicon with `prefers-color-scheme` media query for dark mode support, static apple-icon.png and favicon.ico fallbacks
+
+**Key architectural decisions:**
+- Layout refactor before header addition (prevents layout shift cascade)
+- Parallel token migration (additive, not destructive)
+- Single source SVG for logo (generate variants programmatically)
+- Z-index scale defined upfront (base: 0, dropdown: 1000, sticky: 1020, fixed: 1030, modal: 1040-1050, tooltip: 1070)
 
 ### Critical Pitfalls
 
-**1. Unauthorized Scanning Legal Liability (CRITICAL)**
-Users initiate scans against websites they don't own, ShipSecure becomes liable under Computer Fraud and Abuse Act (CFAA). Prevention: explicit consent checkbox before scan ("I confirm I own this website or have written authorization"), TOS must state scanning third-party assets without authorization is prohibited and may violate 18 U.S.C. § 1030, liability disclaimer stating user is solely responsible.
+1. **Layout Shift Cascade from Header Addition** — App was built header-less with `min-h-screen flex flex-col` pattern. Adding 64px sticky header pushes content down, breaks spacing across all routes. **Prevention:** Define `--header-height: 64px` CSS variable, snapshot all routes before implementation, refactor layout structure FIRST before adding header component.
 
-**2. Show HN Post Flagged or Ignored (HIGH)**
-HN submission flagged as spam, buried by vote-ring detection, or ignored due to poor presentation. Prevention: title format "Show HN: ShipSecure – Security scanner for AI-generated apps", free tier must work without signup (HN guideline), technical and modest language (no superlatives), personal username (not "shipsecure"), no vote coordination, clear one-sentence description in first comment.
+2. **Dark Mode Color Regression from Token Migration** — 17 components use `dark:` prefix classes for severity badges, state indicators, and form inputs. Migrating to semantic tokens without equivalent dark mode mappings causes white-on-white text, invisible inputs, broken severity badges. **Prevention:** Inventory all `dark:` patterns with `rg "dark:(bg|text|border)-" frontend/`, add tokens WITHOUT removing classes, migrate one component at a time, dark mode test each component.
 
-**3. Hydration Mismatch from Viewport-Dependent Rendering (HIGH)**
-Server renders one component tree, client renders different tree based on viewport size, causing React hydration errors and broken interactivity on mobile. Prevention: use CSS-driven responsiveness instead of branching markup based on viewport; same DOM tree with different styles via Tailwind breakpoints; never use window.innerWidth or navigator.userAgent during initial render.
+3. **Logo SVG Breaks Dark Mode or SSR** — Inline SVG with hardcoded fill colors renders incorrectly in dark mode. Next.js SSR hydration mismatch causes flash of wrong-color logo. **Prevention:** Use `currentColor` for all fills (inherits parent text color), apply theme classes to wrapper (`text-blue-600 dark:text-blue-400`), specify width/height to prevent CLS, never read `window`/`document` during render.
 
-**4. SEO Meta Tags Missing or Hydration-Broken (MEDIUM)**
-Open Graph preview shows "No preview available" when shared on Twitter/Slack; meta tags rendered client-side only, invisible to crawlers. Prevention: use Next.js generateMetadata() for server-rendered tags, OG image must be absolute URL (https://shipsecure.ai/og-image.png), verify size is 1200x630px, test with Twitter Card Validator and Facebook Sharing Debugger.
+4. **Favicon Cache Invalidation** — Browsers cache favicons aggressively (up to 7 days). Users report "still seeing old icon" after deployment. **Prevention:** Generate all formats (favicon.ico, favicon.svg, icon-192.png, icon-512.png, apple-touch-icon.png), use Next.js Metadata API for proper link tags, add `?v=2` cache bust param on first deploy, verify formats after deploy with curl.
 
-**5. Mobile Performance Testing Only in DevTools (MEDIUM)**
-Site feels fast in Chrome DevTools responsive mode but slow and janky on real mobile devices; Core Web Vitals fail on actual phones. Prevention: test on real devices (iPhone, Android), use next/image with sizes prop for responsive srcset, measure Core Web Vitals with PageSpeed Insights mobile profile (target: LCP < 2.5s, CLS < 0.1), always specify width/height on images.
+5. **SVG Icon Inconsistency** — Icons render at different sizes, colors don't follow dark mode, missing accessibility labels, inconsistent stroke weights when mixing custom icons with Lucide. **Prevention:** Use established library (Lucide), standardize sizing via Tailwind classes, always use `currentColor`, decorative icons get `aria-hidden="true"`, standalone icons get `aria-label`.
+
+**Moderate pitfalls:** Incomplete color migration causing split codebase, header z-index conflicts with future modals, mobile header navigation confusion (solve by logo + CTA only, no hamburger menu needed for current minimal nav).
 
 ## Implications for Roadmap
 
-Based on research, suggested 6-phase structure ordered by risk/dependency and designed to provide quick feedback loops:
+Based on research, suggested 6-phase structure:
 
-### Phase 1: Analytics Integration
-**Rationale:** Lowest risk, highest value, no dependencies. Analytics provides immediate user insights without affecting existing functionality. Can deploy independently and provides tracking for subsequent phases to measure impact.
+### Phase 1: Design Token System
+**Rationale:** Foundation layer that enables all other work. Non-breaking (additive only). Must be complete before any color migration to prevent regression. Defines semantic tokens with explicit dark mode overrides.
 
-**Delivers:** Plausible Cloud analytics tracking page views and custom events (scan_started, scan_completed, upgrade_clicked, payment_completed). Privacy-friendly, cookieless, no banner required. Dashboard access for launch metrics.
+**Delivers:** Tailwind v4 `@theme` in globals.css with brand colors (primary, primary-hover), semantic tokens (surface-primary/secondary, text-primary/secondary, border-subtle/default), severity tokens (critical, success, danger, warning), and z-index scale.
 
-**Addresses:** Table stakes feature (analytics expected for any serious launch); differentiator (privacy-first positioning resonates with developer audience).
+**Addresses:** Color system definition (table stakes), prevents dark mode regression pitfall, establishes naming convention (--color-{category}-{variant}-{state}).
 
-**Avoids:** CSP conflicts (configure CSP with Plausible domains before integration), analytics database misconfiguration (using cloud = no Docker/database issues).
+**Avoids:** Pitfall #2 (dark mode regression). Token system must be complete before migration begins.
 
-**Estimated effort:** 1-2 hours
+### Phase 2: Logo Component
+**Rationale:** Core brand asset needed for header, favicon, OG images. Must work in isolation before integration. Dark mode support is critical for developer audience.
 
----
+**Delivers:** SVG logo component with variants (full/icon/wordmark), sizes (sm/md/lg/xl), `currentColor` fills, proper aria-label, optimized with SVGO.
 
-### Phase 2: SEO & Open Graph Metadata
-**Rationale:** Improves social sharing immediately. No dependencies on Phase 1. Quick win that makes product look professional when shared on HN/Twitter/Slack.
+**Uses:** Native React SVG (zero dependencies), Tailwind classes for sizing.
 
-**Delivers:** Server-rendered meta tags (title, description) and Open Graph tags (og:title, og:description, og:image, og:url) on landing page, results page, payment success page. 1200x630px OG image created. Twitter Card validation passing.
+**Implements:** Logo component architecture pattern with theme support.
 
-**Addresses:** Table stakes features (SEO meta tags, Open Graph tags) — missing = broken social shares and poor search visibility.
+**Avoids:** Pitfall #3 (logo SSR/dark mode issues). Using `currentColor` prevents hardcoded color problems.
 
-**Uses:** Next.js built-in Metadata API (no new dependencies).
+### Phase 3: Layout Refactor
+**Rationale:** MUST happen before header addition. Current layout uses `min-h-screen flex flex-col` which will break when 64px header is added. Prevents layout shift cascade.
 
-**Avoids:** Client-side meta tags pitfall (use generateMetadata() for server-rendering), hydration issues (metadata is pure HTML, no JS dependency).
+**Delivers:** Updated layout.tsx with `--header-height` variable, adjusted spacing on all routes, snapshots of current state for regression testing.
 
-**Estimated effort:** 3-4 hours (including OG image creation)
+**Addresses:** Prevents critical Pitfall #1 (layout shift cascade). This is the most destructive pitfall if not handled properly.
 
----
+**Avoids:** Breaking spacing across all 5 routes (/, /results/[token], /scan/[id], /privacy, /terms).
 
-### Phase 3: Legal Pages & Consent Mechanism
-**Rationale:** Required for GDPR/CCPA compliance and CFAA liability protection. Must be in place before public launch. Blocking legal risk.
+### Phase 4: Header & Navigation
+**Rationale:** Now that layout structure is prepared, header can be safely added. Primary brand touchpoint.
 
-**Delivers:** Privacy Policy page (/privacy) covering email collection, Stripe PII, analytics opt-out, data retention, GDPR/CCPA rights. Terms of Service page (/terms) covering acceptable use, liability limits, CFAA compliance clause, scan authorization requirements, audit scope disclaimers. Consent checkbox on scan form: "I confirm I own this website or have written authorization to scan it." Footer links on all pages.
+**Delivers:** Sticky header component (64px, z-index 1020) with Logo, minimal nav (hidden on mobile), CTA button, integrated into layout.tsx.
 
-**Addresses:** Table stakes features (Privacy Policy, Terms of Service); critical pitfall (unauthorized scanning legal liability — CFAA clause + consent checkbox).
+**Uses:** Logo component from Phase 2, design tokens from Phase 1, layout structure from Phase 3.
 
-**Avoids:** Generic TOS template gaps (include security scanning specifics, CFAA clause, user responsibility for authorization), no consent mechanism (explicit checkbox required before scan).
+**Implements:** Header architecture pattern with responsive behavior.
 
-**Estimated effort:** 2-3 hours (excluding legal text creation, which is external — use Termly/iubenda generator as starting point, customize for ShipSecure)
+**Avoids:** Pitfall #7 (z-index conflicts) by using defined scale. Pitfall #8 (mobile confusion) by logo + CTA only.
 
----
+### Phase 5: Icon System & Migration
+**Rationale:** Replace emoji with professional SVG icons. Depends on color system being complete for proper theming. Systematic migration prevents inconsistency.
 
-### Phase 4: JSON-LD Structured Data
-**Rationale:** SEO benefit is incremental. No user-facing changes. Can be done after basic metadata. Helps search engines and AI understand what ShipSecure is.
+**Delivers:** lucide-react installed, icon barrel export (components/icons/index.ts), all emoji replaced on landing page, scan form, footer, grade summary (4 components migrated).
 
-**Delivers:** JSON-LD schemas for Organization (founder/company info), SoftwareApplication (product details, pricing), and WebSite (sitemap). Client component wrapper to prevent hydration issues. Validated with Google Rich Results Test.
+**Uses:** Lucide React library, design tokens for colors.
 
-**Addresses:** SEO enhancement (not table stakes, but improves search visibility and AI understanding).
+**Addresses:** Consistent icon system (table stakes), visual coherence.
 
-**Uses:** Next.js built-in support for JSON-LD; client component wrapper pattern from ARCHITECTURE.md.
+**Avoids:** Pitfall #5 (icon inconsistency) by standardizing library and sizing patterns.
 
-**Avoids:** Hydration mismatch from JSON-LD (use client component wrapper).
+### Phase 6: Favicon & OG Image
+**Rationale:** Can be done independently, low risk. Completes brand identity rollout.
 
-**Estimated effort:** 2-3 hours
+**Delivers:** app/icon.tsx (dynamic generation), apple-icon.png, favicon.ico, favicon.svg with dark mode support, updated opengraph-image.tsx with logo overlay.
 
----
+**Uses:** Logo component from Phase 2, Next.js Metadata API, ImageResponse.
 
-### Phase 5: Mobile Responsiveness & UX Polish
-**Rationale:** Existing site is already responsive (using Tailwind) but needs audit and polish. Should be done after analytics is live to measure before/after improvements. Medium risk because it touches existing components.
+**Addresses:** Favicon (table stakes), branded OG images (competitive feature).
 
-**Delivers:** Mobile-responsive layout verified on real devices (iPhone, Android). Loading states with skeleton UI and scan progress messages ("Scanning headers...", "Running Nuclei templates..."). Error boundaries with constructive error messages and retry buttons. Consistent visual design across all pages (spacing, colors, button sizes). Core Web Vitals validated (LCP < 2.5s, CLS < 0.1, mobile PageSpeed Insights score > 90).
-
-**Addresses:** Table stakes features (mobile responsive design, loading states, graceful error handling, consistent visual design); critical pitfall (hydration mismatch — CSS-only responsive approach); critical pitfall (mobile performance testing — real device validation).
-
-**Uses:** Tailwind CSS mobile-first breakpoints (existing), Next.js loading.tsx and error.tsx conventions, Sonner toast notifications (NEW dependency).
-
-**Avoids:** Viewport-dependent rendering (CSS-only approach, same DOM tree), mobile performance issues (real device testing, next/image with sizes prop), missing viewport meta tag (verify correct placement in layout.tsx).
-
-**Estimated effort:** 6-8 hours (includes audit, fixes, testing on real devices)
-
----
-
-### Phase 6: Landing Page & Founder Credibility
-**Rationale:** Must align with Show HN guidelines. Should be done last to benefit from all previous polish (analytics, SEO, mobile, legal). Focuses on copy and messaging for developer audience.
-
-**Delivers:** Landing page copy optimized for technical audience. Clear headline: "ShipSecure — Security Scanner for AI-Generated Apps". Subheadline: "Free scan in 60 seconds. No signup required." Benefits over features: "Finds SQL injection, XSS, SSRF" not "Powered by Nuclei". About page with founder photo, bio (40+ years cybersecurity at Bose, Ford, TrustEdge Labs), LinkedIn link, honest solo founder story ("I built this because..."). Transparent "How it works" section listing scanners used. Example scan results publicly accessible without signup.
-
-**Addresses:** Differentiator features (founder credibility, transparent methodology, example results); critical pitfall (Show HN post flagged — free tier works without signup, modest language, personal story); critical pitfall (landing page copy too technical or too vague — clear outcome-focused headline).
-
-**Avoids:** Marketing language (no superlatives, technical and modest), signup friction (free tier fully functional without account), vague value prop (specific outcomes: "Finds SQL injection, XSS, SSRF in 60 seconds").
-
-**Estimated effort:** 3-4 hours (copy writing, About page creation, example scan generation)
-
----
+**Avoids:** Pitfall #4 (cache invalidation) by generating all formats and using cache bust param.
 
 ### Phase Ordering Rationale
 
-1. **Analytics first** provides tracking for all subsequent phases to measure impact (bounce rate improvements, conversion rate changes).
-2. **SEO next** is quick win with immediate benefit for social sharing; no dependencies.
-3. **Legal pages early** to address blocking legal risk before public launch; content can be refined later but framework must be in place.
-4. **JSON-LD after basic SEO** provides incremental benefit without user-facing urgency.
-5. **Mobile responsiveness before landing page** ensures copy changes are tested in polished, responsive UI.
-6. **Landing page last** benefits from all previous polish and can focus purely on messaging/positioning.
+- **Foundation first:** Design tokens must exist before any component uses them (prevents regression)
+- **Isolation before integration:** Logo built and tested standalone before header integration
+- **Layout refactor before header:** Prevents layout shift cascade (most destructive pitfall)
+- **Sequential dependencies:** Header needs logo, icons need color system, favicon needs logo
+- **Risk management:** Non-breaking changes first (tokens, logo), structural changes second (layout), then additions (header, icons, favicon)
 
-**Critical path:** Analytics → SEO → Legal (blocking for launch) → Mobile (blocking for credibility) → Landing Page (blocking for HN launch). JSON-LD is optional/deferrable.
-
-**Dependency chain:**
-- Mobile responsiveness requires loading states (error states are part of loading flow).
-- Privacy Policy requires analytics implementation (must disclose what's tracked).
-- Landing page requires mobile responsiveness (mobile exposes design inconsistencies).
-- Hacker News launch requires all phases complete (missing any table stakes feature = credibility hit).
+**Total estimated effort:** 10-12 hours across 6 phases (per ARCHITECTURE.md build order)
 
 ### Research Flags
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1 (Analytics):** Well-documented Plausible/Umami integration; official Next.js Script component patterns; no research needed.
-- **Phase 2 (SEO):** Next.js Metadata API is official, well-documented; standard Open Graph patterns; no research needed.
-- **Phase 3 (Legal):** Use legal template generators (Termly, iubenda); standard TOS/Privacy Policy structures; no technical research needed (legal review is external).
-- **Phase 4 (JSON-LD):** Schema.org documentation is comprehensive; Next.js has built-in JSON-LD support; no research needed.
-- **Phase 5 (Mobile):** Tailwind responsive patterns well-documented; Next.js loading/error conventions standard; no research needed.
-- **Phase 6 (Landing):** Copy writing is creative work, not technical research; HN guidelines are published; no research needed.
+**Phases with standard patterns (skip research):**
+- **Phase 1 (Design Tokens):** Well-documented Tailwind v4 @theme, official docs verified
+- **Phase 2 (Logo):** Standard React SVG component pattern
+- **Phase 4 (Header):** Standard Next.js layout pattern
+- **Phase 5 (Icons):** Lucide React has comprehensive docs
+- **Phase 6 (Favicon):** Next.js Metadata API is well-documented
 
-**No phases require deeper research.** All patterns are well-established, documented, and validated through multiple sources. Implementation can proceed directly to execution.
+**No phases require `/gsd:research-phase`.** All patterns are established and documented in official sources.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Next.js built-in features verified via official docs; Plausible/Umami integration patterns validated across multiple sources; Sonner widely adopted with clear documentation. All recommendations backed by official sources or community consensus. |
-| Features | MEDIUM | Feature priorities validated through SaaS launch checklists, HN launch postmortems, and UX research; specific to ShipSecure context (security scanner for developers) but applicable patterns confirmed across multiple similar launches. Table stakes vs differentiators split informed by competitor analysis and HN community feedback. |
-| Architecture | HIGH | Next.js App Router patterns (Metadata API, Script component, loading/error conventions) are official, stable features with extensive documentation. Frontend-only approach verified as sufficient for all launch features. Docker/Nginx integration patterns confirmed via existing v1.1 deployment. |
-| Pitfalls | MEDIUM | CFAA legal liability confirmed via US Department of Justice guidance and similar security tool TOS analysis. HN community dynamics validated through Show HN guidelines and postmortem discussions. Hydration mismatch, CSP conflicts, and mobile performance pitfalls validated through Next.js official docs and developer experience reports. Some pitfalls are inferred from general patterns rather than ShipSecure-specific incidents. |
+| Stack | HIGH | Official Next.js 16 and Tailwind v4 docs verified. Lucide React actively maintained with clear docs. |
+| Features | MEDIUM | Based on training data analysis of Linear, Vercel, Raycast, Stripe, 1Password. Not industry standards, but strong patterns. |
+| Architecture | HIGH | Codebase-specific research. Current layout structure inspected, 17 components inventoried, dark mode patterns documented. |
+| Pitfalls | HIGH | Derived from actual codebase state (layout pattern, dark mode classes, existing color usage). Patterns verified from Next.js/Tailwind best practices. |
 
-**Overall confidence:** HIGH for technical implementation (stack, architecture); MEDIUM for feature priorities and pitfall predictions (validated through research but not ShipSecure-specific testing).
+**Overall confidence:** HIGH
+
+Recommended stack is minimal and proven. Architecture patterns are standard. Pitfalls are derived from actual codebase inspection rather than speculation. Only uncertainty is feature prioritization (table stakes vs competitive), which is based on training data rather than user research.
 
 ### Gaps to Address
 
-**Legal text accuracy:** Legal pages research identifies structure and required clauses (CFAA, GDPR, CCPA) but actual legal text should be reviewed by lawyer. Mitigation: use Termly/iubenda generators as starting point, customize for ShipSecure specifics, note "legal review recommended before accepting payments" in Phase 3 plan.
+**Logo design itself:** Research covers technical integration, not visual design. Logo must be designed (geometric, works at 16x16px, conveys security). This is a design task, not development. **Handle during Phase 2 planning:** Source logo from designer or create placeholder SVG, validate it scales to favicon size before proceeding.
 
-**Hacker News community reception:** Show HN pitfalls are based on guidelines and postmortem analysis but actual reception depends on product-market fit and timing. Mitigation: follow all HN guidelines strictly (no vote coordination, modest language, free tier without signup), soft launch to r/websec or smaller communities first for feedback, prepare for negative comments by having founder respond thoughtfully.
+**Color palette refinement:** Research recommends "monochromatic + blue accent" but doesn't define exact color values. Existing codebase uses blue-400 through blue-900, severity colors (red/orange/yellow/green), and gray neutrals. **Handle during Phase 1:** Audit existing usage with `rg "blue-[0-9]" frontend/`, document current palette, define semantic tokens that map to existing usage to minimize visual changes.
 
-**Mobile performance on production infrastructure:** Research validates patterns but actual Core Web Vitals on DigitalOcean deployment with Nginx proxy may differ from development. Mitigation: test with PageSpeed Insights on production URL after Phase 5 deployment, real device testing on cellular connection (not just wifi).
+**Mobile navigation pattern:** Research recommends "logo + CTA only" but doesn't validate this meets user needs. Current nav is minimal (Home, Privacy, Terms), but future features may need more nav items. **Handle during Phase 4:** Implement logo + CTA pattern, defer hamburger menu decision until Phase 4 validation. If nav grows, add menu in future phase.
 
-**Analytics GDPR compliance:** Plausible/Umami are cookieless and GDPR-compliant but Privacy Policy must accurately reflect data flows. Mitigation: Plausible documentation provides GDPR-compliant privacy policy language; include in Phase 3 legal text generation.
-
-**Founder credibility positioning:** 40+ years experience is strong trust signal but requires authentic storytelling. Mitigation: draft About page copy in founder's voice, avoid corporate language, include personal motivation for building ShipSecure (CVE-2025-48757 catalyst mentioned in memory), link to LinkedIn for verification.
+**Accessibility validation:** Research identifies need for WCAG AA contrast and keyboard navigation but doesn't specify exact criteria. **Handle during Phase 6:** Add pre-deploy checklist item for Lighthouse accessibility audit, manual keyboard navigation test, contrast checker on all token combinations.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Next.js Official Documentation (Metadata API, Script component, App Router conventions) — All architectural patterns validated via official Vercel docs
-- Plausible Analytics Documentation (Next.js integration, CSP configuration) — Official integration guide
-- Umami Analytics GitHub (self-hosting, Docker setup) — Official repository
-- Tailwind CSS Documentation (responsive design, breakpoints) — Official Tailwind Labs docs
-- US Department of Justice CFAA Guidance (18 U.S.C. § 1030) — Legal compliance requirements
-- Hacker News Show HN Guidelines — Community rules for launches
-- Schema.org (JSON-LD structured data) — Official structured data vocabulary
+- Next.js 16 Metadata API: https://nextjs.org/docs/app/api-reference/file-conventions/metadata/app-icons
+- Tailwind CSS v4 Theme: https://tailwindcss.com/docs/theme
+- Lucide Icons: https://lucide.dev (library docs)
+- ShipSecure codebase inspection: layout.tsx, globals.css, 17 component files, existing dark mode patterns
 
 ### Secondary (MEDIUM confidence)
-- SaaS launch checklists (Orb, DevSquad, Default) — Best practices aggregated from multiple SaaS launches
-- Privacy-compliant analytics comparisons (Mitzu, Vemetric) — Plausible vs Umami feature/cost analysis
-- Next.js SEO optimization guides (2026 editions) — Community best practices for App Router SEO
-- HN launch postmortems (Show HN reached front page, successful launches) — Community-shared experiences
-- Developer tool UX research (Evil Martians, NN/G) — Developer audience expectations
-- Core Web Vitals optimization guides (web.dev, LogRocket) — Performance best practices
-- Landing page copywriting research (LandingPageFlow, ZenithCopy) — Conversion optimization patterns
+- OKLch Color Space: https://oklch.com (perceptual uniformity rationale)
+- WCAG 2.2 Contrast Guidelines: https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum
+- Developer-focused brand patterns: Inferred from training data (Linear, Vercel, Raycast, Stripe, 1Password)
 
 ### Tertiary (LOW confidence)
-- Generic SaaS security certifications (SOC 2, ISO) — Cost/timeline estimates (wide variance depending on provider)
-- UI/UX design trends for 2026 — Aesthetic preferences (subjective, not critical for launch)
-- AI-powered explanations in security tools — Emerging pattern, limited adoption data
+- Feature prioritization: Training data analysis, not user research or industry standards
+- Mobile navigation needs: Current minimal nav may not represent future state
 
 ---
-*Research completed: 2026-02-08*
-*Ready for roadmap: yes*
+**Research completed:** 2026-02-09
+**Ready for roadmap:** Yes
+**Total estimated effort:** 10-12 hours across 6 phases

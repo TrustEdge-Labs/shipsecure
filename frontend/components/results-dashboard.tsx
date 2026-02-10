@@ -15,14 +15,14 @@ export function ResultsDashboard({ findings }: ResultsDashboardProps) {
 
   if (findings.length === 0) {
     return (
-      <div className="text-center py-12 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-        <div className="inline-block rounded-full h-16 w-16 bg-green-100 dark:bg-green-900 flex items-center justify-center mb-4">
-          <span className="text-3xl text-green-600 dark:text-green-400">✓</span>
+      <div className="text-center py-12 bg-success-bg border border-success-border rounded-lg">
+        <div className="inline-block rounded-full h-16 w-16 bg-success-bg flex items-center justify-center mb-4">
+          <span className="text-3xl text-success-primary">✓</span>
         </div>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        <h2 className="text-xl font-semibold text-text-primary mb-2">
           No Security Issues Found!
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-text-secondary">
           Your application passed all checks.
         </p>
       </div>
@@ -88,8 +88,8 @@ export function ResultsDashboard({ findings }: ResultsDashboardProps) {
           onClick={() => setGrouping('severity')}
           className={`px-4 py-2 min-h-[44px] text-sm font-medium rounded-md transition-colors ${
             grouping === 'severity'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              ? 'bg-brand-primary text-white'
+              : 'bg-surface-secondary text-text-secondary hover:bg-surface-secondary/80'
           }`}
         >
           By Severity
@@ -98,8 +98,8 @@ export function ResultsDashboard({ findings }: ResultsDashboardProps) {
           onClick={() => setGrouping('category')}
           className={`px-4 py-2 min-h-[44px] text-sm font-medium rounded-md transition-colors ${
             grouping === 'category'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              ? 'bg-brand-primary text-white'
+              : 'bg-surface-secondary text-text-secondary hover:bg-surface-secondary/80'
           }`}
         >
           By Category
@@ -110,7 +110,7 @@ export function ResultsDashboard({ findings }: ResultsDashboardProps) {
       <div className="space-y-6">
         {groupedFindings.map((group, idx) => (
           <div key={idx}>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            <h3 className="text-lg font-semibold text-text-primary mb-3">
               {group.title}
             </h3>
             <div>

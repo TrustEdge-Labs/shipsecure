@@ -14,15 +14,15 @@ export function FindingAccordion({ finding, defaultExpanded = false }: FindingAc
   const getSeverityStyles = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+        return 'bg-severity-critical-bg text-severity-critical-text'
       case 'high':
-        return 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
+        return 'bg-severity-high-bg text-severity-high-text'
       case 'medium':
-        return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
+        return 'bg-severity-medium-bg text-severity-medium-text'
       case 'low':
-        return 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+        return 'bg-severity-info-bg text-severity-info-text'
       default:
-        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+        return 'bg-severity-none-bg text-severity-none-text'
     }
   }
 
@@ -38,24 +38,24 @@ export function FindingAccordion({ finding, defaultExpanded = false }: FindingAc
   }
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-3">
+    <div className="border border-border-subtle rounded-lg overflow-hidden mb-3">
       {/* Header - always visible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex flex-wrap items-center gap-2 sm:gap-3 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+        className="w-full px-4 py-3 flex flex-wrap items-center gap-2 sm:gap-3 bg-surface-elevated hover:bg-surface-secondary transition-colors text-left"
       >
         <span className={`px-2 py-1 text-xs font-medium rounded uppercase ${getSeverityStyles(finding.severity)}`}>
           {finding.severity}
         </span>
         {finding.vibe_code && (
-          <span className="px-2 py-0.5 text-xs font-medium rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
+          <span className="px-2 py-0.5 text-xs font-medium rounded bg-category-bg text-category-text">
             Vibe-Code
           </span>
         )}
-        <span className="flex-1 min-w-0 font-medium text-gray-900 dark:text-gray-100 break-words">
+        <span className="flex-1 min-w-0 font-medium text-text-primary break-words">
           {finding.title}
         </span>
-        <span className="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
+        <span className="hidden sm:inline text-xs text-text-tertiary">
           {getScannerDisplayName(finding.scanner_name)}
         </span>
         <span className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
@@ -71,14 +71,14 @@ export function FindingAccordion({ finding, defaultExpanded = false }: FindingAc
           isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
         } overflow-hidden`}
       >
-        <div className="px-4 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 break-words">
+        <div className="px-4 py-4 bg-surface-secondary border-t border-border-subtle">
+          <p className="text-sm text-text-secondary mb-4 break-words">
             {finding.description}
           </p>
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          <h4 className="text-sm font-semibold text-text-primary mb-2">
             How to Fix
           </h4>
-          <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line break-words">
+          <p className="text-sm text-text-secondary whitespace-pre-line break-words">
             {finding.remediation}
           </p>
         </div>

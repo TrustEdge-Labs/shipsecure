@@ -36,20 +36,20 @@ export function ProgressChecklist({ stages, status }: ProgressChecklistProps) {
           <li key={item.key} className="flex items-start gap-3">
             <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm
               ${item.done
-                ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400'
+                ? 'bg-grade-a-bg text-grade-a-text'
                 : status === 'failed'
-                  ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 animate-pulse'
+                  ? 'bg-danger-bg text-danger-primary'
+                  : 'bg-skeleton text-text-muted animate-pulse'
               }`}
             >
               {item.done ? '✓' : status === 'failed' ? '✗' : '○'}
             </span>
             <div className="flex-1">
-              <span className={item.done ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
+              <span className={item.done ? 'text-text-primary' : 'text-text-tertiary'}>
                 {item.label}
               </span>
               {isActive && (
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <div className="text-sm text-text-tertiary mt-1">
                   {item.description}
                 </div>
               )}

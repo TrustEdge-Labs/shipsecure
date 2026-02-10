@@ -52,3 +52,29 @@
 
 ---
 
+
+## v1.2 Launch Readiness (Shipped: 2026-02-10)
+
+**Delivered:** Launch-ready polish for Hacker News — analytics, SEO, legal compliance, mobile UX, and developer-focused landing page
+
+**Phases completed:** 08-12 (10 plans total)
+
+**Key accomplishments:**
+- Plausible analytics with privacy-friendly pageview tracking and conversion events (scan submit, paid audit purchase)
+- SEO metadata, Open Graph tags, JSON-LD schemas, dynamic OG image generation, sitemap, and robots.txt
+- Privacy Policy and Terms of Service pages with CFAA authorization consent checkbox on scan form
+- Mobile-responsive layouts with 44px touch targets, loading skeletons, error boundaries, and stage-specific progress
+- Developer-focused landing page with methodology transparency, technical honesty, and OSS attribution
+- Automatic CI/CD deploy pipeline (push → build → SSH deploy to production)
+
+**Stats:**
+- 67 files changed (+11,410 / -1,192 lines)
+- 5 phases, 10 plans, 47 commits
+- 2 days from start to ship (Feb 8-10, 2026)
+
+**Git range:** `feat(08-01)` → `test(12)`
+
+**What's next:** Launch on Hacker News, validate demand with real users, then repo scanning and subscription tiers.
+
+---
+

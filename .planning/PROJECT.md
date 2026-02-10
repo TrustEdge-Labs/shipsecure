@@ -34,24 +34,25 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - ✓ Firewall hardening (UFW) for production security — v1.1
 - ✓ Production environment configuration and secrets management — v1.1
 - ✓ Nuclei running natively as subprocess (no Docker-in-Docker) — v1.1
+- ✓ Plausible analytics with pageview tracking and conversion events — v1.2
+- ✓ SEO metadata, Open Graph tags, JSON-LD schemas, OG image, sitemap, robots.txt — v1.2
+- ✓ Privacy Policy and Terms of Service pages with CFAA authorization consent — v1.2
+- ✓ Global footer with legal links on all pages — v1.2
+- ✓ Mobile-responsive design across all pages (375px-1024px) — v1.2
+- ✓ Stage-specific scan progress feedback and loading skeletons — v1.2
+- ✓ Error boundaries with constructive inline error messages — v1.2
+- ✓ Visual consistency and Lighthouse performance >90 — v1.2
+- ✓ Developer-focused landing page with methodology transparency — v1.2
+- ✓ Open-source tool attribution (Nuclei, testssl.sh) in footer — v1.2
+- ✓ Automatic CI/CD deploy pipeline (push → build → deploy) — v1.2
 
 ### Active
 
-## Current Milestone: v1.2 Launch Readiness
-
-**Goal:** Make shipsecure.ai credible and polished enough to launch on Hacker News — trust signals, UX polish, analytics, and discoverability basics.
-
-**Target features:**
-- UX/Polish — Mobile responsiveness, loading states, error handling, visual polish
-- Trust signals — Legal pages (TOS, Privacy Policy), about/credibility section
-- Landing page optimization — Compelling developer-focused copy, clear value prop
-- Analytics — Lightweight privacy-friendly analytics (Plausible or Umami)
-- SEO basics — Meta tags, OG tags for social sharing
-- Mobile — Responsive audit and fixes across all pages
+(None — planning next milestone)
 
 ### Out of Scope
 
-- GitHub repo scanning (Semgrep, Gitleaks, dependency analysis) — fast follow after launch
+- GitHub repo scanning (Semgrep, Gitleaks, dependency analysis) — fast follow after launch validation
 - Pro subscription tier ($149/month continuous monitoring) — add after validating one-time audit demand
 - Agency tier (white-label reports, multi-repo) — future tier after Pro is proven
 - Certificate expiration monitoring — Pro tier feature
@@ -59,6 +60,8 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - OAuth/social login — email-based flow sufficient for now
 - Mobile app — web-first
 - Real-time scan progress (WebSocket) — polling sufficient for now
+- User accounts / scan history — massive scope; free tier explicitly avoids signup
+- Cookie consent banner — not needed with cookieless Plausible analytics
 
 ## Context
 
@@ -72,6 +75,7 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - Remediation playbooks are a key differentiator — not just "you have a vulnerability" but "here's exactly how to fix it"
 - **v1.0 shipped 2026-02-06:** ~7,000 LOC Rust, ~21,000 LOC TypeScript, 165 files, 4 phases, 23 plans
 - **v1.1 shipped 2026-02-08:** Production live at https://shipsecure.ai, 77 files changed, 3 phases, 10 plans
+- **v1.2 shipped 2026-02-10:** Launch-ready polish, 67 files changed, 5 phases, 10 plans, 2 days
 
 ## Constraints
 
@@ -82,6 +86,7 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **Email**: Resend — transactional email for scan results and PDF reports
 - **Free Tier**: No signup required — URL + email only, maximum conversion
 - **Launch Model**: Free + One-Time Audit first, subscriptions later
+- **CI/CD**: GitHub Actions → GHCR images → auto SSH deploy to production
 
 ## Key Decisions
 
@@ -101,6 +106,12 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Reserved IP for DNS stability | IP survives droplet destroy/recreate, no DNS changes needed | ✓ Good — clean separation of compute and networking |
 | DigitalOcean Managed PostgreSQL | No backup management, automatic failover, connection pooling | ✓ Good — requires doadmin user for schema operations |
 | Systemd oneshot for Docker Compose | Tracks compose lifecycle cleanly, RemainAfterExit=yes | ✓ Good — restart/stop/start all work correctly |
+| Plausible over Google Analytics | Privacy-friendly, no cookies, simpler integration | ✓ Good — direct script with proxy config bypasses ad blockers |
+| Next.js App Router conventions for UX | loading.tsx, error.tsx over custom components | ✓ Good — built-in Suspense, better performance |
+| Developer-focused copy over marketing | Technical honesty for HN audience | ✓ Good — passed copy quality checks, no marketing anti-patterns |
+| Footer OSS attribution over credits page | Always visible, follows OSS best practices | ✓ Good — Nuclei MIT + testssl.sh GPLv2 properly credited |
+| CFAA consent checkbox on scan form | Frontend-only gate, Zod validation | ✓ Good — explicit authorization before scanning |
+| Auto CI/CD deploy via SSH | appleboy/ssh-action after image builds | ✓ Good — push to main triggers full build and deploy |
 
 ---
-*Last updated: 2026-02-08 after v1.2 milestone start*
+*Last updated: 2026-02-10 after v1.2 milestone complete*

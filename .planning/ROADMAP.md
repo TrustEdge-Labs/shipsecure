@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 01-04 (shipped 2026-02-06)
 - ✅ **v1.1 DigitalOcean Deployment** — Phases 05-07 (shipped 2026-02-08)
-- 🚧 **v1.2 Launch Readiness** — Phases 08-12 (in progress)
+- ✅ **v1.2 Launch Readiness** — Phases 08-12 (shipped 2026-02-10)
 
 ## Phases
 
@@ -31,89 +31,20 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 
 </details>
 
-### 🚧 v1.2 Launch Readiness (In Progress)
+<details>
+<summary>✅ v1.2 Launch Readiness (Phases 08-12) — SHIPPED 2026-02-10</summary>
 
-**Milestone Goal:** Make shipsecure.ai credible and polished enough to launch on Hacker News — trust signals, UX polish, analytics, and discoverability basics.
+- [x] Phase 08: Analytics & Tracking (1/1 plan) — Plausible analytics, conversion events
+- [x] Phase 09: SEO & Discoverability (2/2 plans) — Meta tags, OG image, JSON-LD, sitemap, robots.txt
+- [x] Phase 10: Legal Compliance (2/2 plans) — Privacy Policy, TOS, CFAA consent checkbox
+- [x] Phase 11: Mobile & UX Polish (3/3 plans) — Mobile responsive, loading states, error boundaries, Lighthouse
+- [x] Phase 12: Landing Page Optimization (2/2 plans) — Developer-focused copy, methodology transparency, OSS attribution
 
-#### Phase 8: Analytics & Tracking ✅
-**Goal**: Privacy-friendly analytics tracking page views and conversion events
-**Depends on**: Phase 7
-**Requirements**: ANLYT-01, ANLYT-02
-**Success Criteria** (what must be TRUE):
-  1. Plausible analytics dashboard shows real-time pageviews for all site pages
-  2. Custom events track scan submission and paid audit purchase conversion rates
-  3. Analytics load without blocking page rendering or affecting Lighthouse scores
-**Plans:** 1 plan
+See: `.planning/milestones/v1.2-ROADMAP.md`
 
-Plans:
-- [x] 08-01-PLAN.md — Plausible integration with pageview tracking and conversion events
-
-#### Phase 9: SEO & Discoverability ✅
-**Goal**: Meta tags and Open Graph configuration for search engines and social sharing
-**Depends on**: Phase 8
-**Requirements**: SEO-01, SEO-02, SEO-03
-**Success Criteria** (what must be TRUE):
-  1. Landing page, results page, and payment success page each have unique title and description tags
-  2. Sharing shipsecure.ai on Twitter/Slack/Reddit shows correct preview image, title, and description
-  3. Scan results pages return noindex/nofollow headers preventing private content from appearing in search results
-  4. Google Rich Results Test validates Organization and SoftwareApplication JSON-LD schemas
-**Plans:** 2 plans
-
-Plans:
-- [x] 09-01-PLAN.md — Landing page metadata, OG tags, JSON-LD schemas, OG image, sitemap, robots.txt
-- [x] 09-02-PLAN.md — Results page noindex/nofollow hardening and payment success page metadata
-
-#### Phase 10: Legal Compliance ✅
-**Goal**: Privacy Policy, Terms of Service, and consent mechanism for GDPR/CCPA and CFAA protection
-**Depends on**: Phase 9 (Privacy Policy must document analytics implementation)
-**Requirements**: LEGAL-01, LEGAL-02, LEGAL-03
-**Success Criteria** (what must be TRUE):
-  1. Privacy Policy page exists at /privacy covering email collection, Stripe data handling, analytics, GDPR/CCPA rights, and data deletion process
-  2. Terms of Service page exists at /terms covering acceptable use, CFAA scanning authorization requirements, liability limits, and refund policy
-  3. Scan submission form requires explicit consent checkbox before submitting ("I confirm I own this website or have authorization to scan it")
-  4. All site pages display footer with links to Privacy Policy and Terms of Service
-**Plans:** 2 plans
-
-Plans:
-- [x] 10-01-PLAN.md — Privacy Policy and Terms of Service static pages
-- [x] 10-02-PLAN.md — Global footer with legal links and scan form consent checkbox
-
-#### Phase 11: Mobile & UX Polish ✅
-**Goal**: Mobile-responsive design, loading states, error handling, and visual consistency across all pages
-**Depends on**: Phase 10
-**Requirements**: UX-01, UX-02, UX-03, UX-04, UX-05, UX-06
-**Success Criteria** (what must be TRUE):
-  1. Landing page, results page, and payment pages render without horizontal scroll or overlapping elements on mobile (375px) and tablet (768px) viewports
-  2. Scan submission shows stage-specific progress messages ("Checking security headers...", "Running Nuclei templates...") instead of generic spinner
-  3. API failures display constructive inline error messages with suggested actions (never silent failures)
-  4. Spacing, colors, button styles, and typography are consistent across all pages
-  5. Landing page and results page achieve Lighthouse performance score >90 on mobile
-**Plans:** 3 plans
-
-Plans:
-- [x] 11-01-PLAN.md — Mobile responsiveness, duplicate footer removal, and visual consistency
-- [x] 11-02-PLAN.md — Loading skeletons, error boundaries, and stage-specific progress messages
-- [x] 11-03-PLAN.md — Lighthouse performance optimization and visual verification checkpoint
-
-#### Phase 12: Landing Page Optimization ✅
-**Goal**: Developer-focused copy, methodology transparency, and open-source attribution
-**Depends on**: Phase 11 (requires responsive, polished UI for testing final copy)
-**Requirements**: LAND-01, LAND-02, LAND-03
-**Success Criteria** (what must be TRUE):
-  1. Landing page headline clearly states product purpose and target audience (developers using AI code generation)
-  2. "How it works" section explains scan methodology without marketing jargon
-  3. Site footer credits Nuclei, testssl.sh, and other open-source tools used
-  4. Landing page copy uses technically honest language (avoids superlatives and vague promises)
-**Plans:** 2 plans
-
-Plans:
-- [x] 12-01-PLAN.md — Developer-focused copy rewrite, "How It Works" section, and OSS attribution in footer
-- [x] 12-02-PLAN.md — Visual verification checkpoint for copy quality and layout
+</details>
 
 ## Progress
-
-**Execution Order:**
-Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
@@ -131,4 +62,4 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 12 - Landing Page Optimization | v1.2 | 2/2 | Complete | 2026-02-09 |
 
 ---
-*Last updated: 2026-02-09*
+*Last updated: 2026-02-10*

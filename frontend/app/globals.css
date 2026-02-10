@@ -12,8 +12,8 @@
   --primitive-gray-100: oklch(0.967 0.003 264);
   --primitive-gray-200: oklch(0.928 0.006 264);
   --primitive-gray-300: oklch(0.872 0.010 258);
-  --primitive-gray-400: oklch(0.707 0.015 261);
-  --primitive-gray-500: oklch(0.551 0.018 264);
+  --primitive-gray-400: oklch(0.650 0.015 261);
+  --primitive-gray-500: oklch(0.530 0.018 264);
   --primitive-gray-600: oklch(0.446 0.014 264);
   --primitive-gray-700: oklch(0.373 0.011 264);
   --primitive-gray-800: oklch(0.278 0.009 264);
@@ -59,14 +59,14 @@
   --primitive-orange-300: oklch(0.868 0.110 68);
   --primitive-orange-400: oklch(0.792 0.142 62);
   --primitive-orange-600: oklch(0.648 0.150 45);
-  --primitive-orange-700: oklch(0.560 0.135 42);
+  --primitive-orange-700: oklch(0.540 0.135 42);
   --primitive-orange-900: oklch(0.408 0.094 40);
 
   /* Yellows - caution states */
   --primitive-yellow-50: oklch(0.987 0.026 100);
   --primitive-yellow-100: oklch(0.973 0.060 100);
   --primitive-yellow-400: oklch(0.880 0.145 95);
-  --primitive-yellow-600: oklch(0.721 0.132 85);
+  --primitive-yellow-600: oklch(0.550 0.132 85);
   --primitive-yellow-800: oklch(0.523 0.095 75);
   --primitive-yellow-900: oklch(0.452 0.085 70);
 
@@ -84,6 +84,11 @@
 /* Dark mode primitive overrides */
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Grays - adjusted for better dark mode contrast */
+    --primitive-gray-400: oklch(0.650 0.015 261);
+    --primitive-gray-500: oklch(0.600 0.018 264);
+    --primitive-gray-900: oklch(0.140 0.006 264);
+
     /* Blues - lighter and less saturated for better dark mode contrast */
     --primitive-blue-400: oklch(0.745 0.155 254);
     --primitive-blue-500: oklch(0.665 0.195 259);

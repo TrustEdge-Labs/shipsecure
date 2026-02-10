@@ -1,19 +1,302 @@
 @import "tailwindcss";
 
+/* ===================================================================
+   Layer 1: Primitive Color Values (OKLch Color Space)
+   =================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Neutrals - full grayscale mapping Tailwind defaults */
+  --primitive-white: oklch(1.000 0 0);
+  --primitive-black: oklch(0.000 0 0);
+  --primitive-gray-50: oklch(0.985 0.002 247);
+  --primitive-gray-100: oklch(0.967 0.003 264);
+  --primitive-gray-200: oklch(0.928 0.006 264);
+  --primitive-gray-300: oklch(0.872 0.010 258);
+  --primitive-gray-400: oklch(0.707 0.015 261);
+  --primitive-gray-500: oklch(0.551 0.018 264);
+  --primitive-gray-600: oklch(0.446 0.014 264);
+  --primitive-gray-700: oklch(0.373 0.011 264);
+  --primitive-gray-800: oklch(0.278 0.009 264);
+  --primitive-gray-900: oklch(0.210 0.006 264);
+  --primitive-gray-950: oklch(0.130 0.004 264);
+
+  /* Blues - brand colors mapping Tailwind blue defaults */
+  --primitive-blue-50: oklch(0.970 0.014 240);
+  --primitive-blue-100: oklch(0.933 0.032 240);
+  --primitive-blue-200: oklch(0.878 0.067 240);
+  --primitive-blue-400: oklch(0.707 0.165 254);
+  --primitive-blue-500: oklch(0.623 0.214 259);
+  --primitive-blue-600: oklch(0.546 0.245 262);
+  --primitive-blue-700: oklch(0.488 0.243 264);
+  --primitive-blue-800: oklch(0.424 0.199 265);
+
+  /* Greens - success states */
+  --primitive-green-50: oklch(0.981 0.020 155);
+  --primitive-green-100: oklch(0.957 0.045 156);
+  --primitive-green-200: oklch(0.920 0.088 154);
+  --primitive-green-400: oklch(0.792 0.150 152);
+  --primitive-green-500: oklch(0.723 0.159 151);
+  --primitive-green-600: oklch(0.643 0.152 151);
+  --primitive-green-800: oklch(0.473 0.112 152);
+  --primitive-green-900: oklch(0.394 0.095 153);
+  --primitive-green-950: oklch(0.240 0.065 155);
+
+  /* Reds - danger/error states */
+  --primitive-red-50: oklch(0.971 0.013 17);
+  --primitive-red-100: oklch(0.942 0.032 17);
+  --primitive-red-200: oklch(0.898 0.062 17);
+  --primitive-red-400: oklch(0.730 0.155 22);
+  --primitive-red-500: oklch(0.656 0.186 25);
+  --primitive-red-600: oklch(0.577 0.195 27);
+  --primitive-red-700: oklch(0.505 0.175 27);
+  --primitive-red-800: oklch(0.440 0.145 27);
+  --primitive-red-900: oklch(0.393 0.121 28);
+  --primitive-red-950: oklch(0.258 0.078 28);
+
+  /* Oranges - warning states */
+  --primitive-orange-50: oklch(0.980 0.021 75);
+  --primitive-orange-100: oklch(0.955 0.050 75);
+  --primitive-orange-300: oklch(0.868 0.110 68);
+  --primitive-orange-400: oklch(0.792 0.142 62);
+  --primitive-orange-600: oklch(0.648 0.150 45);
+  --primitive-orange-700: oklch(0.560 0.135 42);
+  --primitive-orange-900: oklch(0.408 0.094 40);
+
+  /* Yellows - caution states */
+  --primitive-yellow-50: oklch(0.987 0.026 100);
+  --primitive-yellow-100: oklch(0.973 0.060 100);
+  --primitive-yellow-400: oklch(0.880 0.145 95);
+  --primitive-yellow-600: oklch(0.721 0.132 85);
+  --primitive-yellow-800: oklch(0.523 0.095 75);
+  --primitive-yellow-900: oklch(0.452 0.085 70);
+
+  /* Purples - category badges */
+  --primitive-purple-100: oklch(0.954 0.043 308);
+  --primitive-purple-300: oklch(0.843 0.113 308);
+  --primitive-purple-700: oklch(0.533 0.175 305);
+  --primitive-purple-900: oklch(0.408 0.133 305);
+
+  /* Indigo - accent gradients */
+  --primitive-indigo-50: oklch(0.962 0.025 272);
+  --primitive-indigo-900: oklch(0.340 0.090 272);
 }
 
+/* Dark mode primitive overrides */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #030712;
-    --foreground: #f9fafb;
+    /* Blues - lighter and less saturated for better dark mode contrast */
+    --primitive-blue-400: oklch(0.745 0.155 254);
+    --primitive-blue-500: oklch(0.665 0.195 259);
+    --primitive-blue-600: oklch(0.585 0.220 262);
+    --primitive-blue-700: oklch(0.520 0.215 264);
+
+    /* Status colors adjusted for dark backgrounds */
+    --primitive-green-300: oklch(0.850 0.120 152);
+    --primitive-green-400: oklch(0.800 0.145 152);
+    --primitive-red-300: oklch(0.780 0.145 22);
+    --primitive-red-400: oklch(0.745 0.150 22);
+    --primitive-orange-300: oklch(0.880 0.110 68);
+    --primitive-yellow-300: oklch(0.900 0.125 95);
+    --primitive-yellow-400: oklch(0.890 0.140 95);
+    --primitive-purple-300: oklch(0.860 0.110 308);
   }
 }
 
+/* ===================================================================
+   Layer 2: Semantic Design Tokens (via @theme inline)
+   =================================================================== */
+
+@theme inline {
+  /* Brand Colors */
+  --color-brand-primary: var(--primitive-blue-600);
+  --color-brand-primary-hover: var(--primitive-blue-700);
+  --color-brand-accent: var(--primitive-blue-400);
+
+  /* Surface (Background) Colors */
+  --color-surface-primary: var(--primitive-white);
+  --color-surface-secondary: var(--primitive-gray-50);
+  --color-surface-elevated: var(--primitive-white);
+  --color-surface-inverse: var(--primitive-gray-900);
+
+  /* Text Colors */
+  --color-text-primary: var(--primitive-gray-900);
+  --color-text-secondary: var(--primitive-gray-600);
+  --color-text-tertiary: var(--primitive-gray-500);
+  --color-text-inverse: var(--primitive-white);
+  --color-text-muted: var(--primitive-gray-400);
+
+  /* Border Colors */
+  --color-border-subtle: var(--primitive-gray-200);
+  --color-border-default: var(--primitive-gray-300);
+  --color-border-emphasis: var(--primitive-gray-400);
+
+  /* Focus State */
+  --color-focus-ring: var(--primitive-blue-500);
+
+  /* Success Status */
+  --color-success-primary: var(--primitive-green-600);
+  --color-success-bg: var(--primitive-green-50);
+  --color-success-text: var(--primitive-green-800);
+  --color-success-border: var(--primitive-green-200);
+  --color-success-accent: var(--primitive-green-400);
+
+  /* Danger Status */
+  --color-danger-primary: var(--primitive-red-600);
+  --color-danger-bg: var(--primitive-red-50);
+  --color-danger-text: var(--primitive-red-700);
+  --color-danger-border: var(--primitive-red-200);
+  --color-danger-accent: var(--primitive-red-400);
+
+  /* Warning Status */
+  --color-warning-bg: var(--primitive-orange-50);
+  --color-warning-text: var(--primitive-orange-700);
+  --color-warning-border: var(--primitive-orange-100);
+
+  /* Caution Status (Yellow) */
+  --color-caution-bg: var(--primitive-yellow-50);
+  --color-caution-text: var(--primitive-yellow-800);
+  --color-caution-border: var(--primitive-yellow-100);
+  --color-caution-accent: var(--primitive-yellow-400);
+
+  /* Info Status (Blue) */
+  --color-info-bg: var(--primitive-blue-50);
+  --color-info-text: var(--primitive-blue-800);
+  --color-info-border: var(--primitive-blue-200);
+
+  /* Category Badges */
+  --color-category-bg: var(--primitive-purple-100);
+  --color-category-text: var(--primitive-purple-700);
+
+  /* Skeleton Loading States */
+  --color-skeleton: var(--primitive-gray-200);
+
+  /* Severity Badges (for finding-accordion, grade-summary) */
+  --color-severity-critical-bg: var(--primitive-red-100);
+  --color-severity-critical-text: var(--primitive-red-700);
+  --color-severity-high-bg: var(--primitive-orange-100);
+  --color-severity-high-text: var(--primitive-orange-700);
+  --color-severity-medium-bg: var(--primitive-yellow-100);
+  --color-severity-medium-text: var(--primitive-yellow-600);
+  --color-severity-info-bg: var(--primitive-blue-100);
+  --color-severity-info-text: var(--primitive-blue-700);
+  --color-severity-none-bg: var(--primitive-gray-100);
+  --color-severity-none-text: var(--primitive-gray-700);
+
+  /* Grade Colors */
+  --color-grade-a-text: var(--primitive-green-600);
+  --color-grade-a-bg: var(--primitive-green-100);
+  --color-grade-b-text: var(--primitive-yellow-600);
+  --color-grade-b-bg: var(--primitive-yellow-100);
+  --color-grade-c-text: var(--primitive-orange-600);
+  --color-grade-c-bg: var(--primitive-orange-100);
+  --color-grade-df-text: var(--primitive-red-600);
+  --color-grade-df-bg: var(--primitive-red-100);
+
+  /* Gradient Tokens (for landing page) */
+  --color-gradient-start: var(--primitive-blue-600);
+  --color-gradient-end: var(--primitive-blue-800);
+
+  /* Upgrade CTA */
+  --color-cta-gradient-start-bg: var(--primitive-blue-50);
+  --color-cta-gradient-end-bg: var(--primitive-indigo-50);
+  --color-cta-border: var(--primitive-blue-200);
+}
+
+/* Dark mode semantic token overrides */
+@media (prefers-color-scheme: dark) {
+  @theme inline {
+    /* Surface (Background) Colors */
+    --color-surface-primary: var(--primitive-gray-950);
+    --color-surface-secondary: var(--primitive-gray-900);
+    --color-surface-elevated: var(--primitive-gray-900);
+    --color-surface-inverse: var(--primitive-gray-100);
+
+    /* Text Colors */
+    --color-text-primary: var(--primitive-gray-100);
+    --color-text-secondary: var(--primitive-gray-400);
+    --color-text-tertiary: var(--primitive-gray-500);
+    --color-text-inverse: var(--primitive-gray-900);
+    --color-text-muted: var(--primitive-gray-500);
+
+    /* Border Colors */
+    --color-border-subtle: var(--primitive-gray-800);
+    --color-border-default: var(--primitive-gray-700);
+    --color-border-emphasis: var(--primitive-gray-600);
+
+    /* Success Status */
+    --color-success-bg: var(--primitive-green-950);
+    --color-success-text: var(--primitive-green-300);
+    --color-success-border: var(--primitive-green-800);
+    --color-success-accent: var(--primitive-green-400);
+
+    /* Danger Status */
+    --color-danger-bg: var(--primitive-red-950);
+    --color-danger-text: var(--primitive-red-300);
+    --color-danger-border: var(--primitive-red-800);
+    --color-danger-accent: var(--primitive-red-400);
+
+    /* Warning Status */
+    --color-warning-bg: var(--primitive-orange-900);
+    --color-warning-text: var(--primitive-orange-300);
+    --color-warning-border: var(--primitive-orange-800);
+
+    /* Caution Status */
+    --color-caution-bg: var(--primitive-yellow-900);
+    --color-caution-text: var(--primitive-yellow-300);
+    --color-caution-border: var(--primitive-yellow-800);
+    --color-caution-accent: var(--primitive-yellow-400);
+
+    /* Info Status */
+    --color-info-bg: var(--primitive-blue-950);
+    --color-info-text: var(--primitive-blue-300);
+    --color-info-border: var(--primitive-blue-800);
+
+    /* Category Badges */
+    --color-category-bg: var(--primitive-purple-900);
+    --color-category-text: var(--primitive-purple-300);
+
+    /* Skeleton Loading States */
+    --color-skeleton: var(--primitive-gray-700);
+
+    /* Severity Badges */
+    --color-severity-critical-bg: var(--primitive-red-900);
+    --color-severity-critical-text: var(--primitive-red-300);
+    --color-severity-high-bg: var(--primitive-orange-900);
+    --color-severity-high-text: var(--primitive-orange-300);
+    --color-severity-medium-bg: var(--primitive-yellow-900);
+    --color-severity-medium-text: var(--primitive-yellow-300);
+    --color-severity-info-bg: var(--primitive-blue-900);
+    --color-severity-info-text: var(--primitive-blue-300);
+    --color-severity-none-bg: var(--primitive-gray-800);
+    --color-severity-none-text: var(--primitive-gray-400);
+
+    /* Grade Colors */
+    --color-grade-a-text: var(--primitive-green-400);
+    --color-grade-a-bg: var(--primitive-green-900);
+    --color-grade-b-text: var(--primitive-yellow-400);
+    --color-grade-b-bg: var(--primitive-yellow-900);
+    --color-grade-c-text: var(--primitive-orange-400);
+    --color-grade-c-bg: var(--primitive-orange-900);
+    --color-grade-df-text: var(--primitive-red-400);
+    --color-grade-df-bg: var(--primitive-red-900);
+
+    /* Gradient Tokens */
+    --color-gradient-start: var(--primitive-blue-400);
+    --color-gradient-end: var(--primitive-blue-600);
+
+    /* Upgrade CTA */
+    --color-cta-gradient-start-bg: oklch(0.180 0.040 262);
+    --color-cta-gradient-end-bg: oklch(0.170 0.045 272);
+    --color-cta-border: var(--primitive-blue-700);
+  }
+}
+
+/* ===================================================================
+   Base Body Styles
+   =================================================================== */
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-surface-primary);
+  color: var(--color-text-primary);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
 }

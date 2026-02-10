@@ -78,18 +78,18 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   // If scan not completed yet, show in-progress message
   if (data.status !== 'completed') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-8 max-w-md w-full text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+      <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
+        <div className="bg-surface-elevated rounded-lg shadow-md p-8 max-w-md w-full text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mb-4"></div>
+          <h1 className="text-xl font-semibold text-text-primary mb-2">
             Scan Still In Progress
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-text-secondary mb-6">
             Your scan is still running. Please check back in a few moments.
           </p>
           <a
             href={`/scan/${data.id}`}
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            className="inline-block bg-brand-primary text-white px-6 py-2 rounded-md hover:bg-brand-primary/90 transition-colors"
           >
             View Progress
           </a>
@@ -118,37 +118,37 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     const hoursUntilExpiry = (expiry.getTime() - now.getTime()) / (1000 * 60 * 60)
 
     if (hoursUntilExpiry < 24) {
-      return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300'
+      return 'bg-danger-bg border-danger-border text-danger-text'
     }
-    return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300'
+    return 'bg-info-bg border-info-border text-info-text'
   }
 
   const downloadUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'}/api/v1/results/${token}/download`
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8 px-4">
+    <div className="min-h-screen bg-surface-secondary py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+        <div className="bg-surface-elevated rounded-lg shadow-md p-6 mb-6">
+          <h1 className="text-3xl font-bold text-text-primary mb-4">
             Security Scan Results
           </h1>
 
           <div className="space-y-2 text-sm">
             <div>
-              <span className="text-gray-600 dark:text-gray-400">Target: </span>
+              <span className="text-text-secondary">Target: </span>
               <a
                 href={data.target_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline font-mono break-all"
+                className="text-brand-primary hover:underline font-mono break-all"
               >
                 {data.target_url}
               </a>
             </div>
             <div>
-              <span className="text-gray-600 dark:text-gray-400">Scanned: </span>
-              <span className="text-gray-900 dark:text-gray-100">{formatDate(data.completed_at)}</span>
+              <span className="text-text-secondary">Scanned: </span>
+              <span className="text-text-primary">{formatDate(data.completed_at)}</span>
             </div>
             {data.expires_at && (
               <div className={`block sm:inline-block px-3 py-1 rounded-md border ${getExpiryWarning(data.expires_at)}`}>
@@ -170,8 +170,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         </div>
 
         {/* Findings Dashboard */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+        <div className="bg-surface-elevated rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-bold text-text-primary mb-4">
             Security Findings
           </h2>
           <ResultsDashboard findings={data.findings} />
@@ -190,7 +190,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             href={downloadUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-6 py-2 min-h-[44px] w-full sm:w-auto border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-2 min-h-[44px] w-full sm:w-auto border-2 border-brand-primary text-brand-primary rounded-md hover:bg-info-bg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -200,7 +200,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
           <a
             href={`/?url=${encodeURIComponent(data.target_url)}`}
-            className="inline-flex items-center justify-center gap-2 px-6 py-2 min-h-[44px] w-full sm:w-auto bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-2 min-h-[44px] w-full sm:w-auto bg-brand-primary text-white rounded-md hover:bg-brand-primary/90 transition-colors"
           >
             Fixed some issues? Scan again
           </a>

@@ -11,45 +11,45 @@ export const metadata: Metadata = {
 
 export default function TermsOfService() {
   return (
-    <main className="container mx-auto px-4 py-16 pb-8 max-w-4xl bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+    <main className="container mx-auto px-4 py-16 pb-8 max-w-4xl bg-surface-primary text-text-primary">
         <div className="mb-8">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-text-primary">
             Terms of Service
           </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-sm text-text-secondary mb-4">
             Last Updated: February 2026
           </p>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-text-secondary">
             By using ShipSecure, you agree to these terms.
           </p>
         </div>
 
         <div className="prose dark:prose-invert max-w-none">
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               1. Service Description
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
+            <div className="text-text-secondary space-y-3">
               <p>
                 ShipSecure provides automated security scanning services for web applications. Our service includes:
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>
-                  <strong className="text-gray-900 dark:text-gray-100">Free Tier:</strong> Basic security scan with results delivered via email
+                  <strong className="text-text-primary">Free Tier:</strong> Basic security scan with results delivered via email
                 </li>
                 <li>
-                  <strong className="text-gray-900 dark:text-gray-100">Paid Tier:</strong> Comprehensive security audit ($49 one-time payment) with detailed PDF report
+                  <strong className="text-text-primary">Paid Tier:</strong> Comprehensive security audit ($49 one-time payment) with detailed PDF report
                 </li>
               </ul>
             </div>
           </section>
 
           <section className="mb-8" id="acceptable-use">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               2. Acceptable Use and Scanning Authorization
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <div className="text-text-secondary space-y-3">
+              <h3 className="text-xl font-semibold text-text-primary">
                 2.1 Authorization Requirement
               </h3>
               <p>
@@ -60,7 +60,7 @@ export default function TermsOfService() {
                 <li>Have obtained explicit written authorization from the website owner to perform security scanning</li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-6">
+              <h3 className="text-xl font-semibold text-text-primary mt-6">
                 2.2 CFAA Compliance
               </h3>
               <p>
@@ -70,7 +70,7 @@ export default function TermsOfService() {
                 ShipSecure will terminate accounts that engage in unauthorized scanning activities and may report suspected violations to appropriate authorities.
               </p>
 
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-6">
+              <h3 className="text-xl font-semibold text-text-primary mt-6">
                 2.3 Prohibited Uses
               </h3>
               <p>
@@ -88,10 +88,10 @@ export default function TermsOfService() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               3. User Responsibilities
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
+            <div className="text-text-secondary space-y-3">
               <p>
                 As a user of ShipSecure, you are responsible for:
               </p>
@@ -107,11 +107,11 @@ export default function TermsOfService() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               4. Limitation of Liability
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <div className="text-text-secondary space-y-3">
+              <h3 className="text-xl font-semibold text-text-primary">
                 4.1 Service Disclaimer
               </h3>
               <p>
@@ -127,14 +127,14 @@ export default function TermsOfService() {
                 <li>Any vulnerabilities identified pose actual security risks</li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-6">
+              <h3 className="text-xl font-semibold text-text-primary mt-6">
                 4.2 Liability Cap
               </h3>
               <p>
                 To the maximum extent permitted by law, ShipSecure's total liability to you for any claims arising from or related to the service shall not exceed the amount you paid to ShipSecure in the 12 months preceding the claim. For free tier users, this amount is $0. For paid tier users, the maximum liability is $49.
               </p>
 
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-6">
+              <h3 className="text-xl font-semibold text-text-primary mt-6">
                 4.3 Excluded Damages
               </h3>
               <p>
@@ -151,29 +151,29 @@ export default function TermsOfService() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               5. Refund Policy
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
+            <div className="text-text-secondary space-y-3">
               <p>
                 For one-time paid audits ($49):
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>
-                  <strong className="text-gray-900 dark:text-gray-100">Full refund available:</strong> Within 24 hours of payment if your scan has not started processing
+                  <strong className="text-text-primary">Full refund available:</strong> Within 24 hours of payment if your scan has not started processing
                 </li>
                 <li>
-                  <strong className="text-gray-900 dark:text-gray-100">No refund available:</strong> After the scan completes or the PDF report is delivered
+                  <strong className="text-text-primary">No refund available:</strong> After the scan completes or the PDF report is delivered
                 </li>
                 <li>
-                  <strong className="text-gray-900 dark:text-gray-100">Free scans:</strong> Not eligible for refunds (no payment made)
+                  <strong className="text-text-primary">Free scans:</strong> Not eligible for refunds (no payment made)
                 </li>
               </ul>
               <p className="mt-4">
                 To request a refund, contact{' '}
                 <a
                   href="mailto:support@shipsecure.ai"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-brand-primary hover:underline"
                 >
                   support@shipsecure.ai
                 </a>
@@ -183,10 +183,10 @@ export default function TermsOfService() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               6. Intellectual Property
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
+            <div className="text-text-secondary space-y-3">
               <p>
                 ShipSecure and its original content, features, and functionality are owned by ShipSecure and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.
               </p>
@@ -200,10 +200,10 @@ export default function TermsOfService() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               7. Termination
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
+            <div className="text-text-secondary space-y-3">
               <p>
                 ShipSecure may suspend or terminate your access to the service immediately, without prior notice or liability, for any reason, including but not limited to:
               </p>
@@ -220,10 +220,10 @@ export default function TermsOfService() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               8. Governing Law
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
+            <div className="text-text-secondary space-y-3">
               <p>
                 These Terms shall be governed by and construed in accordance with the laws of the United States, without regard to its conflict of law provisions.
               </p>
@@ -234,10 +234,10 @@ export default function TermsOfService() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               9. Changes to Terms
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
+            <div className="text-text-secondary space-y-3">
               <p>
                 We reserve the right to modify these Terms at any time. Material changes will be communicated by updating the "Last Updated" date at the top of this page. Your continued use of ShipSecure after changes constitutes acceptance of the modified Terms.
               </p>
@@ -245,17 +245,17 @@ export default function TermsOfService() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold mb-4 text-text-primary">
               10. Contact
             </h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-3">
+            <div className="text-text-secondary space-y-3">
               <p>
                 For questions about these Terms of Service, contact:
               </p>
               <p>
                 <a
                   href="mailto:support@shipsecure.ai"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-brand-primary hover:underline"
                 >
                   support@shipsecure.ai
                 </a>
@@ -265,10 +265,10 @@ export default function TermsOfService() {
         </div>
 
         {/* Back to Home Link */}
-        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+        <div className="mt-12 pt-8 border-t border-border-subtle">
           <a
             href="/"
-            className="text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-brand-primary hover:underline"
           >
             ← Back to Home
           </a>

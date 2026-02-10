@@ -95,7 +95,7 @@ Plans:
 - [x] 11-02-PLAN.md — Loading skeletons, error boundaries, and stage-specific progress messages
 - [x] 11-03-PLAN.md — Lighthouse performance optimization and visual verification checkpoint
 
-#### Phase 12: Landing Page Optimization
+#### Phase 12: Landing Page Optimization ✅
 **Goal**: Developer-focused copy, methodology transparency, and open-source attribution
 **Depends on**: Phase 11 (requires responsive, polished UI for testing final copy)
 **Requirements**: LAND-01, LAND-02, LAND-03
@@ -107,8 +107,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Developer-focused copy rewrite, "How It Works" section, and OSS attribution in footer
-- [ ] 12-02-PLAN.md — Visual verification checkpoint for copy quality and layout
+- [x] 12-01-PLAN.md — Developer-focused copy rewrite, "How It Works" section, and OSS attribution in footer
+- [x] 12-02-PLAN.md — Visual verification checkpoint for copy quality and layout
 
 ## Progress
 
@@ -128,7 +128,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12
 | 09 - SEO & Discoverability | v1.2 | 2/2 | Complete | 2026-02-08 |
 | 10 - Legal Compliance | v1.2 | 2/2 | Complete | 2026-02-08 |
 | 11 - Mobile & UX Polish | v1.2 | 3/3 | Complete | 2026-02-09 |
-| 12 - Landing Page Optimization | v1.2 | 0/2 | Planned | - |
+| 12 - Landing Page Optimization | v1.2 | 2/2 | Complete | 2026-02-09 |
 
 ---
 *Last updated: 2026-02-09*

@@ -53,3 +53,19 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/trustedge-labs/trustedge-frontend:latest
             ${{ env.REGISTRY }}/trustedge-labs/trustedge-frontend:${{ github.sha }}
+
+  deploy:
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        uses: appleboy/ssh-action@v1
+        with:
+          host: shipsecure.ai
+          username: deploy
+          port: 2222
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/trustedge
+            docker compose pull
+            docker compose up -d

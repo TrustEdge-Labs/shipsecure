@@ -73,10 +73,11 @@ Plans:
   2. Wordmark renders correctly in light and dark mode using `currentColor`
   3. Logo scales cleanly from 16x16px (favicon size) to full desktop size without pixelation
   4. Logo component has proper aria-label and role="img" for accessibility
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 14-01: TBD
+- [ ] 14-01-PLAN.md -- Shield design tokens + Logo component with 3 SVG size variants
+- [ ] 14-02-PLAN.md -- Logo preview page + visual verification checkpoint
 
 #### Phase 15: Layout Refactor
 **Goal**: Prepare layout structure for header integration without causing layout shift
@@ -147,7 +148,7 @@ Plans:
 | 11 - Mobile & UX Polish | v1.2 | 3/3 | Complete | 2026-02-09 |
 | 12 - Landing Page Optimization | v1.2 | 2/2 | Complete | 2026-02-09 |
 | 13 - Design Token System | v1.3 | 3/3 | Complete | 2026-02-10 |
-| 14 - Logo Component | v1.3 | 0/0 | Not started | - |
+| 14 - Logo Component | v1.3 | 0/2 | Planned | - |
 | 15 - Layout Refactor | v1.3 | 0/0 | Not started | - |
 | 16 - Header & Navigation | v1.3 | 0/0 | Not started | - |
 | 17 - Icon System & Migration | v1.3 | 0/0 | Not started | - |

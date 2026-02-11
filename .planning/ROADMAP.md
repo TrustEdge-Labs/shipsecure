@@ -116,7 +116,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 17-01-PLAN.md -- Install lucide-react and replace emoji with SVG icons on feature grid
+- [x] 17-01-PLAN.md -- Install lucide-react and replace emoji with SVG icons on feature grid
 
 #### Phase 18: Favicon & OG Image
 **Goal**: Deploy branded favicon and update OG image with logo
@@ -151,7 +151,7 @@ Plans:
 | 14 - Logo Component | v1.3 | 2/2 | Complete | 2026-02-11 |
 | 15 - Layout Refactor | v1.3 | 1/1 | Complete | 2026-02-11 |
 | 16 - Header & Navigation | v1.3 | 1/1 | Complete | 2026-02-11 |
-| 17 - Icon System & Migration | v1.3 | 0/0 | Not started | - |
+| 17 - Icon System & Migration | v1.3 | 1/1 | Complete | 2026-02-11 |
 | 18 - Favicon & OG Image | v1.3 | 0/0 | Not started | - |
 
 ---

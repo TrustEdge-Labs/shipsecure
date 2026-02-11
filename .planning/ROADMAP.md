@@ -113,10 +113,10 @@ Plans:
   1. Landing page feature grid displays SVG icons instead of emoji (🔒, 🚀, 🎯, etc.)
   2. All SVG icons use consistent sizing (w-5 h-5 or w-6 h-6) and inherit color via `currentColor`
   3. Decorative icons have `aria-hidden="true"` and standalone icons have `aria-label`
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 17-01: TBD
+- [ ] 17-01-PLAN.md -- Install lucide-react and replace emoji with SVG icons on feature grid
 
 #### Phase 18: Favicon & OG Image
 **Goal**: Deploy branded favicon and update OG image with logo

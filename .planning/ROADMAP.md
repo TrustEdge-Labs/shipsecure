@@ -103,7 +103,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 16-01-PLAN.md -- Sticky header component with responsive logo, CTA, and keyboard accessibility
+- [x] 16-01-PLAN.md -- Sticky header component with responsive logo, CTA, and keyboard accessibility
 
 #### Phase 17: Icon System & Migration
 **Goal**: Replace emoji with consistent SVG icon system using Lucide React
@@ -150,7 +150,7 @@ Plans:
 | 13 - Design Token System | v1.3 | 3/3 | Complete | 2026-02-10 |
 | 14 - Logo Component | v1.3 | 2/2 | Complete | 2026-02-11 |
 | 15 - Layout Refactor | v1.3 | 1/1 | Complete | 2026-02-11 |
-| 16 - Header & Navigation | v1.3 | 0/1 | Planned | - |
+| 16 - Header & Navigation | v1.3 | 1/1 | Complete | 2026-02-11 |
 | 17 - Icon System & Migration | v1.3 | 0/0 | Not started | - |
 | 18 - Favicon & OG Image | v1.3 | 0/0 | Not started | - |
 

@@ -45,19 +45,17 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - ✓ Developer-focused landing page with methodology transparency — v1.2
 - ✓ Open-source tool attribution (Nuclei, testssl.sh) in footer — v1.2
 - ✓ Automatic CI/CD deploy pipeline (push → build → deploy) — v1.2
+- ✓ Design token system with OKLch primitives and semantic naming — v1.3
+- ✓ Dark mode via prefers-color-scheme with WCAG AA contrast compliance — v1.3
+- ✓ Professional logo component with responsive icon/compact/full variants — v1.3
+- ✓ Sticky header with logo, navigation, and "Scan Now" CTA — v1.3
+- ✓ SVG icon system (Lucide React) replacing emoji across landing page — v1.3
+- ✓ Branded favicon (ICO + SVG with dark mode) and Apple touch icon — v1.3
+- ✓ Open Graph image with logo composite on branded background — v1.3
 
 ### Active
 
-## Current Milestone: v1.3 Brand Identity
-
-**Goal:** Give ShipSecure a proper visual identity — logo, refined color system, branded favicon, header navbar, and clean SVG icons — so the product looks as credible as it is.
-
-**Target features:**
-- SVG logo mark + wordmark (light/dark mode)
-- Branded favicon (SVG + ICO)
-- Refined blue color palette with design tokens
-- Header/navbar component with logo
-- Replace emoji feature icons with clean SVGs
+(No active requirements — start next milestone with `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -85,6 +83,7 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **v1.0 shipped 2026-02-06:** ~7,000 LOC Rust, ~21,000 LOC TypeScript, 165 files, 4 phases, 23 plans
 - **v1.1 shipped 2026-02-08:** Production live at https://shipsecure.ai, 77 files changed, 3 phases, 10 plans
 - **v1.2 shipped 2026-02-10:** Launch-ready polish, 67 files changed, 5 phases, 10 plans, 2 days
+- **v1.3 shipped 2026-02-11:** Brand identity — design tokens, logo, header, icons, favicon, 62 files changed, 6 phases, 10 plans
 
 ## Constraints
 
@@ -121,6 +120,10 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Footer OSS attribution over credits page | Always visible, follows OSS best practices | ✓ Good — Nuclei MIT + testssl.sh GPLv2 properly credited |
 | CFAA consent checkbox on scan form | Frontend-only gate, Zod validation | ✓ Good — explicit authorization before scanning |
 | Auto CI/CD deploy via SSH | appleboy/ssh-action after image builds | ✓ Good — push to main triggers full build and deploy |
+| Two-layer design tokens (OKLch + semantic) | Future-proof color system, automatic dark mode | ✓ Good — zero `dark:` classes remain, all via prefers-color-scheme |
+| Professional PNG logo over generated SVG | User provided designed logo with shield, padlock, signal waves | ✓ Good — multi-color brand identity, scales from favicon to full |
+| Lucide React over Heroicons | Larger icon set, better tree-shaking | ✓ Good — consistent SVG icons inheriting theme colors |
+| Geometric shield SVG for favicon | SVG favicons must be vector, fine details illegible at 16x16 | ✓ Good — clean shield reads well at all sizes |
 
 ---
-*Last updated: 2026-02-09 after v1.3 milestone started*
+*Last updated: 2026-02-11 after v1.3 milestone*

@@ -45,92 +45,19 @@ See: `.planning/milestones/v1.2-ROADMAP.md`
 
 </details>
 
-### ✅ v1.3 Brand Identity — SHIPPED 2026-02-11
+<details>
+<summary>✅ v1.3 Brand Identity (Phases 13-18) — SHIPPED 2026-02-11</summary>
 
-**Milestone Goal:** Give ShipSecure a proper visual identity — logo, refined color system, branded favicon, header navbar, and clean SVG icons — so the product looks as credible as it is.
+- [x] Phase 13: Design Token System (3/3 plans) — OKLch primitives, semantic tokens, dark mode, WCAG AA
+- [x] Phase 14: Logo Component (2/2 plans) — Shield logo, responsive variants, professional PNG
+- [x] Phase 15: Layout Refactor (1/1 plan) — Header-height token, layout preparation
+- [x] Phase 16: Header & Navigation (1/1 plan) — Sticky header, responsive logo, CTA, keyboard nav
+- [x] Phase 17: Icon System & Migration (1/1 plan) — Lucide React SVG icons replacing emoji
+- [x] Phase 18: Favicon & OG Image (2/2 plans) — Branded favicon (ICO+SVG), Apple touch icon, OG image
 
-#### Phase 13: Design Token System
-**Goal**: Establish design token foundation with semantic color naming and dark mode support
-**Depends on**: Phase 12
-**Requirements**: COLOR-01, COLOR-02, COLOR-03, COLOR-04
-**Success Criteria** (what must be TRUE):
-  1. Design tokens defined via Tailwind v4 `@theme` with semantic naming (brand-primary, surface-primary, text-secondary, border-subtle)
-  2. Dark mode overrides work correctly via `prefers-color-scheme` for all tokens
-  3. All color combinations meet WCAG AA contrast ratio (4.5:1 minimum)
-**Plans**: 3 plans
+See: `.planning/milestones/v1.3-ROADMAP.md`
 
-Plans:
-- [x] 13-01-PLAN.md -- Define design token system + migrate 3 core components
-- [x] 13-02-PLAN.md -- Migrate remaining 14 components/pages to semantic tokens
-- [x] 13-03-PLAN.md -- WCAG contrast validation + visual dark mode verification
-
-#### Phase 14: Logo Component
-**Goal**: Create theme-aware SVG logo component that scales from favicon to full size
-**Depends on**: Phase 13
-**Requirements**: LOGO-01, LOGO-02, LOGO-03, LOGO-04
-**Success Criteria** (what must be TRUE):
-  1. Logo mark renders correctly in light and dark mode using `currentColor`
-  2. Wordmark renders correctly in light and dark mode using `currentColor`
-  3. Logo scales cleanly from 16x16px (favicon size) to full desktop size without pixelation
-  4. Logo component has proper aria-label and role="img" for accessibility
-**Plans**: 2 plans
-
-Plans:
-- [x] 14-01-PLAN.md -- Shield design tokens + Logo component with 3 SVG size variants
-- [x] 14-02-PLAN.md -- Logo preview page + visual verification (user provided designed PNG logo)
-
-#### Phase 15: Layout Refactor
-**Goal**: Prepare layout structure for header integration without causing layout shift
-**Depends on**: Phase 14
-**Requirements**: HDR-03
-**Success Criteria** (what must be TRUE):
-  1. CSS variable `--header-height: 64px` defined and used consistently across layout
-  2. All existing routes maintain current spacing after header-height variable integration
-  3. No layout shift occurs on any route when header is eventually added
-**Plans**: 1 plan
-
-Plans:
-- [x] 15-01-PLAN.md -- Define header-height layout token + verify all routes maintain spacing
-
-#### Phase 16: Header & Navigation
-**Goal**: Add branded header with logo, nav, and CTA across all pages
-**Depends on**: Phase 15
-**Requirements**: HDR-01, HDR-02
-**Success Criteria** (what must be TRUE):
-  1. Sticky header displays on all pages (/, /results, /scan, /privacy, /terms) with logo and "Scan Now" CTA
-  2. Header shows full wordmark on desktop (>=640px) and icon mark only on mobile (<640px)
-  3. Header remains accessible via keyboard navigation (Tab key cycles through logo, nav links, CTA)
-**Plans**: 1 plan
-
-Plans:
-- [x] 16-01-PLAN.md -- Sticky header component with responsive logo, CTA, and keyboard accessibility
-
-#### Phase 17: Icon System & Migration
-**Goal**: Replace emoji with consistent SVG icon system using Lucide React
-**Depends on**: Phase 13
-**Requirements**: ICON-01, ICON-02, ICON-03
-**Success Criteria** (what must be TRUE):
-  1. Landing page feature grid displays SVG icons instead of emoji (🔒, 🚀, 🎯, etc.)
-  2. All SVG icons use consistent sizing (w-5 h-5 or w-6 h-6) and inherit color via `currentColor`
-  3. Decorative icons have `aria-hidden="true"` and standalone icons have `aria-label`
-**Plans**: 1 plan
-
-Plans:
-- [x] 17-01-PLAN.md -- Install lucide-react and replace emoji with SVG icons on feature grid
-
-#### Phase 18: Favicon & OG Image
-**Goal**: Deploy branded favicon and update OG image with logo
-**Depends on**: Phase 14
-**Requirements**: FAV-01, FAV-02, FAV-03, OG-01
-**Success Criteria** (what must be TRUE):
-  1. Favicon displays in browser tabs (ICO + SVG formats) and adapts to dark mode via SVG `prefers-color-scheme`
-  2. Apple touch icon (180x180 PNG) renders on iOS home screen
-  3. Open Graph image includes branded logo and color system when shared on social media
-**Plans**: 2 plans
-
-Plans:
-- [x] 18-01-PLAN.md -- Generate branded favicon assets (ICO, SVG with dark mode, Apple touch icon)
-- [x] 18-02-PLAN.md -- Update OG image with logo composite on branded background
+</details>
 
 ## Progress
 

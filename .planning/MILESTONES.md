@@ -78,3 +78,29 @@
 
 ---
 
+
+## v1.3 Brand Identity (Shipped: 2026-02-11)
+
+**Delivered:** Professional visual identity — design tokens, branded logo, header navigation, SVG icons, and branded favicon/OG assets
+
+**Phases completed:** 13-18 (10 plans total)
+
+**Key accomplishments:**
+- Two-layer design token system (OKLch primitives + semantic tokens) with automatic dark mode via `prefers-color-scheme`
+- WCAG AA contrast validation across all 26 color pairs with OKLch lightness adjustments
+- Professional shield logo (PNG) with responsive component serving icon/compact/full variants
+- Sticky header with responsive logo, navigation links, "Scan Now" CTA, and keyboard accessibility
+- Lucide React SVG icons replacing emoji for cross-platform consistency and theme color inheritance
+- Branded favicon (ICO + SVG with dark mode), Apple touch icon, and OG image with logo composite
+
+**Stats:**
+- 62 files changed (+8,462 / -392 lines)
+- 6 phases, 10 plans, 16 feat commits
+- 7 days from start to ship (Feb 4-11, 2026)
+
+**Git range:** `feat(13-01)` → `docs(phase-18)`
+
+**What's next:** Demand validation with real users. Then repo scanning, continuous monitoring, and subscription tiers.
+
+---
+

@@ -1,5 +1,6 @@
 import { ScanForm } from '@/components/scan-form'
 import type { Metadata } from 'next'
+import { Lock, Key, FileText, Search } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'ShipSecure - Security Scanning for Vibe-Coded Apps',
@@ -125,7 +126,7 @@ export default async function Home() {
           </h2>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto text-left">
             <div className="flex gap-3">
-              <div className="text-brand-primary text-xl">&#x1F512;</div>
+              <div className="text-brand-primary"><Lock className="w-6 h-6" aria-hidden="true" /></div>
               <div>
                 <h3 className="font-semibold text-text-primary">Security Headers</h3>
                 <p className="text-sm text-text-secondary">
@@ -134,7 +135,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="flex gap-3">
-              <div className="text-brand-primary text-xl">&#x1F511;</div>
+              <div className="text-brand-primary"><Key className="w-6 h-6" aria-hidden="true" /></div>
               <div>
                 <h3 className="font-semibold text-text-primary">TLS Configuration</h3>
                 <p className="text-sm text-text-secondary">
@@ -143,7 +144,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="flex gap-3">
-              <div className="text-brand-primary text-xl">&#x1F4C4;</div>
+              <div className="text-brand-primary"><FileText className="w-6 h-6" aria-hidden="true" /></div>
               <div>
                 <h3 className="font-semibold text-text-primary">Exposed Files</h3>
                 <p className="text-sm text-text-secondary">
@@ -152,7 +153,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="flex gap-3">
-              <div className="text-brand-primary text-xl">&#x1F50D;</div>
+              <div className="text-brand-primary"><Search className="w-6 h-6" aria-hidden="true" /></div>
               <div>
                 <h3 className="font-semibold text-text-primary">JavaScript Secrets</h3>
                 <p className="text-sm text-text-secondary">

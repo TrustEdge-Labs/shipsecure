@@ -117,9 +117,6 @@
   --color-brand-primary-hover: var(--primitive-blue-700);
   --color-brand-accent: var(--primitive-blue-400);
 
-  /* Shield Logo */
-  --color-shield-fill: var(--primitive-blue-600);
-  --color-shield-checkmark: var(--primitive-white);
 
   /* Surface (Background) Colors */
   --color-surface-primary: var(--primitive-white);
@@ -297,10 +294,6 @@
     --color-cta-gradient-start-bg: oklch(0.180 0.040 262);
     --color-cta-gradient-end-bg: oklch(0.170 0.045 272);
     --color-cta-border: var(--primitive-blue-700);
-
-    /* Shield Logo */
-    --color-shield-fill: var(--primitive-blue-500);
-    --color-shield-checkmark: var(--primitive-white);
   }
 }
 

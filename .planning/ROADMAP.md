@@ -126,10 +126,11 @@ Plans:
   1. Favicon displays in browser tabs (ICO + SVG formats) and adapts to dark mode via SVG `prefers-color-scheme`
   2. Apple touch icon (180x180 PNG) renders on iOS home screen
   3. Open Graph image includes branded logo and color system when shared on social media
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 18-01: TBD
+- [ ] 18-01-PLAN.md -- Generate branded favicon assets (ICO, SVG with dark mode, Apple touch icon)
+- [ ] 18-02-PLAN.md -- Update OG image with logo composite on branded background
 
 ## Progress
 

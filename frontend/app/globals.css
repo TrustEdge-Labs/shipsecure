@@ -315,3 +315,11 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
 }
+
+/* ===================================================================
+   Accessibility: Sticky Header Focus Protection (WCAG 2.2 SC 2.4.11)
+   =================================================================== */
+
+:root {
+  scroll-padding-top: var(--header-height);
+}

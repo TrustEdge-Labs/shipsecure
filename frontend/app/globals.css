@@ -206,6 +206,15 @@
   --color-cta-gradient-start-bg: var(--primitive-blue-50);
   --color-cta-gradient-end-bg: var(--primitive-indigo-50);
   --color-cta-border: var(--primitive-blue-200);
+
+  /* ===================================================================
+     Layout Dimensions
+     =================================================================== */
+
+  /* Header height - reserved for Phase 16 sticky header.
+   * Used for: sticky header height, main content padding-top offset.
+   * DO NOT change without verifying all routes maintain spacing. */
+  --header-height: 64px;
 }
 
 /* Dark mode semantic token overrides */

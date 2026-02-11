@@ -43,6 +43,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <div className="flex flex-col min-h-screen">
+          {/* Phase 16: Insert <Header /> sticky component here */}
           <div className="flex-1">
             {children}
           </div>

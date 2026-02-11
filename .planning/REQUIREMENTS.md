@@ -31,7 +31,7 @@ Requirements for brand identity milestone. Each maps to roadmap phases.
 
 - [ ] **HDR-01**: Sticky header displays logo and "Scan Now" CTA on all pages
 - [ ] **HDR-02**: Header shows wordmark on desktop, icon mark on mobile (<640px)
-- [ ] **HDR-03**: Header does not cause layout shift on any existing route
+- [x] **HDR-03**: Header does not cause layout shift on any existing route
 
 ### Icons
 
@@ -84,7 +84,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FAV-03 | Phase 18 | Pending |
 | HDR-01 | Phase 16 | Pending |
 | HDR-02 | Phase 16 | Pending |
-| HDR-03 | Phase 15 | Pending |
+| HDR-03 | Phase 15 | Complete |
 | ICON-01 | Phase 17 | Pending |
 | ICON-02 | Phase 17 | Pending |
 | ICON-03 | Phase 17 | Pending |

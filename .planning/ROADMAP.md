@@ -90,7 +90,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 15-01-PLAN.md -- Define header-height layout token + verify all routes maintain spacing
+- [x] 15-01-PLAN.md -- Define header-height layout token + verify all routes maintain spacing
 
 #### Phase 16: Header & Navigation
 **Goal**: Add branded header with logo, nav, and CTA across all pages
@@ -149,10 +149,10 @@ Plans:
 | 12 - Landing Page Optimization | v1.2 | 2/2 | Complete | 2026-02-09 |
 | 13 - Design Token System | v1.3 | 3/3 | Complete | 2026-02-10 |
 | 14 - Logo Component | v1.3 | 2/2 | Complete | 2026-02-11 |
-| 15 - Layout Refactor | v1.3 | 0/1 | In progress | - |
+| 15 - Layout Refactor | v1.3 | 1/1 | Complete | 2026-02-11 |
 | 16 - Header & Navigation | v1.3 | 0/0 | Not started | - |
 | 17 - Icon System & Migration | v1.3 | 0/0 | Not started | - |
 | 18 - Favicon & OG Image | v1.3 | 0/0 | Not started | - |
 
 ---
-*Last updated: 2026-02-10*
+*Last updated: 2026-02-11*

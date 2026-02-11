@@ -87,10 +87,10 @@ Plans:
   1. CSS variable `--header-height: 64px` defined and used consistently across layout
   2. All existing routes maintain current spacing after header-height variable integration
   3. No layout shift occurs on any route when header is eventually added
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 15-01: TBD
+- [ ] 15-01-PLAN.md -- Define header-height layout token + verify all routes maintain spacing
 
 #### Phase 16: Header & Navigation
 **Goal**: Add branded header with logo, nav, and CTA across all pages
@@ -149,7 +149,7 @@ Plans:
 | 12 - Landing Page Optimization | v1.2 | 2/2 | Complete | 2026-02-09 |
 | 13 - Design Token System | v1.3 | 3/3 | Complete | 2026-02-10 |
 | 14 - Logo Component | v1.3 | 2/2 | Complete | 2026-02-11 |
-| 15 - Layout Refactor | v1.3 | 0/0 | Not started | - |
+| 15 - Layout Refactor | v1.3 | 0/1 | In progress | - |
 | 16 - Header & Navigation | v1.3 | 0/0 | Not started | - |
 | 17 - Icon System & Migration | v1.3 | 0/0 | Not started | - |
 | 18 - Favicon & OG Image | v1.3 | 0/0 | Not started | - |

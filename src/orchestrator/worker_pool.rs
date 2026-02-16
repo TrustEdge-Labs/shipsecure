@@ -1,7 +1,8 @@
 use sqlx::PgPool;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::sync::Semaphore;
+use tracing::{info_span, Instrument};
 use uuid::Uuid;
 use base64::Engine;
 
@@ -69,15 +70,24 @@ impl ScanOrchestrator {
         let pool = self.pool.clone();
         let semaphore = self.semaphore.clone();
         let timeout = self.max_scanner_timeout;
+        let span = info_span!("scan", scan_id = %scan_id, target_url = %target_url, tier = "free");
 
         tokio::spawn(async move {
-            // Acquire permit inside the task to avoid blocking the API
             let _permit = semaphore.acquire().await.expect("Semaphore closed");
+            tracing::info!("scan_started");
+            let start = Instant::now();
 
-            if let Err(e) = Self::execute_scan_internal(pool, scan_id, target_url, timeout, "free").await {
-                tracing::error!("Scan {} failed: {}", scan_id, e);
+            match Self::execute_scan_internal(pool, scan_id, target_url, timeout, "free").await {
+                Ok(()) => {
+                    let duration_ms = start.elapsed().as_millis() as u64;
+                    tracing::info!(duration_ms, "scan_completed");
+                }
+                Err(e) => {
+                    let duration_ms = start.elapsed().as_millis() as u64;
+                    tracing::error!(duration_ms, error = %e, "scan_failed");
+                }
             }
-        });
+        }.instrument(span));
     }
 
     /// Spawn a PAID tier scan task in the background
@@ -93,28 +103,38 @@ impl ScanOrchestrator {
         let pool = self.pool.clone();
         let semaphore = self.semaphore.clone();
         let timeout = self.max_scanner_timeout;
+        let span = info_span!("scan", scan_id = %scan_id, target_url = %target_url, tier = "paid");
 
         tokio::spawn(async move {
-            // Acquire permit inside the task to avoid blocking the API
             let _permit = semaphore.acquire().await.expect("Semaphore closed");
+            tracing::info!("scan_started");
+            let start = Instant::now();
 
             // Clear existing findings before paid rescan
             if let Err(e) = crate::db::paid_audits::clear_findings_by_scan(&pool, scan_id).await {
-                tracing::error!("Failed to clear findings for paid scan {}: {}", scan_id, e);
+                let duration_ms = start.elapsed().as_millis() as u64;
+                tracing::error!(duration_ms, error = %e, "scan_failed");
                 return;
             }
 
             // Reset scan status to pending
             if let Err(e) = scans_db::update_scan_status(&pool, scan_id, ScanStatus::Pending, None, None).await {
-                tracing::error!("Failed to reset scan status for paid scan {}: {}", scan_id, e);
+                let duration_ms = start.elapsed().as_millis() as u64;
+                tracing::error!(duration_ms, error = %e, "scan_failed");
                 return;
             }
 
-            // Execute with paid tier configuration
-            if let Err(e) = Self::execute_scan_internal(pool, scan_id, target_url, timeout, "paid").await {
-                tracing::error!("Paid scan {} failed: {}", scan_id, e);
+            match Self::execute_scan_internal(pool, scan_id, target_url, timeout, "paid").await {
+                Ok(()) => {
+                    let duration_ms = start.elapsed().as_millis() as u64;
+                    tracing::info!(duration_ms, "scan_completed");
+                }
+                Err(e) => {
+                    let duration_ms = start.elapsed().as_millis() as u64;
+                    tracing::error!(duration_ms, error = %e, "scan_failed");
+                }
             }
-        });
+        }.instrument(span));
     }
 
     /// Execute a scan synchronously (for testing or controlled execution)
@@ -301,157 +321,226 @@ impl ScanOrchestrator {
         let platform_str_clone = platform.clone();
         let tier_clone = tier.to_string();
 
-        let headers_handle = tokio::spawn(async move {
-            let result = tokio::time::timeout(
-                other_timeout,
-                security_headers::scan_security_headers(&url1)
-            ).await;
+        let headers_handle = tokio::spawn({
+            let span = info_span!("scanner", scanner_name = "security_headers", scan_id = %scan_id);
+            async move {
+                tracing::info!("scanner_started");
+                let start = Instant::now();
+                let result = tokio::time::timeout(
+                    other_timeout,
+                    security_headers::scan_security_headers(&url1)
+                ).await;
 
-            // Update stage on completion (success or failure)
-            let _ = scans_db::update_scan_stage(&pool_clone1, scan_id, "headers", true).await;
+                let _ = scans_db::update_scan_stage(&pool_clone1, scan_id, "headers", true).await;
+                let duration_ms = start.elapsed().as_millis() as u64;
 
-            match result {
-                Ok(Ok(findings)) => ScannerResult {
-                    scanner_name: "security_headers".to_string(),
-                    findings: Some(findings),
-                    error: None,
-                },
-                Ok(Err(e)) => ScannerResult {
-                    scanner_name: "security_headers".to_string(),
-                    findings: None,
-                    error: Some(e.to_string()),
-                },
-                Err(_) => ScannerResult {
-                    scanner_name: "security_headers".to_string(),
-                    findings: None,
-                    error: Some("Timeout".to_string()),
-                },
-            }
-        });
-
-        let tls_handle = tokio::spawn(async move {
-            let result = tokio::time::timeout(
-                Duration::from_secs(300), // SSL Labs can be slow
-                tls::scan_tls(&url2)
-            ).await;
-
-            // Update stage on completion
-            let _ = scans_db::update_scan_stage(&pool_clone2, scan_id, "tls", true).await;
-
-            match result {
-                Ok(Ok(findings)) => ScannerResult {
-                    scanner_name: "tls".to_string(),
-                    findings: Some(findings),
-                    error: None,
-                },
-                Ok(Err(e)) => ScannerResult {
-                    scanner_name: "tls".to_string(),
-                    findings: None,
-                    error: Some(e.to_string()),
-                },
-                Err(_) => ScannerResult {
-                    scanner_name: "tls".to_string(),
-                    findings: None,
-                    error: Some("Timeout".to_string()),
-                },
-            }
-        });
-
-        let files_handle = tokio::spawn(async move {
-            let result = tokio::time::timeout(
-                other_timeout,
-                exposed_files::scan_exposed_files(&url3, extended_files)
-            ).await;
-
-            // Update stage on completion
-            let _ = scans_db::update_scan_stage(&pool_clone3, scan_id, "files", true).await;
-
-            match result {
-                Ok(Ok(findings)) => ScannerResult {
-                    scanner_name: "exposed_files".to_string(),
-                    findings: Some(findings),
-                    error: None,
-                },
-                Ok(Err(e)) => ScannerResult {
-                    scanner_name: "exposed_files".to_string(),
-                    findings: None,
-                    error: Some(e.to_string()),
-                },
-                Err(_) => ScannerResult {
-                    scanner_name: "exposed_files".to_string(),
-                    findings: None,
-                    error: Some("Timeout".to_string()),
-                },
-            }
-        });
-
-        let secrets_handle = tokio::spawn(async move {
-            let result = tokio::time::timeout(
-                other_timeout,
-                js_secrets::scan_js_secrets(&url4, max_js_files)
-            ).await;
-
-            // Update stage on completion
-            let _ = scans_db::update_scan_stage(&pool_clone4, scan_id, "secrets", true).await;
-
-            match result {
-                Ok(Ok(findings)) => ScannerResult {
-                    scanner_name: "js_secrets".to_string(),
-                    findings: Some(findings),
-                    error: None,
-                },
-                Ok(Err(e)) => ScannerResult {
-                    scanner_name: "js_secrets".to_string(),
-                    findings: None,
-                    error: Some(e.to_string()),
-                },
-                Err(_) => ScannerResult {
-                    scanner_name: "js_secrets".to_string(),
-                    findings: None,
-                    error: Some("Timeout".to_string()),
-                },
-            }
-        });
-
-        let vibecode_handle = tokio::spawn(async move {
-            let fw_ref = framework_str_clone.as_deref();
-            let pl_ref = platform_str_clone.as_deref();
-
-            let result = tokio::time::timeout(
-                vibecode_timeout,
-                vibecode::scan_vibecode(&url5, fw_ref, pl_ref, &tier_clone)
-            ).await;
-
-            let _ = scans_db::update_scan_stage(&pool_clone5, scan_id, "vibecode", true).await;
-
-            match result {
-                Ok(Ok(mut findings)) => {
-                    // Apply framework-specific remediation to vibe-code findings
-                    for finding in &mut findings {
-                        finding.remediation = remediation::generate_remediation(
-                            finding.raw_evidence.as_deref().unwrap_or(""),
-                            &finding.title,
-                            fw_ref,
-                            finding.raw_evidence.as_deref(),
-                        );
+                match result {
+                    Ok(Ok(findings)) => {
+                        tracing::info!(duration_ms, "scanner_completed");
+                        ScannerResult {
+                            scanner_name: "security_headers".to_string(),
+                            findings: Some(findings),
+                            error: None,
+                        }
                     }
-                    ScannerResult {
-                        scanner_name: "vibecode".to_string(),
-                        findings: Some(findings),
-                        error: None,
+                    Ok(Err(e)) => {
+                        tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "security_headers".to_string(),
+                            findings: None,
+                            error: Some(e.to_string()),
+                        }
+                    }
+                    Err(_) => {
+                        tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "security_headers".to_string(),
+                            findings: None,
+                            error: Some("Timeout".to_string()),
+                        }
                     }
                 }
-                Ok(Err(e)) => ScannerResult {
-                    scanner_name: "vibecode".to_string(),
-                    findings: None,
-                    error: Some(e.to_string()),
-                },
-                Err(_) => ScannerResult {
-                    scanner_name: "vibecode".to_string(),
-                    findings: None,
-                    error: Some("Timeout".to_string()),
-                },
-            }
+            }.instrument(span)
+        });
+
+        let tls_handle = tokio::spawn({
+            let span = info_span!("scanner", scanner_name = "tls", scan_id = %scan_id);
+            async move {
+                tracing::info!("scanner_started");
+                let start = Instant::now();
+                let result = tokio::time::timeout(
+                    Duration::from_secs(300), // SSL Labs can be slow
+                    tls::scan_tls(&url2)
+                ).await;
+
+                let _ = scans_db::update_scan_stage(&pool_clone2, scan_id, "tls", true).await;
+                let duration_ms = start.elapsed().as_millis() as u64;
+
+                match result {
+                    Ok(Ok(findings)) => {
+                        tracing::info!(duration_ms, "scanner_completed");
+                        ScannerResult {
+                            scanner_name: "tls".to_string(),
+                            findings: Some(findings),
+                            error: None,
+                        }
+                    }
+                    Ok(Err(e)) => {
+                        tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "tls".to_string(),
+                            findings: None,
+                            error: Some(e.to_string()),
+                        }
+                    }
+                    Err(_) => {
+                        tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "tls".to_string(),
+                            findings: None,
+                            error: Some("Timeout".to_string()),
+                        }
+                    }
+                }
+            }.instrument(span)
+        });
+
+        let files_handle = tokio::spawn({
+            let span = info_span!("scanner", scanner_name = "exposed_files", scan_id = %scan_id);
+            async move {
+                tracing::info!("scanner_started");
+                let start = Instant::now();
+                let result = tokio::time::timeout(
+                    other_timeout,
+                    exposed_files::scan_exposed_files(&url3, extended_files)
+                ).await;
+
+                let _ = scans_db::update_scan_stage(&pool_clone3, scan_id, "files", true).await;
+                let duration_ms = start.elapsed().as_millis() as u64;
+
+                match result {
+                    Ok(Ok(findings)) => {
+                        tracing::info!(duration_ms, "scanner_completed");
+                        ScannerResult {
+                            scanner_name: "exposed_files".to_string(),
+                            findings: Some(findings),
+                            error: None,
+                        }
+                    }
+                    Ok(Err(e)) => {
+                        tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "exposed_files".to_string(),
+                            findings: None,
+                            error: Some(e.to_string()),
+                        }
+                    }
+                    Err(_) => {
+                        tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "exposed_files".to_string(),
+                            findings: None,
+                            error: Some("Timeout".to_string()),
+                        }
+                    }
+                }
+            }.instrument(span)
+        });
+
+        let secrets_handle = tokio::spawn({
+            let span = info_span!("scanner", scanner_name = "js_secrets", scan_id = %scan_id);
+            async move {
+                tracing::info!("scanner_started");
+                let start = Instant::now();
+                let result = tokio::time::timeout(
+                    other_timeout,
+                    js_secrets::scan_js_secrets(&url4, max_js_files)
+                ).await;
+
+                let _ = scans_db::update_scan_stage(&pool_clone4, scan_id, "secrets", true).await;
+                let duration_ms = start.elapsed().as_millis() as u64;
+
+                match result {
+                    Ok(Ok(findings)) => {
+                        tracing::info!(duration_ms, "scanner_completed");
+                        ScannerResult {
+                            scanner_name: "js_secrets".to_string(),
+                            findings: Some(findings),
+                            error: None,
+                        }
+                    }
+                    Ok(Err(e)) => {
+                        tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "js_secrets".to_string(),
+                            findings: None,
+                            error: Some(e.to_string()),
+                        }
+                    }
+                    Err(_) => {
+                        tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "js_secrets".to_string(),
+                            findings: None,
+                            error: Some("Timeout".to_string()),
+                        }
+                    }
+                }
+            }.instrument(span)
+        });
+
+        let vibecode_handle = tokio::spawn({
+            let span = info_span!("scanner", scanner_name = "vibecode", scan_id = %scan_id);
+            async move {
+                tracing::info!("scanner_started");
+                let start = Instant::now();
+                let fw_ref = framework_str_clone.as_deref();
+                let pl_ref = platform_str_clone.as_deref();
+
+                let result = tokio::time::timeout(
+                    vibecode_timeout,
+                    vibecode::scan_vibecode(&url5, fw_ref, pl_ref, &tier_clone)
+                ).await;
+
+                let _ = scans_db::update_scan_stage(&pool_clone5, scan_id, "vibecode", true).await;
+                let duration_ms = start.elapsed().as_millis() as u64;
+
+                match result {
+                    Ok(Ok(mut findings)) => {
+                        // Apply framework-specific remediation to vibe-code findings
+                        for finding in &mut findings {
+                            finding.remediation = remediation::generate_remediation(
+                                finding.raw_evidence.as_deref().unwrap_or(""),
+                                &finding.title,
+                                fw_ref,
+                                finding.raw_evidence.as_deref(),
+                            );
+                        }
+                        tracing::info!(duration_ms, "scanner_completed");
+                        ScannerResult {
+                            scanner_name: "vibecode".to_string(),
+                            findings: Some(findings),
+                            error: None,
+                        }
+                    }
+                    Ok(Err(e)) => {
+                        tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "vibecode".to_string(),
+                            findings: None,
+                            error: Some(e.to_string()),
+                        }
+                    }
+                    Err(_) => {
+                        tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        ScannerResult {
+                            scanner_name: "vibecode".to_string(),
+                            findings: None,
+                            error: Some("Timeout".to_string()),
+                        }
+                    }
+                }
+            }.instrument(span)
         });
 
         // Await all scanner tasks

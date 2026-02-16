@@ -16,6 +16,8 @@ use tracing_panic::panic_hook;
 // Import from lib
 use trustedge_audit::api::scans::{self, AppState};
 use trustedge_audit::api::{checkout, health, results, stats, webhooks};
+use trustedge_audit::metrics;
+use trustedge_audit::api::metrics as api_metrics;
 use trustedge_audit::orchestrator::ScanOrchestrator;
 use trustedge_audit::RequestId;
 
@@ -110,6 +112,9 @@ async fn main() {
     // Install panic hook for structured panic logging
     std::panic::set_hook(Box::new(panic_hook));
 
+    // Install metrics recorder
+    let metrics_handle = metrics::install_metrics_recorder();
+
     // Database pool
     let database_url =
         std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -157,6 +162,7 @@ async fn main() {
         pool: pool.clone(),
         orchestrator,
         health_cache,
+        metrics_handle: metrics_handle.clone(),
     };
 
     // CORS middleware for frontend communication
@@ -199,6 +205,11 @@ async fn main() {
         .route("/health/ready", get(health::health_readiness))
         .with_state(state.clone());
 
+    // Metrics router — separate from traced routes
+    let metrics_router = Router::new()
+        .route("/metrics", get(api_metrics::metrics_handler))
+        .with_state(state.clone());
+
     // Router
     let app = Router::new()
         // API routes — these get traced
@@ -212,12 +223,14 @@ async fn main() {
         .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
         .route("/api/v1/checkout", post(checkout::create_checkout))
         .route("/api/v1/webhooks/stripe", post(webhooks::handle_stripe_webhook))
+        .layer(axum::middleware::from_fn(metrics::middleware::track_http_metrics))
         .layer(cors)
         .layer(trace_layer)
         .layer(middleware::from_fn(inject_request_id))
         .with_state(state)
-        // Health checks — merged AFTER layers, bypass tracing
+        // Health checks and metrics — merged AFTER layers, bypass tracing
         .merge(health_router)
+        .merge(metrics_router)
         .into_make_service_with_connect_info::<SocketAddr>();
 
     // Bind and serve

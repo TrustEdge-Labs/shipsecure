@@ -37,9 +37,11 @@ Built for developers shipping fast with AI code generators (Cursor, Bolt, Lovabl
 | Frontend | Next.js (App Router), React, Tailwind CSS |
 | Database | PostgreSQL |
 | Scanners | Nuclei (native binary), testssl.sh (native binary), custom probes |
+| Observability | tracing (structured logging), metrics-exporter-prometheus, tower-http |
 | Payments | Stripe Checkout |
 | Email | Resend API |
 | Reports | genpdf (PDF generation) |
+| Infrastructure | Ansible, Docker Compose, Nginx, systemd |
 
 ## Getting Started
 
@@ -84,10 +86,12 @@ Copy `.env.example` and set the following:
 |----------|-------------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `PORT` | Backend HTTP port | Yes |
-| `RUST_LOG` | Log level filter | Yes |
 | `TRUSTEDGE_BASE_URL` | Base URL for email links | Yes |
 | `FRONTEND_URL` | Frontend URL for redirects | Yes |
 | `MAX_CONCURRENT_SCANS` | Maximum parallel scans | Yes |
+| `LOG_FORMAT` | Log format: `json` for structured, unset for text | No (defaults to text) |
+| `RUST_LOG` | Log level filter override | No (sensible defaults) |
+| `SHUTDOWN_TIMEOUT` | Graceful shutdown timeout in seconds | No (defaults to 90) |
 | `RESEND_API_KEY` | Resend API key for email delivery | No (email disabled) |
 | `STRIPE_SECRET_KEY` | Stripe secret key | No (checkout disabled) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook validation secret | No (webhooks disabled) |
@@ -99,7 +103,9 @@ Copy `.env.example` and set the following:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/health` | Health check |
+| `GET` | `/health` | Liveness check (returns "ok") |
+| `GET` | `/health/ready` | Readiness check (DB connectivity, scan capacity) |
+| `GET` | `/metrics` | Prometheus metrics (localhost only) |
 | `POST` | `/api/v1/scans` | Submit a scan |
 | `GET` | `/api/v1/scans/{id}` | Get scan status and findings |
 | `GET` | `/api/v1/results/{token}` | Get results by capability token |
@@ -112,20 +118,22 @@ Copy `.env.example` and set the following:
 
 ```
 src/
-  api/           # HTTP handlers (scans, results, checkout, webhooks)
+  api/           # HTTP handlers (scans, results, checkout, webhooks, health)
   scanners/      # Security scanners (headers, TLS, secrets, vibecode, etc.)
-  orchestrator/  # Scan job management with concurrency control
+  orchestrator/  # Scan job management with concurrency control and graceful shutdown
   models/        # Data structures (scan, finding, detection, paid_audit)
   db/            # Database operations
   email/         # Resend email integration
   pdf.rs         # PDF report generation
   rate_limit/    # Database-backed rate limiting
   ssrf/          # SSRF protection (blocks private IPs, cloud metadata)
+  metrics/       # Prometheus metrics (HTTP, scan, rate limit counters)
 frontend/
   app/           # Next.js pages (landing, scan, results, payment)
   components/    # Reusable UI components
   actions/       # Server Actions
 migrations/      # PostgreSQL schema migrations
+infrastructure/  # Ansible playbooks, templates, and deployment automation
 ```
 
 ## Architecture Highlights
@@ -135,6 +143,8 @@ migrations/      # PostgreSQL schema migrations
 - **Scanner execution** — Nuclei and testssl.sh run as native binaries with configurable paths and graceful degradation
 - **Capability tokens** — 256-bit unguessable tokens for results access, no auth required
 - **Graceful degradation** — Scanner unavailable? Empty findings with warning. Email fails? PDF saved to disk.
+- **Observability** — Structured JSON logging, request tracing with correlation IDs, Prometheus metrics, health checks (liveness + readiness)
+- **Graceful shutdown** — SIGTERM drains in-flight scans with configurable timeout, tracked via TaskTracker/CancellationToken
 
 ## Testing
 

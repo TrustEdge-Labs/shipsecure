@@ -1,244 +1,302 @@
-# Architecture Research: Brand Identity Integration
+# Architecture Research: Observability Integration
 
-**Domain:** Brand Identity for Next.js 16 + Tailwind CSS v4 Application
-**Researched:** 2026-02-09
-**Confidence:** HIGH (official docs verified)
+**Domain:** Structured logging, Prometheus metrics, health checks, graceful shutdown, request tracing
+**Researched:** 2026-02-16
+**Confidence:** HIGH (established Axum/tower patterns)
 
-## System Architecture
+## Existing Architecture (Relevant Components)
 
 ```
-frontend/
-  app/
-    layout.tsx           <- MODIFY: Add <Header />, update viewport metadata
-    globals.css          <- MODIFY: Add @theme design tokens (additive)
-    icon.tsx             <- NEW: Dynamic favicon via ImageResponse
-    apple-icon.png       <- NEW: Static 180x180 Apple icon
-    favicon.ico          <- NEW: 32x32 legacy favicon
-    page.tsx             <- MODIFY: Replace emoji icons, use design tokens
-  components/
-    brand/
-      logo.tsx           <- NEW: SVG logo with variants (full/icon/wordmark)
-      header.tsx         <- NEW: Sticky navbar with Logo, nav, CTA
-    icons/
-      index.ts           <- NEW: Barrel export for icon components
-  public/
-    logo.svg             <- NEW: Optimized source SVG
+src/
+  main.rs              <- MODIFY: tracing init, middleware stack, graceful shutdown, routes
+  api/
+    scans.rs           <- MODIFY: Add tracing spans with scan_id
+    payments.rs        <- MODIFY: Add tracing spans
+    errors.rs          <- MODIFY: Structured error logging fields
+  orchestrator/
+    worker_pool.rs     <- MODIFY: TaskTracker instead of raw tokio::spawn, scan metrics
+  scanners/
+    *.rs               <- MODIFY: Add scanner-specific metrics and spans
+
+infrastructure/        <- MODIFY: Ansible playbooks
+  playbooks/
+    provision.yml      <- MODIFY: Add DO metrics agent installation
+  templates/
+    nginx.conf.j2      <- MODIFY: /metrics endpoint, /health/ready proxy
+    docker-compose.yml  <- MODIFY: STOPSIGNAL, log rotation
 ```
 
-## Component Architecture
+## Integration Architecture
 
-### 1. Design Token System (Tailwind v4 @theme)
+### 1. Structured JSON Logging (main.rs)
 
-```css
-@theme {
-  /* Brand colors */
-  --color-brand-primary: oklch(0.5 0.2 250);
-  --color-brand-primary-hover: oklch(0.45 0.2 250);
+**Current:**
+```rust
+tracing_subscriber::fmt()
+    .with_env_filter(EnvFilter::try_from_default_env().expect("..."))
+    .init();
+```
 
-  /* Semantic tokens */
-  --color-surface-primary: var(--background);
-  --color-surface-secondary: #f9fafb;
-  --color-text-primary: var(--foreground);
-  --color-text-secondary: #6b7280;
-  --color-border-subtle: #e5e7eb;
-  --color-border-default: #d1d5db;
+**New:**
+```rust
+let env_filter = EnvFilter::try_from_default_env()
+    .expect("RUST_LOG must be set");
 
-  /* Severity (preserve existing visual language) */
-  --color-severity-critical: #991b1b;
-  --color-severity-critical-bg: #fef2f2;
-  --color-success: #16a34a;
-  --color-danger: #dc2626;
-  --color-warning: #ca8a04;
-}
-
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-brand-primary: oklch(0.6 0.2 250);
-    --color-surface-secondary: #1f2937;
-    --color-text-secondary: #9ca3af;
-    --color-border-subtle: #374151;
-    --color-border-default: #4b5563;
-    --color-severity-critical: #fca5a5;
-    --color-severity-critical-bg: #7f1d1d;
-    --color-success: #4ade80;
-    --color-danger: #f87171;
-  }
+if std::env::var("LOG_FORMAT").unwrap_or_default() == "json" {
+    tracing_subscriber::fmt()
+        .json()
+        .with_env_filter(env_filter)
+        .with_target(true)
+        .with_current_span(true)
+        .init();
+} else {
+    tracing_subscriber::fmt()
+        .with_env_filter(env_filter)
+        .init();
 }
 ```
 
-**Naming convention:** `--color-{category}-{variant}-{state}`
-Categories: brand, surface, text, border, success, warning, danger, info
+**Data flow:** All `tracing::info!()`, `tracing::error!()` calls throughout codebase automatically emit JSON when `LOG_FORMAT=json`. No changes needed at call sites.
 
-### 2. Logo Component
+### 2. Request Tracing Middleware (main.rs)
 
-```tsx
-// components/brand/logo.tsx
-interface LogoProps {
-  variant?: 'full' | 'icon' | 'wordmark'
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  className?: string
+**Integration point:** Add TraceLayer to Axum middleware stack, before CORS.
+
+```rust
+use tower_http::trace::TraceLayer;
+
+let trace_layer = TraceLayer::new_for_http()
+    .make_span_with(|request: &Request<_>| {
+        let request_id = Uuid::new_v4().to_string();
+        tracing::info_span!(
+            "http_request",
+            method = %request.method(),
+            uri = %request.uri(),
+            request_id = %request_id,
+        )
+    })
+    .on_response(|response, latency, _span| {
+        tracing::info!(status = %response.status(), latency_ms = latency.as_millis(), "Response");
+    });
+
+let app = Router::new()
+    .route("/api/v1/scans", post(create_scan))
+    // ... routes
+    .layer(trace_layer)  // Add before CORS
+    .layer(cors_layer);
+```
+
+**Key:** All downstream handlers and spawned tasks inherit the request span if properly instrumented with `.instrument()`.
+
+### 3. Prometheus Metrics (new module + route)
+
+**New file:** `src/metrics.rs`
+
+```rust
+use prometheus::{Registry, Counter, Histogram, HistogramVec, CounterVec, Gauge, Encoder, TextEncoder};
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref HTTP_REQUESTS_TOTAL: CounterVec = register_counter_vec!(
+        "http_requests_total", "Total HTTP requests", &["method", "endpoint", "status"]
+    ).unwrap();
+
+    pub static ref HTTP_REQUEST_DURATION: HistogramVec = register_histogram_vec!(
+        "http_request_duration_seconds", "HTTP request duration",
+        &["method", "endpoint"],
+        vec![0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0]
+    ).unwrap();
+
+    pub static ref SCAN_DURATION: HistogramVec = register_histogram_vec!(
+        "scan_duration_seconds", "Scan duration",
+        &["tier", "status"],
+        vec![1.0, 5.0, 10.0, 30.0, 60.0, 120.0, 300.0]
+    ).unwrap();
+
+    pub static ref SCAN_QUEUE_DEPTH: Gauge = register_gauge!(
+        "scan_queue_depth", "Number of scans waiting in queue"
+    ).unwrap();
+
+    pub static ref ACTIVE_SCANS: Gauge = register_gauge!(
+        "active_scans", "Number of scans currently running"
+    ).unwrap();
 }
 
-export function Logo({ variant = 'full', size = 'md', className }: LogoProps) {
-  return (
-    <svg className={className} fill="currentColor" aria-label="ShipSecure" role="img">
-      {/* SVG paths - uses currentColor for theme support */}
-    </svg>
-  )
+pub async fn metrics_handler() -> impl IntoResponse {
+    let encoder = TextEncoder::new();
+    let metric_families = prometheus::gather();
+    let mut buffer = vec![];
+    encoder.encode(&metric_families, &mut buffer).unwrap();
+    ([(header::CONTENT_TYPE, "text/plain; version=0.0.4")], buffer)
 }
 ```
 
-**Key decisions:**
-- Use `currentColor` for fills (inherits text color, themeable)
-- Provide variant/size props for reuse across contexts
-- Always include `aria-label` and `role="img"`
-- Never use `<img>` tag (not themeable, extra HTTP request)
+**Router integration:** Add `GET /metrics` route in main.rs.
 
-### 3. Header/Navbar
+**Metrics increment points:**
+- HTTP middleware (custom layer or on_response callback) → HTTP_REQUESTS_TOTAL, HTTP_REQUEST_DURATION
+- ScanOrchestrator.run_scan() → SCAN_DURATION, ACTIVE_SCANS
+- Worker pool queue → SCAN_QUEUE_DEPTH
 
-```tsx
-// components/brand/header.tsx
-<header className="sticky top-0 z-[1020] border-b border-border-subtle bg-surface-primary">
-  <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-    <Link href="/"><Logo variant="full" size="md" /></Link>
-    <nav className="hidden md:flex gap-6">...</nav>
-    <Button className="bg-brand-primary">Scan Now</Button>
-  </div>
-</header>
-```
+### 4. Health Checks (expand existing)
 
-**Key decisions:**
-- Fixed height (h-16 = 64px)
-- Sticky positioning with z-index from defined scale
-- Logo on left, nav center, CTA right
-- Hide nav on mobile (`hidden md:flex`)
-- Define `--header-height: 64px` CSS variable for spacing calculations
+**Current:** `GET /health` → `"ok"`
 
-### 4. Icon System
+**New:** Keep `/health` shallow (liveness), add `/health/ready` (readiness).
 
-```tsx
-// Pattern: Use Lucide icons with consistent sizing
-import { Shield, Lock, FileText, Search } from 'lucide-react'
+```rust
+// Shallow - unchanged
+.route("/health", get(|| async { "ok" }))
 
-// Decorative (next to text)
-<Shield className="w-5 h-5" aria-hidden="true" />
+// Deep - new
+.route("/health/ready", get(health_ready))
 
-// Standalone (needs label)
-<Shield className="w-5 h-5" aria-label="Security shield" />
-```
+async fn health_ready(State(state): State<AppState>) -> impl IntoResponse {
+    let db_ok = sqlx::query("SELECT 1")
+        .execute(&state.pool)
+        .await
+        .is_ok();
 
-### 5. Favicon Configuration
+    let permits = state.semaphore.available_permits();
+    let status = if db_ok { "healthy" } else { "degraded" };
+    let http_status = if db_ok { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
 
-```tsx
-// app/icon.tsx - Dynamic generation from logo SVG
-import { ImageResponse } from 'next/og'
-
-export const size = { width: 32, height: 32 }
-export const contentType = 'image/png'
-
-export default function Icon() {
-  return new ImageResponse(/* Logo SVG at small size */)
+    (http_status, Json(serde_json::json!({
+        "status": status,
+        "components": {
+            "database": { "status": if db_ok { "healthy" } else { "unhealthy" } },
+            "scan_capacity": { "available_permits": permits }
+        }
+    })))
 }
 ```
 
-Dark mode favicon support via SVG:
-```svg
-<svg xmlns="http://www.w3.org/2000/svg">
-  <style>
-    path { fill: #2563eb; }
-    @media (prefers-color-scheme: dark) {
-      path { fill: #60a5fa; }
+### 5. Graceful Shutdown (main.rs)
+
+**Current:** `axum::serve(listener, app).await.expect("Server error");`
+
+**New:**
+```rust
+use tokio::signal;
+use tokio_util::task::TaskTracker;
+
+let tracker = TaskTracker::new();
+// Pass tracker into AppState for use in ScanOrchestrator
+
+let shutdown = async {
+    let ctrl_c = signal::ctrl_c();
+    let mut sigterm = signal::unix::signal(signal::unix::SignalKind::terminate()).unwrap();
+    tokio::select! {
+        _ = ctrl_c => tracing::info!("Received SIGINT"),
+        _ = sigterm.recv() => tracing::info!("Received SIGTERM"),
     }
-  </style>
-  <path d="..." />
-</svg>
+    tracing::info!("Shutting down gracefully...");
+    tracker.close();  // Stop accepting new tasks
+    tracker.wait().await;  // Wait for in-flight tasks
+    tracing::info!("All tasks completed, shutting down");
+};
+
+axum::serve(listener, app)
+    .with_graceful_shutdown(shutdown)
+    .await
+    .expect("Server error");
 ```
 
-## Color Migration Strategy
+**ScanOrchestrator change:** Replace `tokio::spawn(future)` with `tracker.spawn(future.instrument(span))`.
 
-**Incremental approach:** Add tokens WITHOUT removing existing classes first.
+### 6. Infrastructure Changes (Ansible + Nginx + Docker)
 
-| Current Class | New Token | Usage |
-|--------------|-----------|-------|
-| `blue-600` | `brand-primary` | CTA buttons, primary links |
-| `blue-700` | `brand-primary-hover` | Hover states |
-| `gray-900` | `text-primary` | Headings |
-| `gray-500` | `text-secondary` | Body text, muted |
-| `gray-50` | `surface-secondary` | Light backgrounds |
-| `gray-200` | `border-subtle` | Borders |
-| `red-600` | `danger` | Error states |
-| `green-600` | `success` | Success states |
+**Nginx:** Protect /metrics from public access, proxy /health/ready.
+```nginx
+location /metrics {
+    allow 127.0.0.1;
+    deny all;
+    proxy_pass http://localhost:3000;
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+}
 
-**Migration order:**
-1. Add @theme tokens (non-breaking)
-2. New components use tokens exclusively
-3. Migrate existing components one-by-one
-4. Remove legacy classes after full verification
+location /health/ready {
+    proxy_pass http://localhost:3000;
+    proxy_read_timeout 5s;
+}
+```
 
-## Integration Points
+**Docker Compose:** Add STOPSIGNAL and log rotation.
+```yaml
+services:
+  app:
+    stop_signal: SIGTERM
+    stop_grace_period: 90s  # Longer than max scan duration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - LOG_FORMAT=json
+```
 
-### NEW Components
-| Component | Purpose | Dependencies |
-|-----------|---------|-------------|
-| Logo | SVG wordmark/icon | React only |
-| Header | Navigation bar | Logo, Next.js Link, usePathname |
-| Favicon | Dynamic generation | next/og ImageResponse |
+**systemd:** Extend stop timeout.
+```ini
+[Service]
+TimeoutStopSec=90
+```
 
-### MODIFIED Components
-| Component | Changes | Risk |
-|-----------|---------|------|
-| layout.tsx | Add `<Header />`, update metadata | LOW |
-| globals.css | Add `@theme` tokens | LOW (additive) |
-| page.tsx | Replace emoji icons | MEDIUM |
-| scan-form.tsx | Color token migration | MEDIUM |
-| footer.tsx | Color token migration | LOW |
-
-### NO CHANGES
-- Backend API, Database, Server actions, Nginx config
+**Ansible:** Install DO metrics agent.
+```yaml
+- name: Install DigitalOcean metrics agent
+  shell: curl -sSL https://repos.insights.digitalocean.com/install.sh | bash
+  args:
+    creates: /opt/digitalocean/bin/do-agent
+```
 
 ## Suggested Build Order
 
-1. **Design tokens in globals.css** (30 min) — Non-breaking, foundation
-2. **Logo component** (1 hr) — SVG with variants and sizes
-3. **Icon components / install Lucide** (1 hr) — Icon system setup
-4. **Header component** (1.5 hr) — Build with logo, test in isolation
-5. **Favicon generation** (30 min) — icon.tsx + apple-icon + favicon.ico
-6. **Integrate header into layout** (30 min) — Add to layout.tsx, adjust spacing
-7. **Migrate landing page** (1 hr) — Replace emojis, use tokens
-8. **Migrate scan-form** (45 min) — Color tokens
-9. **Migrate footer** (30 min) — Color tokens
-10. **Migrate grade-summary** (1 hr) — Severity color tokens
-11. **Cross-browser testing** (1 hr) — Chrome, Firefox, Safari
-12. **Accessibility audit** (1 hr) — Contrast, aria-labels, keyboard nav
+Dependencies determine order:
 
-**Total: ~10-12 hours**
+1. **Structured JSON logging** — Foundation. All other features emit logs.
+2. **Request tracing middleware** — Depends on logging. Adds correlation IDs.
+3. **Prometheus metrics endpoint** — Independent of logging but benefits from it.
+4. **Health checks** — Independent. Can be built in parallel with metrics.
+5. **Graceful shutdown** — Requires TaskTracker integration with orchestrator. Most complex.
+6. **Infrastructure (Ansible/Nginx/Docker)** — Deploy all observability together. DO metrics agent, Nginx /metrics protection, Docker log rotation.
 
-## Anti-Patterns to Avoid
-
-1. **Mixing design systems** — Don't use `bg-brand-primary border-gray-300` (inconsistent)
-2. **Logo as `<img>` tag** — Not themeable, extra request
-3. **Inline SVG in JSX** — Duplicates code, use components
-4. **Hex colors in @theme** — Use OKLch for perceptual uniformity
-5. **Over-specific tokens** — `--color-scan-form-button-bg` is too specific
-6. **Skipping a11y attributes** — Always include aria-label on SVGs
-
-## Z-Index Scale
-
-```css
-@theme {
-  --z-base: 0;
-  --z-dropdown: 1000;
-  --z-sticky: 1020;
-  --z-fixed: 1030;
-  --z-modal-backdrop: 1040;
-  --z-modal: 1050;
-  --z-tooltip: 1070;
-}
 ```
+[1] Structured Logging ──→ [2] Request Tracing ──→ [5] Graceful Shutdown
+                                                         ↑
+[3] Prometheus Metrics ─────────────────────────────────┤
+                                                         ↑
+[4] Health Checks ──────────────────────────────────────┤
+                                                         ↓
+                                                    [6] Infrastructure
+```
+
+## New vs Modified Files
+
+### New Files
+| File | Purpose |
+|------|---------|
+| `src/metrics.rs` | Prometheus metric definitions and handler |
+| `src/health.rs` | Deep health check handler |
+
+### Modified Files
+| File | Change | Risk |
+|------|--------|------|
+| `Cargo.toml` | Add prometheus, lazy_static, tokio-util; add json feature | LOW |
+| `src/main.rs` | Logging init, TraceLayer, routes, graceful shutdown | MEDIUM |
+| `src/orchestrator/worker_pool.rs` | TaskTracker, scan metrics | MEDIUM |
+| `src/api/scans.rs` | Span instrumentation | LOW |
+| `src/api/errors.rs` | Structured error fields | LOW |
+| Nginx config template | /metrics protection, /health/ready | LOW |
+| Docker Compose | STOPSIGNAL, log rotation, LOG_FORMAT | LOW |
+| systemd service | TimeoutStopSec | LOW |
+| Ansible playbook | DO metrics agent task | LOW |
 
 ## Sources
 
-- Next.js 16 Metadata API: https://nextjs.org/docs/app/api-reference/file-conventions/metadata/app-icons
-- Tailwind CSS v4 Theme: https://tailwindcss.com/docs/theme
-- OKLch Color Space: https://oklch.com
-- WCAG 2.2 Contrast: https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum
+- Axum examples (graceful shutdown): https://github.com/tokio-rs/axum/blob/main/examples/graceful-shutdown
+- tower-http TraceLayer: https://docs.rs/tower-http/latest/tower_http/trace
+- prometheus crate patterns: https://docs.rs/prometheus
+- tokio-util TaskTracker: https://docs.rs/tokio-util/latest/tokio_util/task/struct.TaskTracker.html
+- DigitalOcean monitoring: https://docs.digitalocean.com/products/monitoring/

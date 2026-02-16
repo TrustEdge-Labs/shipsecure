@@ -71,7 +71,7 @@ See: `.planning/milestones/v1.3-ROADMAP.md`
 - [x] **Phase 19: Structured JSON Logging** - Environment-driven JSON logs with structured fields (completed 2026-02-16)
 - [x] **Phase 20: Request Tracing** - Correlation IDs and request/response logging (completed 2026-02-16)
 - [x] **Phase 21: Health Checks** - Liveness and readiness endpoints with DB checks (completed 2026-02-16)
-- [ ] **Phase 22: Prometheus Metrics** - /metrics endpoint with HTTP and scan metrics
+- [x] **Phase 22: Prometheus Metrics** - /metrics endpoint with HTTP and scan metrics (completed 2026-02-16)
 - [ ] **Phase 23: Graceful Shutdown** - SIGTERM handling with scan drain coordination
 - [ ] **Phase 24: Infrastructure Integration** - Deploy observability to production
 
@@ -136,7 +136,7 @@ Plans:
   7. scanner_results_total counter tracks individual scanner success/failure with scanner and status labels
   8. rate_limit_total counter tracks rate limiting events with limiter and action labels
   9. /metrics endpoint is restricted to localhost only (external requests return 403 from Nginx)
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 22-01-PLAN.md — Metrics infrastructure, HTTP request metrics middleware, /metrics endpoint with localhost access
@@ -202,7 +202,7 @@ Phases execute in numeric order: 01-18 (complete) → 19 → 20 → 21 → 22 �
 | 19 - Structured JSON Logging | v1.4 | Complete    | 2026-02-16 | - |
 | 20 - Request Tracing | v1.4 | Complete    | 2026-02-16 | - |
 | 21 - Health Checks | v1.4 | Complete    | 2026-02-16 | - |
-| 22 - Prometheus Metrics | v1.4 | 0/? | Not started | - |
+| 22 - Prometheus Metrics | v1.4 | Complete    | 2026-02-16 | - |
 | 23 - Graceful Shutdown | v1.4 | 0/? | Not started | - |
 | 24 - Infrastructure Integration | v1.4 | 0/? | Not started | - |
 

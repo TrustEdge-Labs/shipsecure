@@ -1,4 +1,4 @@
-# TrustEdge Audit
+# ShipSecure
 
 ## What This Is
 
@@ -53,16 +53,18 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - ✓ Branded favicon (ICO + SVG with dark mode) and Apple touch icon — v1.3
 - ✓ Open Graph image with logo composite on branded background — v1.3
 
+- ✓ Structured JSON logging with tracing_subscriber JSON formatter (env-toggled) — v1.4
+- ✓ Structured fields and scan lifecycle context propagation via tracing spans — v1.4
+- ✓ Request correlation IDs via tower-http trace middleware — v1.4
+- ✓ Prometheus /metrics endpoint with request latency, scan counts, error rates, queue depth — v1.4
+- ✓ DigitalOcean metrics agent installed via Ansible for infrastructure monitoring — v1.4
+- ✓ Rich GET /health endpoint with DB connectivity, scanner availability, queue depth — v1.4
+- ✓ Graceful shutdown handling (SIGTERM/SIGINT) with in-flight scan draining — v1.4
+- ✓ Ansible playbook updates for all infrastructure changes (metrics agent, Nginx, systemd) — v1.4
+
 ### Active
 
-- [ ] Structured JSON logging with tracing_subscriber JSON formatter (env-toggled)
-- [ ] Structured fields and scan lifecycle context propagation via tracing spans
-- [ ] Request correlation IDs via tower-http trace middleware
-- [ ] Prometheus /metrics endpoint with request latency, scan counts, error rates, queue depth
-- [ ] DigitalOcean metrics agent installed via Ansible for infrastructure monitoring
-- [ ] Rich GET /health endpoint with DB connectivity, scanner availability, queue depth
-- [ ] Graceful shutdown handling (SIGTERM/SIGINT) with in-flight scan draining
-- [ ] Ansible playbook updates for all infrastructure changes (metrics agent, Nginx, systemd)
+(No active requirements — define next milestone with `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -91,6 +93,8 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **v1.1 shipped 2026-02-08:** Production live at https://shipsecure.ai, 77 files changed, 3 phases, 10 plans
 - **v1.2 shipped 2026-02-10:** Launch-ready polish, 67 files changed, 5 phases, 10 plans, 2 days
 - **v1.3 shipped 2026-02-11:** Brand identity — design tokens, logo, header, icons, favicon, 62 files changed, 6 phases, 10 plans
+- **v1.4 shipped 2026-02-16:** Observability — structured logging, request tracing, health checks, Prometheus metrics, graceful shutdown, 47 files changed, 6 phases, 11 plans
+- **Current:** ~7,877 LOC Rust, 5 milestones shipped, 24 phases, 64 plans completed
 
 ## Constraints
 
@@ -131,6 +135,16 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Professional PNG logo over generated SVG | User provided designed logo with shield, padlock, signal waves | ✓ Good — multi-color brand identity, scales from favicon to full |
 | Lucide React over Heroicons | Larger icon set, better tree-shaking | ✓ Good — consistent SVG icons inheriting theme colors |
 | Geometric shield SVG for favicon | SVG favicons must be vector, fine details illegible at 16x16 | ✓ Good — clean shield reads well at all sizes |
+| LOG_FORMAT env var for JSON/text toggle | 12-factor app standard, no recompilation, sensible defaults by build profile | ✓ Good — zero config in dev, production-ready JSON by default |
+| tracing + tracing-subscriber over log crate | Structured spans, async-aware, ecosystem standard for Axum/Tower | ✓ Good — spans propagate context through async tasks |
+| Nullable request_id column with partial index | Not all scans originate from HTTP (webhooks, future CLI) | ✓ Good — flexible without schema waste |
+| HealthCache with std::sync::Mutex | Cache ops are synchronous, no await inside lock | ✓ Good — simpler than tokio::Mutex, no deadlock risk |
+| Histogram buckets as constants not env vars | Changing buckets invalidates historical Prometheus data | ✓ Good — stable data for monitoring |
+| Status grouping (2xx/4xx/5xx) over individual codes | Reduces Prometheus label cardinality | ✓ Good — cleaner dashboards |
+| tokio-util TaskTracker over raw tokio::spawn | Tracks all background tasks for coordinated shutdown | ✓ Good — clean drain, no orphaned tasks |
+| Shutdown middleware as outermost layer | Rejects new scans with 503 while draining in-flight | ✓ Good — clean separation of concerns |
+| systemd TimeoutStopSec=95s (Docker 90s + 5s buffer) | Prevents systemd from killing Docker before graceful shutdown completes | ✓ Good — clean shutdown chain verified in production |
+| Remove app-level /metrics IP check | Docker networking breaks is_loopback(); Nginx + Docker port binding sufficient | ✓ Good — defense-in-depth at infrastructure layer |
 
 ---
-*Last updated: 2026-02-16 after v1.4 milestone start*
+*Last updated: 2026-02-16 after v1.4 milestone*

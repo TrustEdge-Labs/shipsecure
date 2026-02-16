@@ -104,3 +104,30 @@
 
 ---
 
+
+## v1.4 Observability (Shipped: 2026-02-16)
+
+**Delivered:** Production-grade observability — structured logging, request tracing, health checks, Prometheus metrics, graceful shutdown, and infrastructure monitoring
+
+**Phases completed:** 19-24 (11 plans total)
+
+**Key accomplishments:**
+- Structured JSON/text logging with environment-driven switching (LOG_FORMAT), sensible defaults, and panic hook integration
+- End-to-end request tracing with UUID correlation IDs flowing from HTTP middleware through database to scan orchestrator
+- Health check endpoints (liveness + readiness) with DB connectivity validation, scan capacity reporting, and latency-based degradation
+- Prometheus /metrics endpoint with HTTP counters, scan duration histograms, queue depth gauges, and rate limit tracking
+- Graceful shutdown via SIGTERM with TaskTracker-based scan draining, 503 rejection during shutdown, and configurable timeout
+- Production infrastructure: Nginx-secured /metrics, Docker graceful shutdown coordination (90s grace), systemd timeout (95s), DO metrics agent
+
+**Stats:**
+- 47 files changed (+1,088 / -247 lines)
+- ~7,877 lines of Rust total
+- 6 phases, 11 plans, 52 commits
+- 1 day (Feb 16, 2026)
+
+**Git range:** `docs(19)` → `docs(24-02)`
+
+**What's next:** Demand validation with real users. Then repo scanning, continuous monitoring, and subscription tiers.
+
+---
+

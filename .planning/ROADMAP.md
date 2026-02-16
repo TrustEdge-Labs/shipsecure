@@ -60,121 +60,19 @@ See: `.planning/milestones/v1.3-ROADMAP.md`
 
 </details>
 
-### 🚧 v1.4 Observability (In Progress)
+<details>
+<summary>✅ v1.4 Observability (Phases 19-24) — SHIPPED 2026-02-16</summary>
 
-**Milestone Goal:** Add production-grade observability for debugging, monitoring, and operational visibility
+- [x] Phase 19: Structured JSON Logging (2/2 plans) — Environment-driven JSON/text logging, scan lifecycle instrumentation
+- [x] Phase 20: Request Tracing (2/2 plans) — UUID correlation IDs, TraceLayer middleware, end-to-end propagation
+- [x] Phase 21: Health Checks (1/1 plan) — Liveness + readiness endpoints, DB validation, scan capacity
+- [x] Phase 22: Prometheus Metrics (2/2 plans) — HTTP counters, scan histograms, queue depth, rate limit tracking
+- [x] Phase 23: Graceful Shutdown (2/2 plans) — TaskTracker, SIGTERM handling, scan draining, 503 rejection
+- [x] Phase 24: Infrastructure Integration (2/2 plans) — Nginx /metrics security, Docker grace periods, systemd timeout, DO metrics agent
 
-**Phase Numbering:**
-- Integer phases (19-24): Planned milestone work
-- Decimal phases (19.1, 19.2): Urgent insertions (marked with INSERTED)
+See: `.planning/milestones/v1.4-ROADMAP.md`
 
-- [x] **Phase 19: Structured JSON Logging** - Environment-driven JSON logs with structured fields (completed 2026-02-16)
-- [x] **Phase 20: Request Tracing** - Correlation IDs and request/response logging (completed 2026-02-16)
-- [x] **Phase 21: Health Checks** - Liveness and readiness endpoints with DB checks (completed 2026-02-16)
-- [x] **Phase 22: Prometheus Metrics** - /metrics endpoint with HTTP and scan metrics (completed 2026-02-16)
-- [x] **Phase 23: Graceful Shutdown** - SIGTERM handling with scan drain coordination (completed 2026-02-16)
-- [x] **Phase 24: Infrastructure Integration** - Deploy observability to production (completed 2026-02-16)
-
-## Phase Details
-
-### Phase 19: Structured JSON Logging
-**Goal**: Backend emits structured JSON logs in production with scan lifecycle context
-**Depends on**: Nothing (first phase of v1.4)
-**Requirements**: LOG-01, LOG-02, LOG-03, LOG-04
-**Success Criteria** (what must be TRUE):
-  1. Backend logs to stdout in JSON format when LOG_FORMAT=json
-  2. Backend logs to stdout in human-readable text when LOG_FORMAT=text (development default)
-  3. All log events include timestamp, level, target, and span context fields
-  4. Scan lifecycle events include scan_id, target_url, tier, and scanner name in structured fields
-  5. Panic handler outputs structured JSON with backtrace when JSON logging enabled
-**Plans:** 2/2 plans complete
-
-Plans:
-- [ ] 19-01-PLAN.md — Logging foundation: deps, format switching, env filter, panic hook, startup banner
-- [ ] 19-02-PLAN.md — Scan lifecycle instrumentation: structured events in orchestrator
-
-### Phase 20: Request Tracing
-**Goal**: Every HTTP request gets traced with correlation IDs propagated to background tasks
-**Depends on**: Phase 19 (needs structured logging foundation)
-**Requirements**: TRC-01, TRC-02, TRC-03
-**Success Criteria** (what must be TRUE):
-  1. Every HTTP request receives a unique request_id via tower-http TraceLayer
-  2. Request and response logs include method, URI, status code, and latency_ms
-  3. Background scan tasks inherit request span context via .instrument()
-  4. Request_id appears in all logs associated with a single request lifecycle
-**Plans:** 2/2 plans complete
-
-Plans:
-- [ ] 20-01-PLAN.md — TraceLayer middleware, health check filtering, database migration, Scan model update
-- [ ] 20-02-PLAN.md — RequestId extension wiring through handlers, orchestrator propagation, webhook update
-
-### Phase 21: Health Checks
-**Goal**: Load balancers and monitoring systems can check service health with deep readiness validation
-**Depends on**: Phase 19 (needs logging for health check events)
-**Requirements**: HLT-01, HLT-02, HLT-03
-**Success Criteria** (what must be TRUE):
-  1. GET /health returns 200 "ok" in under 10ms (shallow liveness check)
-  2. GET /health/ready returns JSON with db_connected, scan_capacity, and status fields
-  3. GET /health/ready returns 503 when database is unreachable (tested via disconnected DB)
-  4. GET /health/ready completes in under 100ms including DB connectivity check
-**Plans:** 1/1 plans complete
-
-Plans:
-- [ ] 21-01-PLAN.md — Liveness and readiness health check endpoints with DB validation, scan capacity, cache
-
-### Phase 22: Prometheus Metrics
-**Goal**: Operational metrics exposed at /metrics endpoint for monitoring HTTP requests, scan performance, and queue depth
-**Depends on**: Phase 19 (needs logging), Phase 21 (health patterns inform metrics design)
-**Requirements**: MET-01, MET-02, MET-03, MET-04, MET-05, MET-06, MET-07, MET-08
-**Success Criteria** (what must be TRUE):
-  1. GET /metrics returns OpenMetrics format text (Prometheus can scrape)
-  2. http_requests_total counter increments with method, endpoint, and status labels
-  3. http_request_duration_seconds histogram records request latency with method and endpoint labels
-  4. scan_duration_seconds histogram records scan execution time with tier and status labels
-  5. active_scans gauge reflects current number of in-flight scans
-  6. scan_queue_depth gauge reflects number of pending scans waiting to execute
-  7. scanner_results_total counter tracks individual scanner success/failure with scanner and status labels
-  8. rate_limit_total counter tracks rate limiting events with limiter and action labels
-  9. /metrics endpoint is restricted to localhost only (external requests return 403 from Nginx)
-**Plans:** 2/2 plans complete
-
-Plans:
-- [ ] 22-01-PLAN.md — Metrics infrastructure, HTTP request metrics middleware, /metrics endpoint with localhost access
-- [ ] 22-02-PLAN.md — Scan metrics (duration, active, queue depth, scanner results) and rate limit counters
-
-### Phase 23: Graceful Shutdown
-**Goal**: Backend drains in-flight scans before exiting on SIGTERM/SIGINT to prevent data loss
-**Depends on**: Phase 19 (logging shutdown events), Phase 22 (metrics inform shutdown behavior)
-**Requirements**: SHD-01, SHD-02, SHD-03
-**Success Criteria** (what must be TRUE):
-  1. Backend receives SIGTERM and logs graceful shutdown initiation
-  2. In-flight scans complete before process exits (tested via docker stop during active scan)
-  3. Background tasks tracked via TaskTracker instead of fire-and-forget tokio::spawn
-  4. Shutdown timeout respects configurable grace period (default 90s) before force termination
-  5. New scan requests receive 503 Service Unavailable during shutdown drain period
-**Plans:** 2/2 plans complete
-
-Plans:
-- [ ] 23-01-PLAN.md — TaskTracker and CancellationToken integration in ScanOrchestrator
-- [ ] 23-02-PLAN.md — Signal handler, 503 middleware, health shutdown awareness, periodic logging, coordinated shutdown
-
-### Phase 24: Infrastructure Integration
-**Goal**: All observability components deployed to production with security hardening and monitoring agent
-**Depends on**: Phase 19-23 (all code changes complete)
-**Requirements**: INF-01, INF-02, INF-03, INF-04, INF-05
-**Success Criteria** (what must be TRUE):
-  1. DigitalOcean metrics agent installed and reporting infrastructure metrics (CPU, memory, disk)
-  2. Nginx restricts /metrics endpoint to 127.0.0.1 (external curl returns 403)
-  3. Docker Compose sets STOPSIGNAL SIGTERM and stop_grace_period 90s
-  4. Docker Compose configures JSON log driver with rotation (max-size 10m, max-file 3)
-  5. systemd service sets TimeoutStopSec=95s to accommodate graceful shutdown
-  6. Production environment sets LOG_FORMAT=json
-  7. All observability features verified working in production (logs, metrics, health, shutdown)
-**Plans:** 2 plans
-
-Plans:
-- [ ] 24-01-PLAN.md — Infrastructure configuration: Ansible templates, metrics agent, playbook imports
-- [ ] 24-02-PLAN.md — Production deployment and verification (checkpoint)
+</details>
 
 ## Progress
 
@@ -201,11 +99,11 @@ Phases execute in numeric order: 01-18 (complete) → 19 → 20 → 21 → 22 �
 | 16 - Header & Navigation | v1.3 | 1/1 | Complete | 2026-02-11 |
 | 17 - Icon System & Migration | v1.3 | 1/1 | Complete | 2026-02-11 |
 | 18 - Favicon & OG Image | v1.3 | 2/2 | Complete | 2026-02-11 |
-| 19 - Structured JSON Logging | v1.4 | Complete    | 2026-02-16 | - |
-| 20 - Request Tracing | v1.4 | Complete    | 2026-02-16 | - |
-| 21 - Health Checks | v1.4 | Complete    | 2026-02-16 | - |
-| 22 - Prometheus Metrics | v1.4 | Complete    | 2026-02-16 | - |
-| 23 - Graceful Shutdown | v1.4 | Complete    | 2026-02-16 | - |
+| 19 - Structured JSON Logging | v1.4 | 2/2 | Complete | 2026-02-16 |
+| 20 - Request Tracing | v1.4 | 2/2 | Complete | 2026-02-16 |
+| 21 - Health Checks | v1.4 | 1/1 | Complete | 2026-02-16 |
+| 22 - Prometheus Metrics | v1.4 | 2/2 | Complete | 2026-02-16 |
+| 23 - Graceful Shutdown | v1.4 | 2/2 | Complete | 2026-02-16 |
 | 24 - Infrastructure Integration | v1.4 | 2/2 | Complete | 2026-02-16 |
 
 ---

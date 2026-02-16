@@ -116,6 +116,42 @@ async fn reject_scans_during_shutdown(
     next.run(request).await
 }
 
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {
+            tracing::info!("Received SIGINT, initiating graceful shutdown");
+        },
+        _ = terminate => {
+            tracing::info!("Received SIGTERM, initiating graceful shutdown");
+        },
+    }
+}
+
+fn parse_shutdown_timeout() -> Duration {
+    let timeout_secs: u64 = std::env::var("SHUTDOWN_TIMEOUT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(90);
+    Duration::from_secs(timeout_secs)
+}
+
 #[tokio::main]
 async fn main() {
     // Load .env
@@ -174,6 +210,9 @@ async fn main() {
         .expect("MAX_CONCURRENT_SCANS must be set")
         .parse()
         .expect("MAX_CONCURRENT_SCANS must be a valid number");
+
+    // Parse shutdown timeout configuration
+    let shutdown_timeout = parse_shutdown_timeout();
 
     // Create shutdown coordination primitives
     let task_tracker = TaskTracker::new();
@@ -256,6 +295,7 @@ async fn main() {
         .layer(cors)
         .layer(trace_layer)
         .layer(middleware::from_fn(inject_request_id))
+        .layer(axum::middleware::from_fn_with_state(state.clone(), reject_scans_during_shutdown))
         .with_state(state)
         // Health checks and metrics — merged AFTER layers, bypass tracing
         .merge(health_router)
@@ -269,7 +309,74 @@ async fn main() {
         .await
         .expect("Failed to bind");
 
-    tracing::info!(addr = %addr, "Listening");
+    // Log startup with shutdown config
+    tracing::info!(
+        addr = %addr,
+        shutdown_timeout_seconds = shutdown_timeout.as_secs(),
+        "Listening"
+    );
 
-    axum::serve(listener, app).await.expect("Server error");
+    // Serve with graceful shutdown
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .expect("Server error");
+
+    // -- At this point, shutdown signal was received and HTTP server stopped accepting --
+
+    // Initiate orchestrator shutdown (close tracker + cancel token)
+    tracing::info!(
+        timeout_seconds = shutdown_timeout.as_secs(),
+        "Graceful shutdown initiated, draining in-flight scans"
+    );
+    orchestrator.initiate_shutdown();
+
+    // Periodic logging + wait with timeout
+    let start = std::time::Instant::now();
+    let log_interval = Duration::from_secs(5);
+
+    let drain_future = orchestrator.wait_for_drain();
+    tokio::pin!(drain_future);
+
+    loop {
+        let remaining = shutdown_timeout.checked_sub(start.elapsed()).unwrap_or(Duration::ZERO);
+        if remaining.is_zero() {
+            // Timeout expired
+            let (active, _max) = orchestrator.get_capacity();
+            tracing::warn!(
+                active_scans = active,
+                elapsed_seconds = start.elapsed().as_secs(),
+                timeout_seconds = shutdown_timeout.as_secs(),
+                "Shutdown forced: {} scans remaining after {}s",
+                active,
+                start.elapsed().as_secs()
+            );
+            break;
+        }
+
+        // Wait for either: all tasks done, or next log interval
+        let wait_duration = remaining.min(log_interval);
+        tokio::select! {
+            _ = &mut drain_future => {
+                // All tasks completed gracefully -- no summary log per user decision
+                break;
+            }
+            _ = tokio::time::sleep(wait_duration) => {
+                // Log progress
+                let (active, _max) = orchestrator.get_capacity();
+                if active == 0 {
+                    break; // Clean exit
+                }
+                tracing::info!(
+                    active_scans = active,
+                    elapsed_seconds = start.elapsed().as_secs(),
+                    timeout_seconds = shutdown_timeout.as_secs(),
+                    "shutdown_progress"
+                );
+            }
+        }
+    }
+
+    // Exit with code 0 -- per user decision, clean exit prevents systemd restart
+    std::process::exit(0);
 }

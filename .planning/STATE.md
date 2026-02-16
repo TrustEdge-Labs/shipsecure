@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Phase 19 - Structured JSON Logging (v1.4 Observability)
+**Current focus:** Phase 20 - Request Tracing (v1.4 Observability)
 
 ## Current Position
 
-Phase: 19 of 24 (Structured JSON Logging)
-Plan: 2 of 2 complete
-Status: Complete
-Last activity: 2026-02-16 — Completed 19-02 (Scan Lifecycle Logging)
+Phase: 20 of 24 (Request Tracing)
+Plan: 1 of 2 complete
+Status: In Progress
+Last activity: 2026-02-16 — Completed 20-01 (Request Tracing Infrastructure)
 
 Progress: [████████████████████░░░░] 79% (19 of 24 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 55
+- Total plans completed: 56
 - Average duration: ~30 min
 - Total execution time: ~28 hours
 
@@ -31,7 +31,7 @@ Progress: [████████████████████░░░
 | v1.1 Deployment | 5-7 | 10 | 3 |
 | v1.2 Launch | 8-12 | 10 | 2 |
 | v1.3 Brand | 13-18 | 10 | 7 |
-| v1.4 Observability | 19-24 | 2 | - |
+| v1.4 Observability | 19-24 | 3 | - |
 
 **Recent Trend:**
 - v1.3 shipped with design token system, logo, header, icons, favicon
@@ -41,6 +41,7 @@ Progress: [████████████████████░░░
 *Updated: 2026-02-16*
 | Phase 19 P01 | 3 | 1 tasks | 4 files |
 | Phase 19 P02 | 2 | 1 tasks | 1 files |
+| Phase 20 P01 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -61,6 +62,12 @@ Recent decisions affecting v1.4:
 - Text mode with no ANSI colors: Cleaner output for log aggregation tools
 - tracing-panic for panic hook: Battle-tested integration with tracing ecosystem
 
+**Phase 20-01 decisions:**
+- Query parameters stripped from logged URIs (path only): Prevents sensitive data in logs
+- Request ID internal only (no X-Request-Id response header): Simplicity, no client impact
+- Nullable request_id column with partial index: Not all scans originate from HTTP requests
+- Health check routes bypass tracing: Placed after .layer() to avoid noise in logs
+
 ### Pending Todos
 
 None yet.
@@ -77,5 +84,5 @@ None yet. v1.4 requirements validated, research complete, roadmap created.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 19-02-PLAN.md (Scan Lifecycle Logging) - Phase 19 Complete
-Resume file: None (ready to continue with Phase 20)
+Stopped at: Completed 20-01-PLAN.md (Request Tracing Infrastructure)
+Resume file: None (ready to continue with 20-02)

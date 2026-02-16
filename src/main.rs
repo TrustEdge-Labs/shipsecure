@@ -4,8 +4,11 @@ use axum::Router;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::TraceLayer;
+use tracing::Span;
 use tracing_subscriber::EnvFilter;
 use tracing_panic::panic_hook;
 
@@ -147,9 +150,34 @@ async fn main() {
         .allow_methods([Method::GET, Method::POST])
         .allow_headers(Any);
 
+    // TraceLayer middleware for request tracing
+    let trace_layer = TraceLayer::new_for_http()
+        .make_span_with(|request: &axum::http::Request<axum::body::Body>| {
+            let request_id = uuid::Uuid::new_v4();
+            tracing::info_span!(
+                "http_request",
+                request_id = %request_id,
+                method = %request.method(),
+                uri = %request.uri().path(),
+                status_code = tracing::field::Empty,
+                latency_ms = tracing::field::Empty,
+            )
+        })
+        .on_response(|response: &axum::http::Response<_>, latency: Duration, span: &Span| {
+            let status = response.status();
+            let latency_ms = latency.as_millis() as u64;
+            span.record("status_code", status.as_u16());
+            span.record("latency_ms", latency_ms);
+            if status.is_client_error() || status.is_server_error() {
+                tracing::info!("http_response");
+            } else {
+                tracing::debug!("http_response");
+            }
+        });
+
     // Router
     let app = Router::new()
-        .route("/health", get(|| async { "ok" }))
+        // API routes — these get traced
         .route("/api/v1/scans", post(scans::create_scan))
         .route("/api/v1/scans/{id}", get(scans::get_scan))
         .route("/api/v1/results/{token}", get(results::get_results_by_token))
@@ -160,8 +188,11 @@ async fn main() {
         .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
         .route("/api/v1/checkout", post(checkout::create_checkout))
         .route("/api/v1/webhooks/stripe", post(webhooks::handle_stripe_webhook))
+        .layer(trace_layer)
         .layer(cors)
         .with_state(state)
+        // Health checks — added AFTER layer, bypass tracing
+        .route("/health", get(|| async { "ok" }))
         .into_make_service_with_connect_info::<SocketAddr>();
 
     // Bind and serve

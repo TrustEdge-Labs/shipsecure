@@ -1,6 +1,7 @@
 use axum::extract::{ConnectInfo, Path, State, Extension};
 use axum::http::StatusCode;
 use axum::Json;
+use metrics_exporter_prometheus::PrometheusHandle;
 use serde_json::json;
 use sqlx::PgPool;
 use std::net::SocketAddr;
@@ -18,6 +19,7 @@ pub struct AppState {
     pub pool: PgPool,
     pub orchestrator: Arc<ScanOrchestrator>,
     pub health_cache: HealthCache,
+    pub metrics_handle: PrometheusHandle,
 }
 
 /// POST /api/v1/scans - Create a new scan

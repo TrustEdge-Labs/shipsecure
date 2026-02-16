@@ -1,6 +1,7 @@
 pub mod api;
 pub mod db;
 pub mod email;
+pub mod metrics;
 pub mod models;
 pub mod orchestrator;
 pub mod pdf;

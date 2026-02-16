@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Phase 20 - Request Tracing (v1.4 Observability)
+**Current focus:** Phase 21 - Health Checks (v1.4 Observability)
 
 ## Current Position
 
-Phase: 20 of 24 (Request Tracing)
-Plan: 2 of 2 complete
+Phase: 21 of 24 (Health Checks)
+Plan: 1 of 1 complete
 Status: Complete
-Last activity: 2026-02-16 — Completed 20-02 (Request ID Propagation)
+Last activity: 2026-02-16 — Completed 21-01 (Health Check Endpoints)
 
-Progress: [████████████████████░░░░] 83% (20 of 24 phases complete)
+Progress: [████████████████████░░░░] 87% (21 of 24 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 57
+- Total plans completed: 58
 - Average duration: ~30 min
 - Total execution time: ~28 hours
 
@@ -31,7 +31,7 @@ Progress: [████████████████████░░░
 | v1.1 Deployment | 5-7 | 10 | 3 |
 | v1.2 Launch | 8-12 | 10 | 2 |
 | v1.3 Brand | 13-18 | 10 | 7 |
-| v1.4 Observability | 19-24 | 4 | - |
+| v1.4 Observability | 19-24 | 5 | - |
 
 **Recent Trend:**
 - v1.3 shipped with design token system, logo, header, icons, favicon
@@ -43,6 +43,7 @@ Progress: [████████████████████░░░
 | Phase 19 P02 | 2 | 1 tasks | 1 files |
 | Phase 20 P01 | 2 | 2 tasks | 4 files |
 | Phase 20 P02 | 2 | 2 tasks | 5 files |
+| Phase 21 P01 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,9 @@ Recent decisions affecting v1.4:
 - Health check routes bypass tracing: Placed after .layer() to avoid noise in logs
 - [Phase 20]: RequestId defined in lib.rs for library-wide access (not main.rs binary crate)
 - [Phase 20]: Shared field approach for request_id in scan spans (not parent-child span linking)
+- [Phase 21]: HealthCache field in AppState: Simplest approach for state sharing - avoids nested state extraction complexity
+- [Phase 21]: Separate health_router with .merge(): Enables health routes to bypass tracing layers while maintaining state access
+- [Phase 21]: std::sync::Mutex over tokio::sync::Mutex: Cache operations are synchronous and non-blocking - no await points inside lock
 
 ### Pending Todos
 
@@ -87,5 +91,5 @@ None yet. v1.4 requirements validated, research complete, roadmap created.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 21 context gathered
-Resume file: .planning/phases/21-health-checks/21-CONTEXT.md
+Stopped at: Completed 21-01-PLAN.md
+Resume file: .planning/phases/21-health-checks/21-01-SUMMARY.md

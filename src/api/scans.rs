@@ -1,4 +1,4 @@
-use axum::extract::{ConnectInfo, Path, State};
+use axum::extract::{ConnectInfo, Path, State, Extension};
 use axum::http::StatusCode;
 use axum::Json;
 use serde_json::json;
@@ -10,7 +10,7 @@ use uuid::Uuid;
 use crate::api::errors::ApiError;
 use crate::models::{CreateScanRequest, Severity};
 use crate::orchestrator::ScanOrchestrator;
-use crate::{db, rate_limit, ssrf};
+use crate::{db, rate_limit, ssrf, RequestId};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -22,6 +22,7 @@ pub struct AppState {
 pub async fn create_scan(
     State(state): State<AppState>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    Extension(request_id): Extension<RequestId>,
     Json(req): Json<CreateScanRequest>,
 ) -> Result<(StatusCode, Json<serde_json::Value>), ApiError> {
     // 1. Validate input
@@ -50,12 +51,12 @@ pub async fn create_scan(
         &validated_url,
         &req.email,
         Some(&client_ip),
-        None, // Temporary: Plan 02 will extract request_id from tracing span
+        Some(request_id.0),
     )
     .await?;
 
     // 5. Spawn scan execution (fire-and-forget)
-    state.orchestrator.spawn_scan(scan.id, scan.target_url.clone());
+    state.orchestrator.spawn_scan(scan.id, scan.target_url.clone(), Some(request_id.0));
 
     // 6. Return 201 Created
     let response = json!({

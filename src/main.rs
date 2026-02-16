@@ -1,4 +1,5 @@
 use axum::http::Method;
+use axum::middleware;
 use axum::routing::{get, post};
 use axum::Router;
 use sqlx::postgres::PgPoolOptions;
@@ -16,6 +17,7 @@ use tracing_panic::panic_hook;
 use trustedge_audit::api::scans::{self, AppState};
 use trustedge_audit::api::{checkout, results, stats, webhooks};
 use trustedge_audit::orchestrator::ScanOrchestrator;
+use trustedge_audit::RequestId;
 
 fn validate_required_env_vars(vars: &[&str]) -> Result<(), String> {
     let mut missing = Vec::new();
@@ -77,6 +79,15 @@ fn init_logging() -> (String, String) {
         if log_format == "json" { "json".to_string() } else { "text".to_string() },
         filter_description
     )
+}
+
+async fn inject_request_id(
+    mut request: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let request_id = uuid::Uuid::new_v4();
+    request.extensions_mut().insert(RequestId(request_id));
+    next.run(request).await
 }
 
 #[tokio::main]
@@ -153,7 +164,10 @@ async fn main() {
     // TraceLayer middleware for request tracing
     let trace_layer = TraceLayer::new_for_http()
         .make_span_with(|request: &axum::http::Request<axum::body::Body>| {
-            let request_id = uuid::Uuid::new_v4();
+            let request_id = request.extensions()
+                .get::<RequestId>()
+                .map(|r| r.0)
+                .unwrap_or_else(uuid::Uuid::new_v4);
             tracing::info_span!(
                 "http_request",
                 request_id = %request_id,
@@ -188,8 +202,9 @@ async fn main() {
         .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
         .route("/api/v1/checkout", post(checkout::create_checkout))
         .route("/api/v1/webhooks/stripe", post(webhooks::handle_stripe_webhook))
-        .layer(trace_layer)
         .layer(cors)
+        .layer(trace_layer)
+        .layer(middleware::from_fn(inject_request_id))
         .with_state(state)
         // Health checks — added AFTER layer, bypass tracing
         .route("/health", get(|| async { "ok" }))

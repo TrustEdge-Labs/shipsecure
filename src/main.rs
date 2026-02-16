@@ -15,7 +15,7 @@ use tracing_panic::panic_hook;
 
 // Import from lib
 use trustedge_audit::api::scans::{self, AppState};
-use trustedge_audit::api::{checkout, results, stats, webhooks};
+use trustedge_audit::api::{checkout, health, results, stats, webhooks};
 use trustedge_audit::orchestrator::ScanOrchestrator;
 use trustedge_audit::RequestId;
 
@@ -149,10 +149,14 @@ async fn main() {
     // Create orchestrator with configurable concurrency
     let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), max_concurrent));
 
+    // Create health cache
+    let health_cache = health::HealthCache::new();
+
     // App state
     let state = AppState {
         pool: pool.clone(),
         orchestrator,
+        health_cache,
     };
 
     // CORS middleware for frontend communication
@@ -189,6 +193,12 @@ async fn main() {
             }
         });
 
+    // Health check router — separate from traced routes
+    let health_router = Router::new()
+        .route("/health", get(health::health_liveness))
+        .route("/health/ready", get(health::health_readiness))
+        .with_state(state.clone());
+
     // Router
     let app = Router::new()
         // API routes — these get traced
@@ -206,8 +216,8 @@ async fn main() {
         .layer(trace_layer)
         .layer(middleware::from_fn(inject_request_id))
         .with_state(state)
-        // Health checks — added AFTER layer, bypass tracing
-        .route("/health", get(|| async { "ok" }))
+        // Health checks — merged AFTER layers, bypass tracing
+        .merge(health_router)
         .into_make_service_with_connect_info::<SocketAddr>();
 
     // Bind and serve

@@ -4,3 +4,4 @@ pub mod results;
 pub mod stats;
 pub mod checkout;
 pub mod webhooks;
+pub mod health;

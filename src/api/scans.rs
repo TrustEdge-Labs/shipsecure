@@ -8,6 +8,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::api::errors::ApiError;
+use crate::api::health::HealthCache;
 use crate::models::{CreateScanRequest, Severity};
 use crate::orchestrator::ScanOrchestrator;
 use crate::{db, rate_limit, ssrf, RequestId};
@@ -16,6 +17,7 @@ use crate::{db, rate_limit, ssrf, RequestId};
 pub struct AppState {
     pub pool: PgPool,
     pub orchestrator: Arc<ScanOrchestrator>,
+    pub health_cache: HealthCache,
 }
 
 /// POST /api/v1/scans - Create a new scan

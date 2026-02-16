@@ -10,17 +10,17 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 19 of 24 (Structured JSON Logging)
-Plan: Ready to plan phase 19
-Status: Ready to plan
-Last activity: 2026-02-16 — v1.4 Observability roadmap created
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-02-16 — Completed 19-01 (Structured Logging Foundation)
 
 Progress: [███████████████████░░░░░] 75% (18 of 24 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 53
-- Average duration: ~32 min
+- Total plans completed: 54
+- Average duration: ~31 min
 - Total execution time: ~28 hours
 
 **By Milestone:**
@@ -31,7 +31,7 @@ Progress: [███████████████████░░░░
 | v1.1 Deployment | 5-7 | 10 | 3 |
 | v1.2 Launch | 8-12 | 10 | 2 |
 | v1.3 Brand | 13-18 | 10 | 7 |
-| v1.4 Observability | 19-24 | 0 | - |
+| v1.4 Observability | 19-24 | 1 | - |
 
 **Recent Trend:**
 - v1.3 shipped with design token system, logo, header, icons, favicon
@@ -39,6 +39,7 @@ Progress: [███████████████████░░░░
 - Ready for v1.4 Observability
 
 *Updated: 2026-02-16*
+| Phase 19 P01 | 3 | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -51,6 +52,13 @@ Recent decisions affecting v1.4:
 - DigitalOcean deployment (v1.1): Full control for observability infrastructure
 - Ansible automation (v1.1): Infrastructure as code for metrics agent deployment
 - CI/CD auto-deploy (v1.2): Pipeline integration for observability config changes
+
+**Phase 19-01 decisions:**
+- LOG_FORMAT env var for JSON/text toggle (not feature flags): Environment variables are standard for 12-factor apps, no recompilation needed
+- Sensible defaults based on build profile: Zero-config startup for development, production-ready by default
+- RUST_LOG optional with complete override: Developer experience balanced with power user control
+- Text mode with no ANSI colors: Cleaner output for log aggregation tools
+- tracing-panic for panic hook: Battle-tested integration with tracing ecosystem
 
 ### Pending Todos
 
@@ -68,5 +76,5 @@ None yet. v1.4 requirements validated, research complete, roadmap created.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: v1.4 Observability roadmap created (Phases 19-24), 100% requirement coverage validated
-Resume file: None (ready to start phase planning)
+Stopped at: Completed 19-01-PLAN.md (Structured Logging Foundation)
+Resume file: None (ready to continue with 19-02)

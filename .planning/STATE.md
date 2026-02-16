@@ -87,5 +87,5 @@ None yet. v1.4 requirements validated, research complete, roadmap created.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 20-02-PLAN.md (Request ID Propagation) - Phase 20 complete
-Resume file: None (ready to continue with phase 21)
+Stopped at: Phase 21 context gathered
+Resume file: .planning/phases/21-health-checks/21-CONTEXT.md

@@ -109,3 +109,6 @@
 
     - name: Import systemd service tasks
       import_tasks: ../tasks/systemd.yml
+
+    - name: Import metrics agent tasks
+      import_tasks: ../tasks/metrics-agent.yml

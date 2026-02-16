@@ -1,0 +1,29 @@
+---
+# DigitalOcean metrics agent installation
+# Reports CPU, memory, disk, and network metrics to DO control panel
+# Phase 24: INF-01
+
+- name: Check if DigitalOcean metrics agent is already installed
+  systemd:
+    name: do-agent
+  register: do_agent_check
+  failed_when: false
+  changed_when: false
+
+- name: Install DigitalOcean metrics agent
+  shell: curl -sSL https://repos.insights.digitalocean.com/install.sh | bash
+  args:
+    creates: /etc/systemd/system/do-agent.service
+  when: do_agent_check.status.ActiveState is not defined or do_agent_check.status.ActiveState != "active"
+
+- name: Ensure metrics agent is running and enabled
+  systemd:
+    name: do-agent
+    state: started
+    enabled: yes
+
+- name: Verify metrics agent is active
+  command: systemctl is-active do-agent
+  register: agent_active
+  changed_when: false
+  failed_when: agent_active.rc != 0

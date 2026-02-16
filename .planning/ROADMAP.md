@@ -152,10 +152,11 @@ Plans:
   3. Background tasks tracked via TaskTracker instead of fire-and-forget tokio::spawn
   4. Shutdown timeout respects configurable grace period (default 90s) before force termination
   5. New scan requests receive 503 Service Unavailable during shutdown drain period
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 23-01: TBD
+- [ ] 23-01-PLAN.md — TaskTracker and CancellationToken integration in ScanOrchestrator
+- [ ] 23-02-PLAN.md — Signal handler, 503 middleware, health shutdown awareness, periodic logging, coordinated shutdown
 
 ### Phase 24: Infrastructure Integration
 **Goal**: All observability components deployed to production with security hardening and monitoring agent
@@ -203,7 +204,7 @@ Phases execute in numeric order: 01-18 (complete) → 19 → 20 → 21 → 22 �
 | 20 - Request Tracing | v1.4 | Complete    | 2026-02-16 | - |
 | 21 - Health Checks | v1.4 | Complete    | 2026-02-16 | - |
 | 22 - Prometheus Metrics | v1.4 | Complete    | 2026-02-16 | - |
-| 23 - Graceful Shutdown | v1.4 | 0/? | Not started | - |
+| 23 - Graceful Shutdown | v1.4 | 0/2 | Not started | - |
 | 24 - Infrastructure Integration | v1.4 | 0/? | Not started | - |
 
 ---

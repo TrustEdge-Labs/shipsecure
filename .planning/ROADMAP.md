@@ -102,10 +102,11 @@ Plans:
   2. Request and response logs include method, URI, status code, and latency_ms
   3. Background scan tasks inherit request span context via .instrument()
   4. Request_id appears in all logs associated with a single request lifecycle
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 20-01: TBD
+- [ ] 20-01-PLAN.md — TraceLayer middleware, health check filtering, database migration, Scan model update
+- [ ] 20-02-PLAN.md — RequestId extension wiring through handlers, orchestrator propagation, webhook update
 
 ### Phase 21: Health Checks
 **Goal**: Load balancers and monitoring systems can check service health with deep readiness validation

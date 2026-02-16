@@ -44,6 +44,7 @@ struct ScannerResult {
 pub struct ScanOrchestrator {
     pool: PgPool,
     semaphore: Arc<Semaphore>,
+    max_concurrent: usize,
     max_scanner_timeout: Duration,
 }
 
@@ -57,8 +58,17 @@ impl ScanOrchestrator {
         Self {
             pool,
             semaphore: Arc::new(Semaphore::new(max_concurrent)),
+            max_concurrent,
             max_scanner_timeout: Duration::from_secs(60),
         }
+    }
+
+    /// Returns (active_scans, max_concurrent) for health check reporting.
+    /// Uses Semaphore::available_permits() for non-blocking capacity check.
+    pub fn get_capacity(&self) -> (usize, usize) {
+        let available = self.semaphore.available_permits();
+        let active = self.max_concurrent - available;
+        (active, self.max_concurrent)
     }
 
     /// Spawn a scan task in the background (fire-and-forget)

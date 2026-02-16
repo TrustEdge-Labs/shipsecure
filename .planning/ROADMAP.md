@@ -87,10 +87,11 @@ See: `.planning/milestones/v1.3-ROADMAP.md`
   3. All log events include timestamp, level, target, and span context fields
   4. Scan lifecycle events include scan_id, target_url, tier, and scanner name in structured fields
   5. Panic handler outputs structured JSON with backtrace when JSON logging enabled
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 19-01: TBD
+- [ ] 19-01-PLAN.md — Logging foundation: deps, format switching, env filter, panic hook, startup banner
+- [ ] 19-02-PLAN.md — Scan lifecycle instrumentation: structured events in orchestrator
 
 ### Phase 20: Request Tracing
 **Goal**: Every HTTP request gets traced with correlation IDs propagated to background tasks
@@ -196,7 +197,7 @@ Phases execute in numeric order: 01-18 (complete) → 19 → 20 → 21 → 22 �
 | 16 - Header & Navigation | v1.3 | 1/1 | Complete | 2026-02-11 |
 | 17 - Icon System & Migration | v1.3 | 1/1 | Complete | 2026-02-11 |
 | 18 - Favicon & OG Image | v1.3 | 2/2 | Complete | 2026-02-11 |
-| 19 - Structured JSON Logging | v1.4 | 0/? | Not started | - |
+| 19 - Structured JSON Logging | v1.4 | 0/2 | Planning complete | - |
 | 20 - Request Tracing | v1.4 | 0/? | Not started | - |
 | 21 - Health Checks | v1.4 | 0/? | Not started | - |
 | 22 - Prometheus Metrics | v1.4 | 0/? | Not started | - |

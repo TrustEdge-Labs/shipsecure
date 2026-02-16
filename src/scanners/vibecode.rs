@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 /// Scan for vibe-code specific vulnerabilities using custom Nuclei templates
 ///
-/// This scanner is TrustEdge's differentiator - it runs framework-aware templates
+/// This scanner is ShipSecure's differentiator - it runs framework-aware templates
 /// that catch vulnerabilities specific to AI-generated applications (vibe-coded apps).
 ///
 /// # Arguments
@@ -121,7 +121,7 @@ pub async fn scan_vibecode(
 /// Get the templates directory path
 fn get_templates_dir() -> PathBuf {
     // Try environment variable first
-    if let Ok(dir) = std::env::var("TRUSTEDGE_TEMPLATES_DIR") {
+    if let Ok(dir) = std::env::var("SHIPSECURE_TEMPLATES_DIR") {
         return PathBuf::from(dir);
     }
 
@@ -421,12 +421,12 @@ mod tests {
     #[test]
     fn test_templates_dir_from_env() {
         unsafe {
-            std::env::set_var("TRUSTEDGE_TEMPLATES_DIR", "/custom/path");
+            std::env::set_var("SHIPSECURE_TEMPLATES_DIR", "/custom/path");
         }
         let dir = get_templates_dir();
         assert_eq!(dir, PathBuf::from("/custom/path"));
         unsafe {
-            std::env::remove_var("TRUSTEDGE_TEMPLATES_DIR");
+            std::env::remove_var("SHIPSECURE_TEMPLATES_DIR");
         }
     }
 }

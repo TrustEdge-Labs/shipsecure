@@ -2,7 +2,7 @@ id: firebase-permissive-rules
 
 info:
   name: Firebase Permissive Security Rules
-  author: trustedge-audit
+  author: shipsecure
   severity: critical
   description: |
     Detects Firebase Realtime Database instances with overly permissive security rules

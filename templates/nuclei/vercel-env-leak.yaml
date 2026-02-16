@@ -2,7 +2,7 @@ id: vercel-env-leak
 
 info:
   name: Vercel Environment Variable Leak
-  author: trustedge-audit
+  author: shipsecure
   severity: low
   description: |
     Detects Vercel system environment variables exposed in client-side bundles.

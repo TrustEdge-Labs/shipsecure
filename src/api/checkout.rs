@@ -42,7 +42,7 @@ pub async fn create_checkout(
         if paid_audit.status == "completed" {
             return Err(ApiError::Custom {
                 status: StatusCode::CONFLICT,
-                error_type: "https://trustedge.dev/errors/already-purchased".to_string(),
+                error_type: "https://shipsecure.ai/errors/already-purchased".to_string(),
                 title: "Paid Audit Already Purchased".to_string(),
                 detail: "A paid audit has already been purchased for this scan.".to_string(),
             });

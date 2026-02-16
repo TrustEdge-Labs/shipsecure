@@ -28,8 +28,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/trustedge-labs/trustedge-backend:latest
-            ${{ env.REGISTRY }}/trustedge-labs/trustedge-backend:${{ github.sha }}
+            ${{ env.REGISTRY }}/trustedge-labs/shipsecure-backend:latest
+            ${{ env.REGISTRY }}/trustedge-labs/shipsecure-backend:${{ github.sha }}
 
   build-frontend:
     runs-on: ubuntu-latest
@@ -51,8 +51,8 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/trustedge-labs/trustedge-frontend:latest
-            ${{ env.REGISTRY }}/trustedge-labs/trustedge-frontend:${{ github.sha }}
+            ${{ env.REGISTRY }}/trustedge-labs/shipsecure-frontend:latest
+            ${{ env.REGISTRY }}/trustedge-labs/shipsecure-frontend:${{ github.sha }}
 
   deploy:
     needs: [build-backend, build-frontend]
@@ -66,6 +66,6 @@ jobs:
           port: 2222
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/trustedge
+            cd /opt/shipsecure
             docker compose pull
             docker compose up -d

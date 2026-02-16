@@ -4,22 +4,22 @@
 
 - name: Deploy systemd service unit
   template:
-    src: ../templates/trustedge.service.j2
-    dest: /etc/systemd/system/trustedge.service
+    src: ../templates/shipsecure.service.j2
+    dest: /etc/systemd/system/shipsecure.service
     mode: '0644'
 
 - name: Reload systemd daemon
   systemd:
     daemon_reload: yes
 
-- name: Enable TrustEdge service
+- name: Enable ShipSecure service
   systemd:
-    name: trustedge
+    name: shipsecure
     enabled: yes
 
-- name: Start TrustEdge service
+- name: Start ShipSecure service
   systemd:
-    name: trustedge
+    name: shipsecure
     state: started
 
 - name: Wait for backend health endpoint
@@ -41,5 +41,5 @@
   until: frontend_check.status == 200
 
 - name: Display service status
-  command: systemctl status trustedge
+  command: systemctl status shipsecure
   changed_when: false

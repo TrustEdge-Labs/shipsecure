@@ -31,8 +31,8 @@
 
 - name: Deploy full HTTPS Nginx config
   template:
-    src: ../templates/trustedge.nginx.conf.j2
-    dest: /etc/nginx/sites-available/trustedge
+    src: ../templates/shipsecure.nginx.conf.j2
+    dest: /etc/nginx/sites-available/shipsecure
     mode: '0644'
 
 - name: Test Nginx configuration

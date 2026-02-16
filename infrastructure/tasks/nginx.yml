@@ -28,17 +28,17 @@
           }
 
           location / {
-              return 200 'TrustEdge Audit — waiting for SSL certificate';
+              return 200 'ShipSecure — waiting for SSL certificate';
               add_header Content-Type text/plain;
           }
       }
-    dest: /etc/nginx/sites-available/trustedge
+    dest: /etc/nginx/sites-available/shipsecure
     mode: '0644'
 
 - name: Enable site via symlink
   file:
-    src: /etc/nginx/sites-available/trustedge
-    dest: /etc/nginx/sites-enabled/trustedge
+    src: /etc/nginx/sites-available/shipsecure
+    dest: /etc/nginx/sites-enabled/shipsecure
     state: link
 
 - name: Remove default Nginx site

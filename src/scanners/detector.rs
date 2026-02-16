@@ -40,7 +40,7 @@ pub async fn detect_stack(target_url: &str) -> Result<DetectionResult, ScannerEr
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::limited(10))
-        .user_agent("TrustEdge-Scanner/0.1")
+        .user_agent("ShipSecure-Scanner/1.0")
         .build()
         .map_err(|e| ScannerError::Other(format!("Failed to build client: {}", e)))?;
 

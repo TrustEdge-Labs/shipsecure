@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/li
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && echo "fn main() {}" > src/main.rs && echo "" > src/lib.rs
 RUN cargo build --release 2>/dev/null || true
-RUN rm -rf src target/release/.fingerprint/trustedge_audit-* target/release/deps/trustedge_audit-* target/release/deps/libtrustedge_audit-* target/release/trustedge_audit
+RUN rm -rf src target/release/.fingerprint/shipsecure-* target/release/deps/shipsecure-* target/release/deps/libshipsecure-* target/release/shipsecure
 
 # Build application
 COPY . .
@@ -15,7 +15,7 @@ RUN cargo build --release
 
 # Runtime stage
 FROM debian:bookworm-slim
-LABEL org.opencontainers.image.source=https://github.com/trustedge-labs/trustedge-audit
+LABEL org.opencontainers.image.source=https://github.com/trustedge-labs/shipsecure
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -42,10 +42,10 @@ RUN git clone --depth 1 https://github.com/drwetter/testssl.sh.git /opt/testssl.
     && chmod +x /opt/testssl.sh/testssl.sh
 
 # Create non-root user
-RUN useradd -m -u 1000 -U -s /bin/bash trustedge
+RUN useradd -m -u 1000 -U -s /bin/bash shipsecure
 
 # Copy artifacts from builder
-COPY --from=builder /app/target/release/trustedge_audit /usr/local/bin/
+COPY --from=builder /app/target/release/shipsecure /usr/local/bin/
 COPY --from=builder /app/migrations /app/migrations
 
 # Copy templates directory (for vibe-code scanning)
@@ -55,14 +55,14 @@ COPY templates /app/templates
 COPY fonts /app/fonts
 
 # Set ownership and switch to non-root user
-RUN chown -R trustedge:trustedge /app
-USER trustedge
+RUN chown -R shipsecure:shipsecure /app
+USER shipsecure
 
 # Set scanner environment defaults
 ENV NUCLEI_BINARY_PATH=/usr/local/bin/nuclei
 ENV TESTSSL_BINARY_PATH=/usr/local/bin/testssl.sh
-ENV TRUSTEDGE_TEMPLATES_DIR=/app/templates/nuclei
+ENV SHIPSECURE_TEMPLATES_DIR=/app/templates/nuclei
 
 WORKDIR /app
 EXPOSE 3000
-CMD ["trustedge_audit"]
+CMD ["shipsecure"]

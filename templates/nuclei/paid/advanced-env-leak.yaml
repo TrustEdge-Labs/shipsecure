@@ -1,11 +1,11 @@
-id: trustedge-paid-advanced-env-leak
+id: shipsecure-paid-advanced-env-leak
 
 info:
   name: Advanced Environment Variable Leak Detection
-  author: TrustEdge
+  author: shipsecure
   severity: high
   description: Detects environment variable leaks in non-obvious locations like production configs, staging env files, and JS config files
-  tags: paid,trustedge,vibe-code,env-leak
+  tags: paid,shipsecure,vibe-code,env-leak
 
 http:
   - method: GET

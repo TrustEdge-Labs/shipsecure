@@ -95,7 +95,7 @@ pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
     // Create HTTP client
     let client = Client::builder()
         .timeout(Duration::from_secs(15))
-        .user_agent("TrustEdge-Scanner/0.1")
+        .user_agent("ShipSecure-Scanner/1.0")
         .build()
         .map_err(|e| ScannerError::Other(format!("Failed to build client: {}", e)))?;
 

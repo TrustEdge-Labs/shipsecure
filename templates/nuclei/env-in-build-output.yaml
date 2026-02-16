@@ -2,7 +2,7 @@ id: env-file-in-build-output
 
 info:
   name: Environment File Exposed in Build Output
-  author: trustedge-audit
+  author: shipsecure
   severity: critical
   description: |
     Detects .env files that are accidentally included in build output and served publicly.

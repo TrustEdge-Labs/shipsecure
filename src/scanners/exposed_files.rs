@@ -79,7 +79,7 @@ pub async fn scan_exposed_files(url: &str, extended: bool) -> Result<Vec<Finding
     let client = Client::builder()
         .timeout(Duration::from_secs(10))
         .redirect(reqwest::redirect::Policy::limited(5))
-        .user_agent("TrustEdge-Scanner/0.1")
+        .user_agent("ShipSecure-Scanner/1.0")
         .build()
         .map_err(|e| ScannerError::Other(format!("Failed to build client: {}", e)))?;
 

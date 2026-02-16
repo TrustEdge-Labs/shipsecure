@@ -11,7 +11,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 FROM node:20-alpine AS runner
-LABEL org.opencontainers.image.source=https://github.com/trustedge-labs/trustedge-audit
+LABEL org.opencontainers.image.source=https://github.com/trustedge-labs/shipsecure
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

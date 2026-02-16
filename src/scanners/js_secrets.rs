@@ -179,7 +179,7 @@ async fn discover_js_urls(url: &str) -> Result<HashSet<String>, ScannerError> {
     // Fetch the HTML page
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
-        .user_agent("TrustEdge-Audit/1.0")
+        .user_agent("ShipSecure-Scanner/1.0")
         .build()
         .map_err(|e| ScannerError::HttpError(e.to_string()))?;
 
@@ -227,7 +227,7 @@ async fn scan_single_js_file(js_url: String) -> Result<Vec<Finding>, ScannerErro
     // Fetch JS content with timeout
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
-        .user_agent("TrustEdge-Audit/1.0")
+        .user_agent("ShipSecure-Scanner/1.0")
         .build()
         .map_err(|e| ScannerError::HttpError(e.to_string()))?;
 

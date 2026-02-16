@@ -220,7 +220,7 @@ pub async fn download_results_markdown(
     } else {
         &token
     };
-    let filename = format!("trustedge-scan-{}.md", token_prefix);
+    let filename = format!("shipsecure-scan-{}.md", token_prefix);
 
     Ok((
         StatusCode::OK,

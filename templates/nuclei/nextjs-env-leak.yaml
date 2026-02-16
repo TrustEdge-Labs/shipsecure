@@ -2,7 +2,7 @@ id: nextjs-env-secret-leak
 
 info:
   name: Next.js NEXT_PUBLIC_ Secret Exposure
-  author: trustedge-audit
+  author: shipsecure
   severity: high
   description: |
     Detects Next.js applications that expose sensitive secrets through NEXT_PUBLIC_ environment

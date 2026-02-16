@@ -303,7 +303,7 @@ async fn handle_checkout_completed(
 
         // Get results token and base URL
         let results_token = scan.results_token.as_deref().unwrap_or("");
-        let base_url = std::env::var("TRUSTEDGE_BASE_URL")
+        let base_url = std::env::var("SHIPSECURE_BASE_URL")
             .unwrap_or_else(|_| "http://localhost:3001".to_string());
 
         // Format scan_id for filename (first 8 chars)
@@ -333,7 +333,7 @@ async fn handle_checkout_completed(
                 tracing::error!("Failed to create reports directory: {:?}", e);
                 return;
             }
-            let pdf_path = reports_dir.join(format!("trustedge-deep-audit-{}.pdf", short_scan_id));
+            let pdf_path = reports_dir.join(format!("shipsecure-deep-audit-{}.pdf", short_scan_id));
             match tokio::fs::write(&pdf_path, &pdf_bytes).await {
                 Ok(_) => tracing::info!("PDF saved to {} (email delivery failed)", pdf_path.display()),
                 Err(e) => tracing::error!("Failed to save PDF to disk: {:?}", e),

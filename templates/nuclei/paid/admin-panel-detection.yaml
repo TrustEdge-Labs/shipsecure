@@ -1,11 +1,11 @@
-id: trustedge-paid-admin-panel
+id: shipsecure-paid-admin-panel
 
 info:
   name: Exposed Admin Panel Detection
-  author: TrustEdge
+  author: shipsecure
   severity: medium
   description: Detects admin panels and CMS administration interfaces exposed to the public internet
-  tags: paid,trustedge,vibe-code,admin
+  tags: paid,shipsecure,vibe-code,admin
   remediation: Protect admin panels with IP allowlisting, HTTP authentication, or VPN access. Consider using a non-standard URL path and implement rate limiting on login attempts.
 
 http:

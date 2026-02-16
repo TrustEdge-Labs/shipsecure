@@ -2,7 +2,7 @@ id: unprotected-api-routes
 
 info:
   name: Unprotected API Routes
-  author: trustedge-audit
+  author: shipsecure
   severity: high
   description: |
     Detects Next.js and other framework API routes that return data without authentication.

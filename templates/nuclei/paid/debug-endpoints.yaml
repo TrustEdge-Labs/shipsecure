@@ -1,11 +1,11 @@
-id: trustedge-paid-debug-endpoints
+id: shipsecure-paid-debug-endpoints
 
 info:
   name: Exposed Debug and Profiling Endpoints
-  author: TrustEdge
+  author: shipsecure
   severity: medium
   description: Detects debug and profiling endpoints that are often left enabled in production environments
-  tags: paid,trustedge,vibe-code,debug
+  tags: paid,shipsecure,vibe-code,debug
   remediation: Disable debug endpoints in production. Use environment-specific configuration to ensure debug features are only available in development.
 
 http:

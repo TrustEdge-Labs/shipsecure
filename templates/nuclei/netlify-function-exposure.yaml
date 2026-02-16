@@ -2,7 +2,7 @@ id: netlify-function-exposure
 
 info:
   name: Netlify Function Exposure
-  author: trustedge-audit
+  author: shipsecure
   severity: medium
   description: |
     Detects exposed Netlify function directories or debug endpoints that reveal

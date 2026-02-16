@@ -38,13 +38,13 @@ impl IntoResponse for ApiError {
                 msg,
             ),
             ApiError::SsrfBlocked(msg) => (
-                "https://trustedge.dev/errors/ssrf-blocked".to_string(),
+                "https://shipsecure.ai/errors/ssrf-blocked".to_string(),
                 "Target URL Not Allowed".to_string(),
                 StatusCode::BAD_REQUEST,
                 msg,
             ),
             ApiError::RateLimited(msg) => (
-                "https://trustedge.dev/errors/rate-limited".to_string(),
+                "https://shipsecure.ai/errors/rate-limited".to_string(),
                 "Rate Limit Exceeded".to_string(),
                 StatusCode::TOO_MANY_REQUESTS,
                 msg,
@@ -163,7 +163,7 @@ mod tests {
         assert_eq!(content_type, "application/problem+json");
 
         let problem: ProblemDetails = serde_json::from_str(&body).unwrap();
-        assert_eq!(problem.problem_type, "https://trustedge.dev/errors/ssrf-blocked");
+        assert_eq!(problem.problem_type, "https://shipsecure.ai/errors/ssrf-blocked");
         assert_eq!(problem.title, "Target URL Not Allowed");
         assert_eq!(problem.status, 400);
     }
@@ -178,7 +178,7 @@ mod tests {
         assert_eq!(content_type, "application/problem+json");
 
         let problem: ProblemDetails = serde_json::from_str(&body).unwrap();
-        assert_eq!(problem.problem_type, "https://trustedge.dev/errors/rate-limited");
+        assert_eq!(problem.problem_type, "https://shipsecure.ai/errors/rate-limited");
         assert_eq!(problem.title, "Rate Limit Exceeded");
         assert_eq!(problem.status, 429);
     }

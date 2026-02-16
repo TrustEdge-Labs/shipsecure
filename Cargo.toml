@@ -1,5 +1,5 @@
 [package]
-name = "trustedge_audit"
+name = "shipsecure"
 version = "0.1.0"
 edition = "2024"
 

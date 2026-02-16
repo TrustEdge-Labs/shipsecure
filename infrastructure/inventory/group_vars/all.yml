@@ -16,7 +16,7 @@ deploy_user: deploy
 deploy_user_ssh_key: "{{ vault_deploy_ssh_public_key }}"
 
 # Application
-app_directory: /opt/trustedge
+app_directory: /opt/shipsecure
 
 # Container Registry (GitHub Container Registry)
 ghcr_username: "{{ vault_ghcr_username }}"

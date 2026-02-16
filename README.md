@@ -1,4 +1,4 @@
-# TrustEdge Audit
+# ShipSecure
 
 Security scanning platform for vibe-coded apps. Paste a URL, get an A-F security grade with actionable fixes — no security expertise required.
 
@@ -86,7 +86,7 @@ Copy `.env.example` and set the following:
 |----------|-------------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `PORT` | Backend HTTP port | Yes |
-| `TRUSTEDGE_BASE_URL` | Base URL for email links | Yes |
+| `SHIPSECURE_BASE_URL` | Base URL for email links | Yes |
 | `FRONTEND_URL` | Frontend URL for redirects | Yes |
 | `MAX_CONCURRENT_SCANS` | Maximum parallel scans | Yes |
 | `LOG_FORMAT` | Log format: `json` for structured, unset for text | No (defaults to text) |
@@ -97,7 +97,7 @@ Copy `.env.example` and set the following:
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook validation secret | No (webhooks disabled) |
 | `NUCLEI_BINARY_PATH` | Path to Nuclei binary | No (auto-detected) |
 | `TESTSSL_BINARY_PATH` | Path to testssl.sh binary | No (auto-detected) |
-| `TRUSTEDGE_TEMPLATES_DIR` | Custom Nuclei templates directory | No (uses bundled) |
+| `SHIPSECURE_TEMPLATES_DIR` | Custom Nuclei templates directory | No (uses bundled) |
 
 ## API
 

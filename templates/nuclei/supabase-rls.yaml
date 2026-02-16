@@ -2,7 +2,7 @@ id: supabase-rls-misconfiguration
 
 info:
   name: Supabase Row Level Security Misconfiguration
-  author: trustedge-audit
+  author: shipsecure
   severity: critical
   description: |
     Detects Supabase databases with missing or misconfigured Row Level Security (RLS) policies.

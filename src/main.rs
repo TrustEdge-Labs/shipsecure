@@ -17,12 +17,12 @@ use tracing_subscriber::EnvFilter;
 use tracing_panic::panic_hook;
 
 // Import from lib
-use trustedge_audit::api::scans::{self, AppState};
-use trustedge_audit::api::{checkout, health, results, stats, webhooks};
-use trustedge_audit::metrics;
-use trustedge_audit::api::metrics as api_metrics;
-use trustedge_audit::orchestrator::ScanOrchestrator;
-use trustedge_audit::RequestId;
+use shipsecure::api::scans::{self, AppState};
+use shipsecure::api::{checkout, health, results, stats, webhooks};
+use shipsecure::metrics;
+use shipsecure::api::metrics as api_metrics;
+use shipsecure::orchestrator::ScanOrchestrator;
+use shipsecure::RequestId;
 
 fn validate_required_env_vars(vars: &[&str]) -> Result<(), String> {
     let mut missing = Vec::new();
@@ -161,7 +161,7 @@ async fn main() {
     validate_required_env_vars(&[
         "DATABASE_URL",
         "PORT",
-        "TRUSTEDGE_BASE_URL",
+        "SHIPSECURE_BASE_URL",
         "FRONTEND_URL",
         "MAX_CONCURRENT_SCANS",
     ]).expect("Configuration error");
@@ -202,7 +202,7 @@ async fn main() {
         log_filter = %filter_description,
         port = port,
         db_connected = true,
-        "TrustEdge Audit API starting"
+        "ShipSecure API starting"
     );
 
     // Parse max concurrent scans from env var

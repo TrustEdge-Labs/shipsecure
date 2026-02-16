@@ -1,5 +1,5 @@
 ---
-# TrustEdge Audit — Production Infrastructure Provisioning
+# ShipSecure — Production Infrastructure Provisioning
 #
 # Usage:
 #   ansible-galaxy collection install -r requirements.yml

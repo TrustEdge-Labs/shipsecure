@@ -40,7 +40,7 @@ pub async fn scan_security_headers(url: &str) -> Result<Vec<Finding>, ScannerErr
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
         .redirect(reqwest::redirect::Policy::none())
-        .user_agent("TrustEdge-Scanner/0.1")
+        .user_agent("ShipSecure-Scanner/1.0")
         .build()
         .map_err(|e| ScannerError::Other(format!("Failed to build client: {}", e)))?;
 

@@ -1,11 +1,11 @@
-id: trustedge-paid-database-exposure
+id: shipsecure-paid-database-exposure
 
 info:
   name: Exposed Database Admin Interfaces
-  author: TrustEdge
+  author: shipsecure
   severity: critical
   description: Detects publicly accessible database administration interfaces that should be protected
-  tags: paid,trustedge,vibe-code,database
+  tags: paid,shipsecure,vibe-code,database
   remediation: Remove public access to database admin panels. Use IP allowlisting, VPN access, or SSH tunneling for database administration. Never expose these interfaces to the public internet.
 
 http:

@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Phase 22 - Prometheus Metrics (v1.4 Observability)
+**Current focus:** Phase 23 - Graceful Shutdown (v1.4 Observability)
 
 ## Current Position
 
-Phase: 22 of 24 (Prometheus Metrics)
-Plan: 2 of 2 complete
-Status: Complete
-Last activity: 2026-02-16 — Completed 22-02 (Scan Performance and Rate Limit Metrics)
+Phase: 23 of 24 (Graceful Shutdown)
+Plan: 1 of 2 complete
+Status: In Progress
+Last activity: 2026-02-16 — Completed 23-01 (Task Tracking and Cancellation Integration)
 
-Progress: [█████████████████████░░░] 91% (22 of 24 phases complete)
+Progress: [█████████████████████░░░] 92% (22 of 24 phases complete, 1/2 plans in phase 23)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 59
+- Total plans completed: 60
 - Average duration: ~30 min
-- Total execution time: ~28 hours
+- Total execution time: ~28.5 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [█████████████████████░░
 | v1.1 Deployment | 5-7 | 10 | 3 |
 | v1.2 Launch | 8-12 | 10 | 2 |
 | v1.3 Brand | 13-18 | 10 | 7 |
-| v1.4 Observability | 19-24 | 6 | - |
+| v1.4 Observability | 19-24 | 7 | - |
 
 **Recent Trend:**
 - v1.3 shipped with design token system, logo, header, icons, favicon
@@ -47,6 +47,7 @@ Progress: [█████████████████████░░
 | Phase 22 P01 | 3 | 2 tasks | 9 files |
 | Phase 22 P01 | 3 | 2 tasks | 9 files |
 | Phase 22 P02 | 2 | 2 tasks | 3 files |
+| Phase 23 P01 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,9 @@ Recent decisions affecting v1.4:
 - [Phase 22]: Status grouping (2xx, 4xx, 5xx) instead of individual codes - reduces cardinality for better Prometheus performance
 - [Phase 22]: Queue depth vs active scans distinction: Queue depth tracks tasks waiting for semaphore permits, active_scans tracks executing scans
 - [Phase 22]: SSL Labs rate limit counters increment on EVERY backoff event (429/529/capacity) not just final failures
+- [Phase 23]: tokio-util rt feature (not sync) provides both TaskTracker and CancellationToken
+- [Phase 23]: Shutdown checks before queue depth increment and after semaphore acquire for clean metrics
+- [Phase 23]: Inner scanner spawns remain tokio::spawn (correct - joined within scan task)
 
 ### Pending Todos
 
@@ -100,5 +104,5 @@ None yet. v1.4 requirements validated, research complete, roadmap created.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 22-02-PLAN.md
-Resume file: .planning/phases/22-prometheus-metrics/22-02-SUMMARY.md
+Stopped at: Completed 23-01-PLAN.md
+Resume file: .planning/phases/23-graceful-shutdown/23-01-SUMMARY.md

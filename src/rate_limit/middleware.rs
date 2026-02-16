@@ -20,6 +20,11 @@ pub async fn check_rate_limits(
         .await?;
 
     if email_count >= 3 {
+        metrics::counter!(
+            "rate_limit_total",
+            "limiter" => "scan_email",
+            "action" => "blocked"
+        ).increment(1);
         return Err(ApiError::RateLimited(
             "You've reached your daily scan limit of 3 scans per email. Try again tomorrow.".to_string()
         ));
@@ -30,6 +35,11 @@ pub async fn check_rate_limits(
         .await?;
 
     if ip_count >= 10 {
+        metrics::counter!(
+            "rate_limit_total",
+            "limiter" => "scan_ip",
+            "action" => "blocked"
+        ).increment(1);
         return Err(ApiError::RateLimited(
             "You've reached your daily scan limit of 10 scans per IP address. Try again tomorrow.".to_string()
         ));

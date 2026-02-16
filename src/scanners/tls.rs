@@ -111,6 +111,11 @@ pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
     if !start_response.status().is_success() {
         let status_code = start_response.status();
         if status_code.as_u16() == 429 || status_code.as_u16() == 529 {
+            metrics::counter!(
+                "rate_limit_total",
+                "limiter" => "ssl_labs",
+                "action" => "blocked"
+            ).increment(1);
             return Ok(vec![create_informational_finding(
                 "TLS analysis unavailable due to SSL Labs API rate limiting. Please try again later.",
             )]);
@@ -150,6 +155,11 @@ pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
         let current_rate_limit = extract_rate_limits(&poll_response);
         if let (Some(current), Some(max)) = (current_rate_limit.current, current_rate_limit.max) {
             if current >= max {
+                metrics::counter!(
+                    "rate_limit_total",
+                    "limiter" => "ssl_labs",
+                    "action" => "blocked"
+                ).increment(1);
                 tokio::time::sleep(Duration::from_secs(30)).await;
             }
         }
@@ -157,10 +167,20 @@ pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
         // Handle HTTP errors
         let status = poll_response.status();
         if status.as_u16() == 429 {
+            metrics::counter!(
+                "rate_limit_total",
+                "limiter" => "ssl_labs",
+                "action" => "blocked"
+            ).increment(1);
             tokio::time::sleep(Duration::from_secs(60)).await;
             continue;
         }
         if status.as_u16() == 529 {
+            metrics::counter!(
+                "rate_limit_total",
+                "limiter" => "ssl_labs",
+                "action" => "blocked"
+            ).increment(1);
             tokio::time::sleep(Duration::from_secs(30)).await;
             continue;
         }

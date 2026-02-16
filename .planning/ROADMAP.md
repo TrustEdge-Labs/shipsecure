@@ -6,7 +6,7 @@
 - ✅ **v1.1 DigitalOcean Deployment** — Phases 05-07 (shipped 2026-02-08)
 - ✅ **v1.2 Launch Readiness** — Phases 08-12 (shipped 2026-02-10)
 - ✅ **v1.3 Brand Identity** — Phases 13-18 (shipped 2026-02-11)
-- 🚧 **v1.4 Observability** — Phases 19-24 (in progress)
+- ✅ **v1.4 Observability** — Phases 19-24 (shipped 2026-02-16)
 
 ## Phases
 
@@ -73,7 +73,7 @@ See: `.planning/milestones/v1.3-ROADMAP.md`
 - [x] **Phase 21: Health Checks** - Liveness and readiness endpoints with DB checks (completed 2026-02-16)
 - [x] **Phase 22: Prometheus Metrics** - /metrics endpoint with HTTP and scan metrics (completed 2026-02-16)
 - [x] **Phase 23: Graceful Shutdown** - SIGTERM handling with scan drain coordination (completed 2026-02-16)
-- [ ] **Phase 24: Infrastructure Integration** - Deploy observability to production
+- [x] **Phase 24: Infrastructure Integration** - Deploy observability to production (completed 2026-02-16)
 
 ## Phase Details
 
@@ -206,7 +206,7 @@ Phases execute in numeric order: 01-18 (complete) → 19 → 20 → 21 → 22 �
 | 21 - Health Checks | v1.4 | Complete    | 2026-02-16 | - |
 | 22 - Prometheus Metrics | v1.4 | Complete    | 2026-02-16 | - |
 | 23 - Graceful Shutdown | v1.4 | Complete    | 2026-02-16 | - |
-| 24 - Infrastructure Integration | v1.4 | 0/? | Not started | - |
+| 24 - Infrastructure Integration | v1.4 | 2/2 | Complete | 2026-02-16 |
 
 ---
 *Last updated: 2026-02-16*

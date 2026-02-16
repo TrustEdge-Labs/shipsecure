@@ -1,5 +1,6 @@
 use axum::http::Method;
 use axum::middleware;
+use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::Router;
 use sqlx::postgres::PgPoolOptions;
@@ -94,6 +95,27 @@ async fn inject_request_id(
     next.run(request).await
 }
 
+async fn reject_scans_during_shutdown(
+    axum::extract::State(state): axum::extract::State<AppState>,
+    request: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    // Only reject scan creation endpoints during shutdown
+    // Per user decision: scan creation returns 503, other endpoints keep working
+    let is_scan_creation = request.method() == Method::POST
+        && request.uri().path() == "/api/v1/scans";
+
+    if is_scan_creation && state.shutdown_token.is_cancelled() {
+        let error_body = serde_json::json!({"error": "Service shutting down"});
+        return (
+            axum::http::StatusCode::SERVICE_UNAVAILABLE,
+            axum::Json(error_body),
+        ).into_response();
+    }
+
+    next.run(request).await
+}
+
 #[tokio::main]
 async fn main() {
     // Load .env
@@ -158,7 +180,7 @@ async fn main() {
     let shutdown_token = CancellationToken::new();
 
     // Create orchestrator with configurable concurrency
-    let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), max_concurrent, task_tracker, shutdown_token));
+    let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), max_concurrent, task_tracker, shutdown_token.clone()));
 
     // Create health cache
     let health_cache = health::HealthCache::new();
@@ -166,9 +188,10 @@ async fn main() {
     // App state
     let state = AppState {
         pool: pool.clone(),
-        orchestrator,
+        orchestrator: orchestrator.clone(),
         health_cache,
         metrics_handle: metrics_handle.clone(),
+        shutdown_token: shutdown_token.clone(),
     };
 
     // CORS middleware for frontend communication

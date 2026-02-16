@@ -6,6 +6,7 @@ use serde_json::json;
 use sqlx::PgPool;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
 use crate::api::errors::ApiError;
@@ -20,6 +21,7 @@ pub struct AppState {
     pub orchestrator: Arc<ScanOrchestrator>,
     pub health_cache: HealthCache,
     pub metrics_handle: PrometheusHandle,
+    pub shutdown_token: CancellationToken,
 }
 
 /// POST /api/v1/scans - Create a new scan

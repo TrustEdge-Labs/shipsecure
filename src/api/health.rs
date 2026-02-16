@@ -66,6 +66,16 @@ pub async fn health_liveness() -> Json<LivenessResponse> {
 pub async fn health_readiness(
     State(state): State<AppState>,
 ) -> (StatusCode, Json<ReadinessResponse>) {
+    // Check shutdown state first -- per user decision: /health/ready returns unhealthy during shutdown
+    if state.orchestrator.is_shutting_down() {
+        let (active, max) = state.orchestrator.get_capacity();
+        return (StatusCode::SERVICE_UNAVAILABLE, Json(ReadinessResponse {
+            db_connected: true, // Assume true during shutdown
+            scan_capacity: ScanCapacity { active, max },
+            status: "unhealthy".to_string(),
+        }));
+    }
+
     // 1. Check cache first
     let cache_ttl = Duration::from_secs(5);
     if let Some(cached_response) = state.health_cache.get_cached(cache_ttl) {

@@ -2,26 +2,26 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-11)
+See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.3 complete — planning next milestone
+**Current focus:** v1.4 Observability — structured logging, metrics, health checks, graceful shutdown
 
 ## Current Position
 
-Phase: 18 of 18 (Favicon & OG Image)
-Plan: 2 of 2 in current phase
-Status: Complete
-Last activity: 2026-02-11 — Phase 18 verified and approved
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-16 — Milestone v1.4 started
 
-Progress: [████████████████████] 100% (18/18 phases complete)
+Progress: [░░░░░░░░░░░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 43
-- Average duration: 37 min (estimated)
-- Total execution time: 26.18 hours
+- Total plans completed: 53
+- Average duration: 30 min (estimated)
+- Total execution time: ~26.5 hours
 
 **By Milestone:**
 
@@ -30,23 +30,7 @@ Progress: [████████████████████] 100% (1
 | v1.0 MVP | 23 | 17.3 hrs | ~45 min |
 | v1.1 Deployment | 10 | 7.5 hrs | ~45 min |
 | v1.2 Launch Ready | 10 | ~6 hrs | ~36 min |
-| v1.3 Brand Identity | 9 | 1.29 hrs | 9 min |
-
-**Recent Trend:**
-- v1.3 showing exceptional efficiency (6 min for 18-01, 1 min for 17-01, 2 min for 16-01, 1 min for 15-01)
-- Trend: Accelerating (design token foundation + small focused plans)
-
-*Updated after 18-01 completion*
-
-**Recent Plan Details:**
-
-| Phase-Plan | Duration | Tasks | Files |
-|------------|----------|-------|-------|
-| 18-02 | 2 min | 1 | 1 |
-| 18-01 | 6 min | 2 | 6 |
-| 17-01 | 1 min | 1 | 3 |
-| 16-01 | 2 min | 2 | 4 |
-| 15-01 | 1 min | 1 | 2 |
+| v1.3 Brand Identity | 10 | 1.29 hrs | 9 min |
 
 ## Accumulated Context
 
@@ -55,18 +39,9 @@ Progress: [████████████████████] 100% (1
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Phase 08: Plausible over Google Analytics (privacy-friendly, no cookies)
-- Phase 09: Next.js App Router conventions for UX (loading.tsx, error.tsx)
-- Phase 12: Developer-focused copy over marketing (technical honesty for HN audience)
-- Phase 13-01: Two-layer design token architecture (primitives in OKLch + semantic tokens via @theme inline)
-- Phase 13-02: Grade tokens for success states (consistency with grading system), caution tokens for warning states
-- Phase 13-03: WCAG AA contrast validated via OKLch lightness adjustments (maintain hue/chroma for visual identity)
-- Phase 14-01: Shield design tokens (blue-500 dark mode for vibrancy), inline SVG logo component
-- Phase 14-02: User replaced generated SVG with professionally designed PNG logo (multi-color shield + wordmark)
-- [Phase 15-01]: Define layout dimension token in light mode @theme inline only (no dark mode override needed for layout dimensions)
-- [Phase 17]: Lucide React over Heroicons for larger icon set and better tree-shaking
-- [Phase 18-01]: Use simplified geometric shield in SVG favicon instead of rasterizing logo.png (SVG favicons must be vector, fine details illegible at 16x16)
-- [Phase 18-01]: Hardcode hex colors in SVG favicon instead of CSS custom properties (standalone SVG cannot access document CSS vars)
+- v1.4: Prometheus for app-level metrics + DigitalOcean metrics agent for infrastructure monitoring
+- v1.4: All infrastructure changes (DO metrics agent, Nginx, systemd) managed via Ansible
+- v1.4: JSON logging toggled via env var (text for dev, JSON for prod)
 
 ### Pending Todos
 
@@ -74,15 +49,11 @@ None yet.
 
 ### Blockers/Concerns
 
-**From v1.3 planning:**
-- ~~Logo design required: Geometric, works at 16x16px, conveys security. Handle during Phase 14 planning (source from designer or create placeholder).~~ (Completed in 14-01 - geometric shield with checkmark cutout, three size variants)
-- ~~Color palette refinement: Audit existing blue-400 through blue-900 usage during Phase 13 to minimize visual changes.~~ (Completed in 13-01)
-- ~~Component migration tracking: 17 components use `dark:` classes. Must migrate carefully to prevent dark mode regression.~~ (Completed in 13-02 - zero dark: classes remain)
-- ~~WCAG AA contrast validation: All text/background pairs must meet 4.5:1 minimum for normal text.~~ (Completed in 13-03 - all 26 pairs validated and fixed)
+None identified yet.
 
 ## Session Continuity
 
-Last session: 2026-02-11
-Stopped at: v1.3 Brand Identity milestone archived
+Last session: 2026-02-16
+Stopped at: v1.4 Observability milestone started, defining requirements
 Resume file: None
-Next: `/gsd:new-milestone` (start next milestone cycle)
+Next: Define requirements and create roadmap

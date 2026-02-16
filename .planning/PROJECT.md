@@ -55,7 +55,14 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 ### Active
 
-(No active requirements — start next milestone with `/gsd:new-milestone`)
+- [ ] Structured JSON logging with tracing_subscriber JSON formatter (env-toggled)
+- [ ] Structured fields and scan lifecycle context propagation via tracing spans
+- [ ] Request correlation IDs via tower-http trace middleware
+- [ ] Prometheus /metrics endpoint with request latency, scan counts, error rates, queue depth
+- [ ] DigitalOcean metrics agent installed via Ansible for infrastructure monitoring
+- [ ] Rich GET /health endpoint with DB connectivity, scanner availability, queue depth
+- [ ] Graceful shutdown handling (SIGTERM/SIGINT) with in-flight scan draining
+- [ ] Ansible playbook updates for all infrastructure changes (metrics agent, Nginx, systemd)
 
 ### Out of Scope
 
@@ -126,4 +133,4 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Geometric shield SVG for favicon | SVG favicons must be vector, fine details illegible at 16x16 | ✓ Good — clean shield reads well at all sizes |
 
 ---
-*Last updated: 2026-02-11 after v1.3 milestone*
+*Last updated: 2026-02-16 after v1.4 milestone start*

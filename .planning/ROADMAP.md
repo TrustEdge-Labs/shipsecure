@@ -117,10 +117,10 @@ Plans:
   2. GET /health/ready returns JSON with db_connected, scan_capacity, and status fields
   3. GET /health/ready returns 503 when database is unreachable (tested via disconnected DB)
   4. GET /health/ready completes in under 100ms including DB connectivity check
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 21-01: TBD
+- [ ] 21-01-PLAN.md — Liveness and readiness health check endpoints with DB validation, scan capacity, cache
 
 ### Phase 22: Prometheus Metrics
 **Goal**: Operational metrics exposed at /metrics endpoint for monitoring HTTP requests, scan performance, and queue depth

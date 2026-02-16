@@ -90,38 +90,46 @@ Requirements for the Observability milestone. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOG-01 | — | Pending |
-| LOG-02 | — | Pending |
-| LOG-03 | — | Pending |
-| LOG-04 | — | Pending |
-| TRC-01 | — | Pending |
-| TRC-02 | — | Pending |
-| TRC-03 | — | Pending |
-| MET-01 | — | Pending |
-| MET-02 | — | Pending |
-| MET-03 | — | Pending |
-| MET-04 | — | Pending |
-| MET-05 | — | Pending |
-| MET-06 | — | Pending |
-| MET-07 | — | Pending |
-| MET-08 | — | Pending |
-| HLT-01 | — | Pending |
-| HLT-02 | — | Pending |
-| HLT-03 | — | Pending |
-| SHD-01 | — | Pending |
-| SHD-02 | — | Pending |
-| SHD-03 | — | Pending |
-| INF-01 | — | Pending |
-| INF-02 | — | Pending |
-| INF-03 | — | Pending |
-| INF-04 | — | Pending |
-| INF-05 | — | Pending |
+| LOG-01 | Phase 19 | Pending |
+| LOG-02 | Phase 19 | Pending |
+| LOG-03 | Phase 19 | Pending |
+| LOG-04 | Phase 19 | Pending |
+| TRC-01 | Phase 20 | Pending |
+| TRC-02 | Phase 20 | Pending |
+| TRC-03 | Phase 20 | Pending |
+| MET-01 | Phase 22 | Pending |
+| MET-02 | Phase 22 | Pending |
+| MET-03 | Phase 22 | Pending |
+| MET-04 | Phase 22 | Pending |
+| MET-05 | Phase 22 | Pending |
+| MET-06 | Phase 22 | Pending |
+| MET-07 | Phase 22 | Pending |
+| MET-08 | Phase 22 | Pending |
+| HLT-01 | Phase 21 | Pending |
+| HLT-02 | Phase 21 | Pending |
+| HLT-03 | Phase 21 | Pending |
+| SHD-01 | Phase 23 | Pending |
+| SHD-02 | Phase 23 | Pending |
+| SHD-03 | Phase 23 | Pending |
+| INF-01 | Phase 24 | Pending |
+| INF-02 | Phase 24 | Pending |
+| INF-03 | Phase 24 | Pending |
+| INF-04 | Phase 24 | Pending |
+| INF-05 | Phase 24 | Pending |
 
 **Coverage:**
 - v1.4 requirements: 26 total
-- Mapped to phases: 0
-- Unmapped: 26 ⚠️
+- Mapped to phases: 26 (100%)
+- Unmapped: 0
+
+**Phase mapping:**
+- Phase 19 (Structured JSON Logging): 4 requirements
+- Phase 20 (Request Tracing): 3 requirements
+- Phase 21 (Health Checks): 3 requirements
+- Phase 22 (Prometheus Metrics): 8 requirements
+- Phase 23 (Graceful Shutdown): 3 requirements
+- Phase 24 (Infrastructure Integration): 5 requirements
 
 ---
 *Requirements defined: 2026-02-16*
-*Last updated: 2026-02-16 after initial definition*
+*Last updated: 2026-02-16 after roadmap creation*

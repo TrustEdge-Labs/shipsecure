@@ -208,7 +208,7 @@ async fn handle_checkout_completed(
 
         // Trigger paid scan via orchestrator
         tracing::info!("Spawning paid scan for scan_id={}, url={}", scan_id, target_url);
-        orchestrator.spawn_paid_scan(scan_id, target_url.clone());
+        orchestrator.spawn_paid_scan(scan_id, target_url.clone(), None);
 
         // Poll database for completion (max 15 minutes)
         let max_attempts = 180; // 15 min / 5s = 180 attempts

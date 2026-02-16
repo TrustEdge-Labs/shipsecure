@@ -66,11 +66,17 @@ impl ScanOrchestrator {
     /// The scan will acquire a semaphore permit, run scanners, and update the database.
     /// Errors are logged but not propagated.
     /// This spawns a FREE tier scan.
-    pub fn spawn_scan(&self, scan_id: Uuid, target_url: String) {
+    pub fn spawn_scan(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>) {
         let pool = self.pool.clone();
         let semaphore = self.semaphore.clone();
         let timeout = self.max_scanner_timeout;
-        let span = info_span!("scan", scan_id = %scan_id, target_url = %target_url, tier = "free");
+        let span = info_span!(
+            "scan",
+            scan_id = %scan_id,
+            target_url = %target_url,
+            tier = "free",
+            request_id = request_id.map(|id| id.to_string()).as_deref().unwrap_or(""),
+        );
 
         tokio::spawn(async move {
             let _permit = semaphore.acquire().await.expect("Semaphore closed");
@@ -99,11 +105,17 @@ impl ScanOrchestrator {
     /// - 600s timeout for vibecode scanner (vs 180s)
     ///
     /// Errors are logged but not propagated.
-    pub fn spawn_paid_scan(&self, scan_id: Uuid, target_url: String) {
+    pub fn spawn_paid_scan(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>) {
         let pool = self.pool.clone();
         let semaphore = self.semaphore.clone();
         let timeout = self.max_scanner_timeout;
-        let span = info_span!("scan", scan_id = %scan_id, target_url = %target_url, tier = "paid");
+        let span = info_span!(
+            "scan",
+            scan_id = %scan_id,
+            target_url = %target_url,
+            tier = "paid",
+            request_id = request_id.map(|id| id.to_string()).as_deref().unwrap_or(""),
+        );
 
         tokio::spawn(async move {
             let _permit = semaphore.acquire().await.expect("Semaphore closed");

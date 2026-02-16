@@ -13,7 +13,8 @@ ExecStart=/usr/bin/docker compose up -d
 ExecStop=/usr/bin/docker compose down
 ExecReload=/usr/bin/docker compose pull && /usr/bin/docker compose up -d
 TimeoutStartSec=120
-TimeoutStopSec=30
+# Extended for graceful shutdown: Docker grace (90s) + buffer (5s) (Phase 24: INF-04)
+TimeoutStopSec=95s
 Restart=on-failure
 RestartSec=15
 User={{ deploy_user }}

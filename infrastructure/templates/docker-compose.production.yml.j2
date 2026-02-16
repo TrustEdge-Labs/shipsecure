@@ -12,6 +12,9 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
     restart: unless-stopped
+    # Graceful shutdown (Phase 24: INF-03) — matches SHUTDOWN_TIMEOUT
+    stop_signal: SIGTERM
+    stop_grace_period: 90s
     deploy:
       resources:
         limits:
@@ -31,6 +34,9 @@ services:
       BACKEND_URL: http://backend:3000
       NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
     restart: unless-stopped
+    # Graceful shutdown (Phase 24: INF-03) — matches SHUTDOWN_TIMEOUT
+    stop_signal: SIGTERM
+    stop_grace_period: 10s
     depends_on:
       - backend
     deploy:

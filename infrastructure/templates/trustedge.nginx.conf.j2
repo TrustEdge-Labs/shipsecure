@@ -52,6 +52,25 @@ server {
     gzip_comp_level 6;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 
+    # Metrics endpoint — restricted to localhost only (Phase 24: INF-02)
+    location = /metrics {
+        proxy_pass http://127.0.0.1:3000/metrics;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+
+        # Restrict access to localhost only
+        allow 127.0.0.1;
+        allow ::1;
+        deny all;
+
+        # Avoid noise from high-frequency scraping
+        access_log off;
+    }
+
     # Backend API — proxy to Rust/Axum backend
     location /api/ {
         proxy_pass http://127.0.0.1:3000;

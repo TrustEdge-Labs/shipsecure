@@ -136,10 +136,11 @@ Plans:
   7. scanner_results_total counter tracks individual scanner success/failure with scanner and status labels
   8. rate_limit_total counter tracks rate limiting events with limiter and action labels
   9. /metrics endpoint is restricted to localhost only (external requests return 403 from Nginx)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 22-01: TBD
+- [ ] 22-01-PLAN.md — Metrics infrastructure, HTTP request metrics middleware, /metrics endpoint with localhost access
+- [ ] 22-02-PLAN.md — Scan metrics (duration, active, queue depth, scanner results) and rate limit counters
 
 ### Phase 23: Graceful Shutdown
 **Goal**: Backend drains in-flight scans before exiting on SIGTERM/SIGINT to prevent data loss

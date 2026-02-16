@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 20 of 24 (Request Tracing)
-Plan: 1 of 2 complete
-Status: In Progress
-Last activity: 2026-02-16 — Completed 20-01 (Request Tracing Infrastructure)
+Plan: 2 of 2 complete
+Status: Complete
+Last activity: 2026-02-16 — Completed 20-02 (Request ID Propagation)
 
-Progress: [████████████████████░░░░] 79% (19 of 24 phases complete)
+Progress: [████████████████████░░░░] 83% (20 of 24 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 56
+- Total plans completed: 57
 - Average duration: ~30 min
 - Total execution time: ~28 hours
 
@@ -31,7 +31,7 @@ Progress: [████████████████████░░░
 | v1.1 Deployment | 5-7 | 10 | 3 |
 | v1.2 Launch | 8-12 | 10 | 2 |
 | v1.3 Brand | 13-18 | 10 | 7 |
-| v1.4 Observability | 19-24 | 3 | - |
+| v1.4 Observability | 19-24 | 4 | - |
 
 **Recent Trend:**
 - v1.3 shipped with design token system, logo, header, icons, favicon
@@ -42,6 +42,7 @@ Progress: [████████████████████░░░
 | Phase 19 P01 | 3 | 1 tasks | 4 files |
 | Phase 19 P02 | 2 | 1 tasks | 1 files |
 | Phase 20 P01 | 2 | 2 tasks | 4 files |
+| Phase 20 P02 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting v1.4:
 - Request ID internal only (no X-Request-Id response header): Simplicity, no client impact
 - Nullable request_id column with partial index: Not all scans originate from HTTP requests
 - Health check routes bypass tracing: Placed after .layer() to avoid noise in logs
+- [Phase 20]: RequestId defined in lib.rs for library-wide access (not main.rs binary crate)
+- [Phase 20]: Shared field approach for request_id in scan spans (not parent-child span linking)
 
 ### Pending Todos
 
@@ -84,5 +87,5 @@ None yet. v1.4 requirements validated, research complete, roadmap created.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 20-01-PLAN.md (Request Tracing Infrastructure)
-Resume file: None (ready to continue with 20-02)
+Stopped at: Completed 20-02-PLAN.md (Request ID Propagation) - Phase 20 complete
+Resume file: None (ready to continue with phase 21)

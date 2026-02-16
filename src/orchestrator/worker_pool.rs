@@ -89,11 +89,29 @@ impl ScanOrchestrator {
         );
 
         tokio::spawn(async move {
+            // Track queue depth (waiting for permit)
+            metrics::gauge!("scan_queue_depth").increment(1.0);
             let _permit = semaphore.acquire().await.expect("Semaphore closed");
+            metrics::gauge!("scan_queue_depth").decrement(1.0);
+
+            // Track active scans (executing)
+            metrics::gauge!("active_scans").increment(1.0);
             tracing::info!("scan_started");
             let start = Instant::now();
 
-            match Self::execute_scan_internal(pool, scan_id, target_url, timeout, "free").await {
+            let result = Self::execute_scan_internal(pool, scan_id, target_url, timeout, "free").await;
+            let is_success = result.is_ok();
+            let duration_secs = start.elapsed().as_secs_f64();
+
+            // Record scan duration metric
+            metrics::histogram!(
+                "scan_duration_seconds",
+                "tier" => "free",
+                "status" => if is_success { "success" } else { "failure" }
+            ).record(duration_secs);
+
+            // Existing logging
+            match result {
                 Ok(()) => {
                     let duration_ms = start.elapsed().as_millis() as u64;
                     tracing::info!(duration_ms, "scan_completed");
@@ -103,6 +121,9 @@ impl ScanOrchestrator {
                     tracing::error!(duration_ms, error = %e, "scan_failed");
                 }
             }
+
+            // Decrement active scans
+            metrics::gauge!("active_scans").decrement(1.0);
         }.instrument(span));
     }
 
@@ -128,7 +149,13 @@ impl ScanOrchestrator {
         );
 
         tokio::spawn(async move {
+            // Track queue depth (waiting for permit)
+            metrics::gauge!("scan_queue_depth").increment(1.0);
             let _permit = semaphore.acquire().await.expect("Semaphore closed");
+            metrics::gauge!("scan_queue_depth").decrement(1.0);
+
+            // Track active scans (executing)
+            metrics::gauge!("active_scans").increment(1.0);
             tracing::info!("scan_started");
             let start = Instant::now();
 
@@ -136,6 +163,7 @@ impl ScanOrchestrator {
             if let Err(e) = crate::db::paid_audits::clear_findings_by_scan(&pool, scan_id).await {
                 let duration_ms = start.elapsed().as_millis() as u64;
                 tracing::error!(duration_ms, error = %e, "scan_failed");
+                metrics::gauge!("active_scans").decrement(1.0);
                 return;
             }
 
@@ -143,10 +171,24 @@ impl ScanOrchestrator {
             if let Err(e) = scans_db::update_scan_status(&pool, scan_id, ScanStatus::Pending, None, None).await {
                 let duration_ms = start.elapsed().as_millis() as u64;
                 tracing::error!(duration_ms, error = %e, "scan_failed");
+                metrics::gauge!("active_scans").decrement(1.0);
                 return;
             }
 
-            match Self::execute_scan_internal(pool, scan_id, target_url, timeout, "paid").await {
+            // Execute scan and track metrics
+            let result = Self::execute_scan_internal(pool, scan_id, target_url, timeout, "paid").await;
+            let is_success = result.is_ok();
+            let duration_secs = start.elapsed().as_secs_f64();
+
+            // Record scan duration metric
+            metrics::histogram!(
+                "scan_duration_seconds",
+                "tier" => "paid",
+                "status" => if is_success { "success" } else { "failure" }
+            ).record(duration_secs);
+
+            // Existing logging
+            match result {
                 Ok(()) => {
                     let duration_ms = start.elapsed().as_millis() as u64;
                     tracing::info!(duration_ms, "scan_completed");
@@ -156,6 +198,9 @@ impl ScanOrchestrator {
                     tracing::error!(duration_ms, error = %e, "scan_failed");
                 }
             }
+
+            // Decrement active scans
+            metrics::gauge!("active_scans").decrement(1.0);
         }.instrument(span));
     }
 
@@ -359,6 +404,7 @@ impl ScanOrchestrator {
                 match result {
                     Ok(Ok(findings)) => {
                         tracing::info!(duration_ms, "scanner_completed");
+                        metrics::counter!("scanner_results_total", "scanner" => "security_headers", "status" => "success").increment(1);
                         ScannerResult {
                             scanner_name: "security_headers".to_string(),
                             findings: Some(findings),
@@ -367,6 +413,7 @@ impl ScanOrchestrator {
                     }
                     Ok(Err(e)) => {
                         tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "security_headers", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "security_headers".to_string(),
                             findings: None,
@@ -375,6 +422,7 @@ impl ScanOrchestrator {
                     }
                     Err(_) => {
                         tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "security_headers", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "security_headers".to_string(),
                             findings: None,
@@ -401,6 +449,7 @@ impl ScanOrchestrator {
                 match result {
                     Ok(Ok(findings)) => {
                         tracing::info!(duration_ms, "scanner_completed");
+                        metrics::counter!("scanner_results_total", "scanner" => "tls", "status" => "success").increment(1);
                         ScannerResult {
                             scanner_name: "tls".to_string(),
                             findings: Some(findings),
@@ -409,6 +458,7 @@ impl ScanOrchestrator {
                     }
                     Ok(Err(e)) => {
                         tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "tls", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "tls".to_string(),
                             findings: None,
@@ -417,6 +467,7 @@ impl ScanOrchestrator {
                     }
                     Err(_) => {
                         tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "tls", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "tls".to_string(),
                             findings: None,
@@ -443,6 +494,7 @@ impl ScanOrchestrator {
                 match result {
                     Ok(Ok(findings)) => {
                         tracing::info!(duration_ms, "scanner_completed");
+                        metrics::counter!("scanner_results_total", "scanner" => "exposed_files", "status" => "success").increment(1);
                         ScannerResult {
                             scanner_name: "exposed_files".to_string(),
                             findings: Some(findings),
@@ -451,6 +503,7 @@ impl ScanOrchestrator {
                     }
                     Ok(Err(e)) => {
                         tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "exposed_files", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "exposed_files".to_string(),
                             findings: None,
@@ -459,6 +512,7 @@ impl ScanOrchestrator {
                     }
                     Err(_) => {
                         tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "exposed_files", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "exposed_files".to_string(),
                             findings: None,
@@ -485,6 +539,7 @@ impl ScanOrchestrator {
                 match result {
                     Ok(Ok(findings)) => {
                         tracing::info!(duration_ms, "scanner_completed");
+                        metrics::counter!("scanner_results_total", "scanner" => "js_secrets", "status" => "success").increment(1);
                         ScannerResult {
                             scanner_name: "js_secrets".to_string(),
                             findings: Some(findings),
@@ -493,6 +548,7 @@ impl ScanOrchestrator {
                     }
                     Ok(Err(e)) => {
                         tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "js_secrets", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "js_secrets".to_string(),
                             findings: None,
@@ -501,6 +557,7 @@ impl ScanOrchestrator {
                     }
                     Err(_) => {
                         tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "js_secrets", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "js_secrets".to_string(),
                             findings: None,
@@ -539,6 +596,7 @@ impl ScanOrchestrator {
                             );
                         }
                         tracing::info!(duration_ms, "scanner_completed");
+                        metrics::counter!("scanner_results_total", "scanner" => "vibecode", "status" => "success").increment(1);
                         ScannerResult {
                             scanner_name: "vibecode".to_string(),
                             findings: Some(findings),
@@ -547,6 +605,7 @@ impl ScanOrchestrator {
                     }
                     Ok(Err(e)) => {
                         tracing::error!(duration_ms, error = %e, "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "vibecode", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "vibecode".to_string(),
                             findings: None,
@@ -555,6 +614,7 @@ impl ScanOrchestrator {
                     }
                     Err(_) => {
                         tracing::error!(duration_ms, error = "timeout", "scanner_failed");
+                        metrics::counter!("scanner_results_total", "scanner" => "vibecode", "status" => "failure").increment(1);
                         ScannerResult {
                             scanner_name: "vibecode".to_string(),
                             findings: None,

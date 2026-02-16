@@ -1,18 +1,11 @@
-use axum::extract::{ConnectInfo, State};
-use axum::http::StatusCode;
+use axum::extract::State;
 use axum::response::{IntoResponse, Response};
-use std::net::SocketAddr;
 
 use crate::api::scans::AppState;
 
-pub async fn metrics_handler(
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    State(state): State<AppState>,
-) -> Response {
-    // Defense-in-depth: only allow localhost access
-    if !addr.ip().is_loopback() {
-        return (StatusCode::FORBIDDEN, "Forbidden").into_response();
-    }
-
+pub async fn metrics_handler(State(state): State<AppState>) -> Response {
+    // Access control handled by:
+    // 1. Docker: port 3000 bound to 127.0.0.1 only
+    // 2. Nginx: /metrics restricted to localhost (deny all)
     state.metrics_handle.render().into_response()
 }

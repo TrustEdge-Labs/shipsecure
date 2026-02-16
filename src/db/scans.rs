@@ -10,11 +10,12 @@ pub async fn create_scan(
     target_url: &str,
     email: &str,
     submitter_ip: Option<&str>,
+    request_id: Option<Uuid>,
 ) -> Result<Scan, sqlx::Error> {
     let scan = sqlx::query_as::<_, Scan>(
-        "INSERT INTO scans (target_url, email, submitter_ip)
-         VALUES ($1, $2, $3::inet)
-         RETURNING id, target_url, email, submitter_ip::text, status, score, results_token,
+        "INSERT INTO scans (target_url, email, submitter_ip, request_id)
+         VALUES ($1, $2, $3::inet, $4)
+         RETURNING id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
                    expires_at::timestamp, detected_framework, detected_platform,
                    stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                    tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp"
@@ -22,6 +23,7 @@ pub async fn create_scan(
     .bind(target_url)
     .bind(email)
     .bind(submitter_ip)
+    .bind(request_id)
     .fetch_one(pool)
     .await?;
 
@@ -32,7 +34,7 @@ pub async fn create_scan(
 #[allow(dead_code)]
 pub async fn get_scan(pool: &PgPool, id: Uuid) -> Result<Option<Scan>, sqlx::Error> {
     let scan = sqlx::query_as::<_, Scan>(
-        "SELECT id, target_url, email, submitter_ip::text, status, score, results_token,
+        "SELECT id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
                 expires_at::timestamp, detected_framework, detected_platform,
                 stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                 tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp
@@ -59,7 +61,7 @@ pub async fn claim_pending_scan(pool: &PgPool) -> Result<Option<Scan>, sqlx::Err
              FOR UPDATE SKIP LOCKED
              LIMIT 1
          )
-         RETURNING id, target_url, email, submitter_ip::text, status, score, results_token,
+         RETURNING id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
                    expires_at::timestamp, detected_framework, detected_platform,
                    stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                    tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp"
@@ -148,7 +150,7 @@ pub async fn count_scans_by_ip_today(pool: &PgPool, ip: &str) -> Result<i64, sql
 #[allow(dead_code)]
 pub async fn get_scan_by_token(pool: &PgPool, token: &str) -> Result<Option<Scan>, sqlx::Error> {
     let scan = sqlx::query_as::<_, Scan>(
-        "SELECT id, target_url, email, submitter_ip::text, status, score, results_token,
+        "SELECT id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
                 expires_at::timestamp, detected_framework, detected_platform,
                 stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                 tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp

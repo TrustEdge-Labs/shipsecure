@@ -50,6 +50,7 @@ pub async fn create_scan(
         &validated_url,
         &req.email,
         Some(&client_ip),
+        None, // Temporary: Plan 02 will extract request_id from tracing span
     )
     .await?;
 

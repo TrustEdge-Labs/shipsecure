@@ -18,6 +18,7 @@ pub struct Scan {
     pub target_url: String,
     pub email: String,
     pub submitter_ip: Option<String>,
+    pub request_id: Option<Uuid>,
     pub status: ScanStatus,
     pub score: Option<String>,
     pub results_token: Option<String>,

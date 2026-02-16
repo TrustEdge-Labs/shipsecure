@@ -69,7 +69,7 @@ See: `.planning/milestones/v1.3-ROADMAP.md`
 - Decimal phases (19.1, 19.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 19: Structured JSON Logging** - Environment-driven JSON logs with structured fields (completed 2026-02-16)
-- [ ] **Phase 20: Request Tracing** - Correlation IDs and request/response logging
+- [x] **Phase 20: Request Tracing** - Correlation IDs and request/response logging (completed 2026-02-16)
 - [ ] **Phase 21: Health Checks** - Liveness and readiness endpoints with DB checks
 - [ ] **Phase 22: Prometheus Metrics** - /metrics endpoint with HTTP and scan metrics
 - [ ] **Phase 23: Graceful Shutdown** - SIGTERM handling with scan drain coordination
@@ -102,7 +102,7 @@ Plans:
   2. Request and response logs include method, URI, status code, and latency_ms
   3. Background scan tasks inherit request span context via .instrument()
   4. Request_id appears in all logs associated with a single request lifecycle
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 20-01-PLAN.md — TraceLayer middleware, health check filtering, database migration, Scan model update
@@ -199,7 +199,7 @@ Phases execute in numeric order: 01-18 (complete) → 19 → 20 → 21 → 22 �
 | 17 - Icon System & Migration | v1.3 | 1/1 | Complete | 2026-02-11 |
 | 18 - Favicon & OG Image | v1.3 | 2/2 | Complete | 2026-02-11 |
 | 19 - Structured JSON Logging | v1.4 | Complete    | 2026-02-16 | - |
-| 20 - Request Tracing | v1.4 | 0/? | Not started | - |
+| 20 - Request Tracing | v1.4 | Complete    | 2026-02-16 | - |
 | 21 - Health Checks | v1.4 | 0/? | Not started | - |
 | 22 - Prometheus Metrics | v1.4 | 0/? | Not started | - |
 | 23 - Graceful Shutdown | v1.4 | 0/? | Not started | - |

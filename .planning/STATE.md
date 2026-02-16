@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Phase 23 - Graceful Shutdown (v1.4 Observability)
+**Current focus:** Phase 24 - Infrastructure Integration (v1.4 Observability)
 
 ## Current Position
 
-Phase: 23 of 24 (Graceful Shutdown)
-Plan: 2 of 2 complete
-Status: Complete
-Last activity: 2026-02-16 — Completed 23-02 (Signal Handling and Shutdown Coordination)
+Phase: 24 of 24 (Infrastructure Integration)
+Plan: 1 of 2 complete
+Status: In Progress
+Last activity: 2026-02-16 — Completed 24-01 (Ansible Template Configuration)
 
 Progress: [█████████████████████░░░] 96% (23 of 24 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 61
+- Total plans completed: 62
 - Average duration: ~30 min
 - Total execution time: ~29 hours
 
@@ -31,7 +31,7 @@ Progress: [█████████████████████░░
 | v1.1 Deployment | 5-7 | 10 | 3 |
 | v1.2 Launch | 8-12 | 10 | 2 |
 | v1.3 Brand | 13-18 | 10 | 7 |
-| v1.4 Observability | 19-24 | 7 | - |
+| v1.4 Observability | 19-24 | 8 | - |
 
 **Recent Trend:**
 - v1.3 shipped with design token system, logo, header, icons, favicon
@@ -49,6 +49,7 @@ Progress: [█████████████████████░░
 | Phase 22 P02 | 2 | 2 tasks | 3 files |
 | Phase 23 P01 | 3 | 2 tasks | 4 files |
 | Phase 23 P02 | 198 | 2 tasks | 3 files |
+| Phase 24 P01 | 1 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Recent decisions affecting v1.4:
 - [Phase 23]: Inner scanner spawns remain tokio::spawn (correct - joined within scan task)
 - [Phase 23]: Shutdown middleware as outermost layer executes first, rejecting POST /api/v1/scans with 503 during shutdown while other endpoints continue
 - [Phase 23]: Periodic progress logs every 5s during shutdown drain, summary log only on forced timeout (WARN level), clean shutdowns have no summary
+- [Phase 24]: Use exact location match for /metrics endpoint (not prefix match)
+- [Phase 24]: Frontend stop_grace_period 10s (stateless Next.js needs less time than backend)
+- [Phase 24]: systemd TimeoutStopSec 95s = Docker grace 90s + 5s buffer
 
 ### Pending Todos
 
@@ -107,5 +111,5 @@ None yet. v1.4 requirements validated, research complete, roadmap created.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 23-01-PLAN.md
-Resume file: .planning/phases/23-graceful-shutdown/23-01-SUMMARY.md
+Stopped at: Completed 24-01-PLAN.md
+Resume file: .planning/phases/24-infrastructure-integration/24-01-SUMMARY.md

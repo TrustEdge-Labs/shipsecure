@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 22 of 24 (Prometheus Metrics)
-Plan: 1 of 2 complete
-Status: In Progress
-Last activity: 2026-02-16 — Completed 22-01 (Prometheus Metrics Infrastructure)
+Plan: 2 of 2 complete
+Status: Complete
+Last activity: 2026-02-16 — Completed 22-02 (Scan Performance and Rate Limit Metrics)
 
 Progress: [█████████████████████░░░] 91% (22 of 24 phases complete)
 
@@ -46,6 +46,7 @@ Progress: [█████████████████████░░
 | Phase 21 P01 | 2 | 2 tasks | 5 files |
 | Phase 22 P01 | 3 | 2 tasks | 9 files |
 | Phase 22 P01 | 3 | 2 tasks | 9 files |
+| Phase 22 P02 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting v1.4:
 - [Phase 22]: Status grouping (2xx, 4xx, 5xx) instead of individual codes - reduces cardinality for better Prometheus performance
 - [Phase 22]: Histogram buckets as constants not env vars - bucket changes invalidate historical Prometheus data
 - [Phase 22]: Status grouping (2xx, 4xx, 5xx) instead of individual codes - reduces cardinality for better Prometheus performance
+- [Phase 22]: Queue depth vs active scans distinction: Queue depth tracks tasks waiting for semaphore permits, active_scans tracks executing scans
+- [Phase 22]: SSL Labs rate limit counters increment on EVERY backoff event (429/529/capacity) not just final failures
 
 ### Pending Todos
 
@@ -97,5 +100,5 @@ None yet. v1.4 requirements validated, research complete, roadmap created.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 22-01-PLAN.md
-Resume file: .planning/phases/22-prometheus-metrics/22-01-SUMMARY.md
+Stopped at: Completed 22-02-PLAN.md
+Resume file: .planning/phases/22-prometheus-metrics/22-02-SUMMARY.md

@@ -7,6 +7,7 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::EnvFilter;
+use tracing_panic::panic_hook;
 
 // Import from lib
 use trustedge_audit::api::scans::{self, AppState};
@@ -29,6 +30,52 @@ fn validate_required_env_vars(vars: &[&str]) -> Result<(), String> {
     Ok(())
 }
 
+fn build_env_filter() -> EnvFilter {
+    // RUST_LOG overrides everything when set
+    if std::env::var("RUST_LOG").is_ok() {
+        return EnvFilter::from_default_env();
+    }
+    // Sensible defaults based on build profile
+    let defaults = if cfg!(debug_assertions) {
+        "debug,hyper=info,sqlx=info,tower=info,tower_http=info,reqwest=info,h2=info"
+    } else {
+        "info,hyper=warn,sqlx=warn,tower=warn,tower_http=warn,reqwest=warn,h2=warn"
+    };
+    EnvFilter::new(defaults)
+}
+
+fn init_logging() -> (String, String) {
+    let log_format = std::env::var("LOG_FORMAT").unwrap_or_default();
+    let filter_description = if std::env::var("RUST_LOG").is_ok() {
+        "RUST_LOG".to_string()
+    } else if cfg!(debug_assertions) {
+        "defaults (debug)".to_string()
+    } else {
+        "defaults (release)".to_string()
+    };
+
+    if log_format == "json" {
+        tracing_subscriber::fmt()
+            .json()
+            .with_env_filter(build_env_filter())
+            .with_target(true)
+            .with_thread_ids(false)
+            .with_thread_names(false)
+            .init();
+    } else {
+        tracing_subscriber::fmt()
+            .with_ansi(false)
+            .with_env_filter(build_env_filter())
+            .with_target(true)
+            .init();
+    }
+
+    (
+        if log_format == "json" { "json".to_string() } else { "text".to_string() },
+        filter_description
+    )
+}
+
 #[tokio::main]
 async fn main() {
     // Load .env
@@ -38,19 +85,16 @@ async fn main() {
     validate_required_env_vars(&[
         "DATABASE_URL",
         "PORT",
-        "RUST_LOG",
         "TRUSTEDGE_BASE_URL",
         "FRONTEND_URL",
         "MAX_CONCURRENT_SCANS",
     ]).expect("Configuration error");
 
-    // Init tracing
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::try_from_default_env()
-                .expect("RUST_LOG must be set to a valid filter (e.g., info,trustedge_audit=debug)"),
-        )
-        .init();
+    // Init logging with format switching
+    let (log_format, filter_description) = init_logging();
+
+    // Install panic hook for structured panic logging
+    std::panic::set_hook(Box::new(panic_hook));
 
     // Database pool
     let database_url =
@@ -66,6 +110,21 @@ async fn main() {
         .run(&pool)
         .await
         .expect("Failed to run migrations");
+
+    // Parse port and max concurrent scans
+    let port: u16 = std::env::var("PORT")
+        .expect("PORT must be set")
+        .parse()
+        .expect("PORT must be a valid number");
+
+    // Log startup banner with key configuration
+    tracing::info!(
+        log_format = %log_format,
+        log_filter = %filter_description,
+        port = port,
+        db_connected = true,
+        "TrustEdge Audit API starting"
+    );
 
     // Parse max concurrent scans from env var
     let max_concurrent: usize = std::env::var("MAX_CONCURRENT_SCANS")
@@ -106,15 +165,13 @@ async fn main() {
         .into_make_service_with_connect_info::<SocketAddr>();
 
     // Bind and serve
-    let port: u16 = std::env::var("PORT")
-        .expect("PORT must be set")
-        .parse()
-        .expect("PORT must be a valid number");
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    tracing::info!("TrustEdge Audit API listening on {}", addr);
 
     let listener = TcpListener::bind(addr)
         .await
         .expect("Failed to bind");
+
+    tracing::info!(addr = %addr, "Listening");
+
     axum::serve(listener, app).await.expect("Server error");
 }

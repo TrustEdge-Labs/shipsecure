@@ -57,6 +57,7 @@ jobs:
   deploy:
     needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Deploy to production
         uses: appleboy/ssh-action@v1

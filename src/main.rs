@@ -7,6 +7,8 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
+use tokio_util::sync::CancellationToken;
+use tokio_util::task::TaskTracker;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::Span;
@@ -151,8 +153,12 @@ async fn main() {
         .parse()
         .expect("MAX_CONCURRENT_SCANS must be a valid number");
 
+    // Create shutdown coordination primitives
+    let task_tracker = TaskTracker::new();
+    let shutdown_token = CancellationToken::new();
+
     // Create orchestrator with configurable concurrency
-    let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), max_concurrent));
+    let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), max_concurrent, task_tracker, shutdown_token));
 
     // Create health cache
     let health_cache = health::HealthCache::new();

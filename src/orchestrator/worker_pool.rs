@@ -2,6 +2,8 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Semaphore;
+use tokio_util::sync::CancellationToken;
+use tokio_util::task::TaskTracker;
 use tracing::{info_span, Instrument};
 use uuid::Uuid;
 use base64::Engine;
@@ -46,6 +48,8 @@ pub struct ScanOrchestrator {
     semaphore: Arc<Semaphore>,
     max_concurrent: usize,
     max_scanner_timeout: Duration,
+    task_tracker: TaskTracker,
+    shutdown_token: CancellationToken,
 }
 
 impl ScanOrchestrator {
@@ -54,12 +58,16 @@ impl ScanOrchestrator {
     /// # Arguments
     /// * `pool` - Database connection pool
     /// * `max_concurrent` - Maximum number of concurrent scans (default: 5)
-    pub fn new(pool: PgPool, max_concurrent: usize) -> Self {
+    /// * `task_tracker` - TaskTracker for coordinating graceful shutdown
+    /// * `shutdown_token` - CancellationToken for signaling shutdown
+    pub fn new(pool: PgPool, max_concurrent: usize, task_tracker: TaskTracker, shutdown_token: CancellationToken) -> Self {
         Self {
             pool,
             semaphore: Arc::new(Semaphore::new(max_concurrent)),
             max_concurrent,
             max_scanner_timeout: Duration::from_secs(60),
+            task_tracker,
+            shutdown_token,
         }
     }
 
@@ -80,6 +88,7 @@ impl ScanOrchestrator {
         let pool = self.pool.clone();
         let semaphore = self.semaphore.clone();
         let timeout = self.max_scanner_timeout;
+        let shutdown_token = self.shutdown_token.clone();
         let span = info_span!(
             "scan",
             scan_id = %scan_id,
@@ -88,11 +97,23 @@ impl ScanOrchestrator {
             request_id = request_id.map(|id| id.to_string()).as_deref().unwrap_or(""),
         );
 
-        tokio::spawn(async move {
+        self.task_tracker.spawn(async move {
+            // Check shutdown before queuing
+            if shutdown_token.is_cancelled() {
+                tracing::info!("Shutdown in progress, skipping queued scan");
+                return;
+            }
+
             // Track queue depth (waiting for permit)
             metrics::gauge!("scan_queue_depth").increment(1.0);
             let _permit = semaphore.acquire().await.expect("Semaphore closed");
             metrics::gauge!("scan_queue_depth").decrement(1.0);
+
+            // Check shutdown after acquiring permit
+            if shutdown_token.is_cancelled() {
+                tracing::info!("Shutdown in progress, aborting scan before execution");
+                return;
+            }
 
             // Track active scans (executing)
             metrics::gauge!("active_scans").increment(1.0);
@@ -140,6 +161,7 @@ impl ScanOrchestrator {
         let pool = self.pool.clone();
         let semaphore = self.semaphore.clone();
         let timeout = self.max_scanner_timeout;
+        let shutdown_token = self.shutdown_token.clone();
         let span = info_span!(
             "scan",
             scan_id = %scan_id,
@@ -148,11 +170,23 @@ impl ScanOrchestrator {
             request_id = request_id.map(|id| id.to_string()).as_deref().unwrap_or(""),
         );
 
-        tokio::spawn(async move {
+        self.task_tracker.spawn(async move {
+            // Check shutdown before queuing
+            if shutdown_token.is_cancelled() {
+                tracing::info!("Shutdown in progress, skipping queued scan");
+                return;
+            }
+
             // Track queue depth (waiting for permit)
             metrics::gauge!("scan_queue_depth").increment(1.0);
             let _permit = semaphore.acquire().await.expect("Semaphore closed");
             metrics::gauge!("scan_queue_depth").decrement(1.0);
+
+            // Check shutdown after acquiring permit
+            if shutdown_token.is_cancelled() {
+                tracing::info!("Shutdown in progress, aborting scan before execution");
+                return;
+            }
 
             // Track active scans (executing)
             metrics::gauge!("active_scans").increment(1.0);
@@ -772,6 +806,27 @@ impl ScanOrchestrator {
             13..=20 => "D".to_string(),
             _ => "F".to_string(),
         }
+    }
+
+    /// Returns true if shutdown is in progress
+    pub fn is_shutting_down(&self) -> bool {
+        self.shutdown_token.is_cancelled()
+    }
+
+    /// Get the CancellationToken for external use (middleware, health checks)
+    pub fn shutdown_token(&self) -> CancellationToken {
+        self.shutdown_token.clone()
+    }
+
+    /// Initiate graceful shutdown: close tracker and cancel token
+    pub fn initiate_shutdown(&self) {
+        self.task_tracker.close();
+        self.shutdown_token.cancel();
+    }
+
+    /// Wait for all tracked tasks to complete
+    pub async fn wait_for_drain(&self) {
+        self.task_tracker.wait().await;
     }
 }
 

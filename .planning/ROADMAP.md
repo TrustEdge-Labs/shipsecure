@@ -170,10 +170,11 @@ Plans:
   5. systemd service sets TimeoutStopSec=95s to accommodate graceful shutdown
   6. Production environment sets LOG_FORMAT=json
   7. All observability features verified working in production (logs, metrics, health, shutdown)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 24-01: TBD
+- [ ] 24-01-PLAN.md — Infrastructure configuration: Ansible templates, metrics agent, playbook imports
+- [ ] 24-02-PLAN.md — Production deployment and verification (checkpoint)
 
 ## Progress
 

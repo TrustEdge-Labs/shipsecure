@@ -92,6 +92,7 @@ Copy `.env.example` and set the following:
 | `LOG_FORMAT` | Log format: `json` for structured, unset for text | No (defaults to text) |
 | `RUST_LOG` | Log level filter override | No (sensible defaults) |
 | `SHUTDOWN_TIMEOUT` | Graceful shutdown timeout in seconds | No (defaults to 90) |
+| `HEALTH_DB_LATENCY_THRESHOLD_MS` | Health check DB latency threshold | No (defaults to 200) |
 | `RESEND_API_KEY` | Resend API key for email delivery | No (email disabled) |
 | `STRIPE_SECRET_KEY` | Stripe secret key | No (checkout disabled) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook validation secret | No (webhooks disabled) |

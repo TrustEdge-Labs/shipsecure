@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest --coverage --reporter=dot",
+    "test:e2e": "echo 'Playwright not yet configured (Phase 27)'",
+    "test:ci": "vitest run --coverage --reporter=dot"
   },
   "dependencies": {
     "lucide-react": "^0.563.0",
@@ -17,14 +20,24 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@next/env": "^16.1.6",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "happy-dom": "^20.6.1",
+    "msw": "^2.12.10",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.0.18"
   }
 }

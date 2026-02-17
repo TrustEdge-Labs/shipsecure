@@ -1,0 +1,158 @@
+# Requirements: ShipSecure
+
+**Defined:** 2026-02-17
+**Core Value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow — no security expertise required.
+
+## v1.6 Requirements
+
+Requirements for Auth & Tiered Access milestone. Each maps to roadmap phases.
+
+### Authentication
+
+- [ ] **AUTH-01**: User can sign up with email/password via Clerk
+- [ ] **AUTH-02**: User can sign up/in with Google OAuth
+- [ ] **AUTH-03**: User can sign up/in with GitHub OAuth
+- [ ] **AUTH-04**: User session persists across browser restarts
+- [ ] **AUTH-05**: Signed-in user sees UserButton (avatar/menu) in sticky header
+- [ ] **AUTH-06**: Dashboard routes redirect unauthenticated users to sign-in
+
+### Domain Verification
+
+- [ ] **DOMN-01**: User can add a domain and receive a unique verification token
+- [ ] **DOMN-02**: User can verify domain ownership via HTML meta tag
+- [ ] **DOMN-03**: Verified domain displays green badge in dashboard
+- [ ] **DOMN-04**: System blocks verification of shared hosting TLDs (github.io, vercel.app, netlify.app, pages.dev)
+- [ ] **DOMN-05**: Domain verification expires after 30 days requiring re-verification
+
+### Results Gating
+
+- [ ] **GATE-01**: API strips description/remediation from high/critical findings for anonymous scan tokens
+- [ ] **GATE-02**: API returns `gated: true` flag and `owner_verified` field on results
+- [ ] **GATE-03**: Frontend renders teaser cards with lock overlay for gated findings
+- [ ] **GATE-04**: Teaser cards show severity and category but not details, with "Sign up free" CTA
+
+### Scan Tiering
+
+- [ ] **TIER-01**: Anonymous scans use lighter config (20 JS files, 180s vibecode timeout)
+- [ ] **TIER-02**: Authenticated scans use enhanced config (30 JS files, 300s vibecode timeout, extended exposed files)
+- [ ] **TIER-03**: Anonymous users limited to 1 scan per IP per 24 hours
+- [ ] **TIER-04**: Developer tier users limited to 5 scans per calendar month
+- [ ] **TIER-05**: Rate limit exceeded returns 429 with friendly message and `resets_at` timestamp
+- [ ] **TIER-06**: Authenticated scans require verified domain ownership
+
+### Dashboard
+
+- [ ] **DASH-01**: Authenticated user can view paginated scan history (domain, date, severity counts, expiry)
+- [ ] **DASH-02**: Dashboard shows quota status ("3 of 5 scans used this month, resets Mar 1")
+
+### Data Retention
+
+- [ ] **RETN-01**: Anonymous scan results expire after 24 hours
+- [ ] **RETN-02**: Developer tier scan results expire after 30 days
+- [ ] **RETN-03**: Background cleanup task deletes expired completed/failed scans hourly
+
+### Cleanup
+
+- [ ] **CLEN-01**: Remove Stripe checkout flow, paid audit routes, and async-stripe/hmac/sha2/genpdf dependencies
+- [ ] **CLEN-02**: Change paid_audits FK to ON DELETE SET NULL; preserve all historical payment records
+- [ ] **CLEN-03**: Add clerk_user_id column to scans; extend tier constraint to include 'authenticated'
+
+### Infrastructure
+
+- [ ] **INFR-01**: CORS config allows Authorization header for JWT bearer tokens
+- [ ] **INFR-02**: Nginx strips x-middleware-subrequest header (CVE-2025-29927 mitigation)
+- [ ] **INFR-03**: Clerk webhook handler verifies svix signatures on user.created events
+- [ ] **INFR-04**: Axum verifies Clerk JWTs locally via cached JWKS public keys (no per-request Clerk API calls)
+
+## Future Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Pro Tier
+
+- **PRO-01**: User can subscribe to Pro tier via Stripe
+- **PRO-02**: Pro users get unlimited verified sites
+- **PRO-03**: Pro users get unlimited scans per month
+- **PRO-04**: Pro users get permanent scan history (no expiry)
+- **PRO-05**: Pro users get deep scan mode (50 JS files, 600s timeout, extended templates)
+- **PRO-06**: Pro users can export PDF and CSV reports
+- **PRO-07**: Pro users get API access for CI/CD integration
+- **PRO-08**: Pro users can schedule automated re-scans
+
+### Conversion Enhancements
+
+- **CONV-01**: Post-scan signup modal when anonymous scan finds high/critical findings
+- **CONV-02**: Inline upgrade prompt at 80% quota (4/5 scans used)
+- **CONV-03**: One-click re-scan from scan history
+- **CONV-04**: Post-signup onboarding checklist (verify, scan, fix)
+- **CONV-05**: Scan comparison / delta view across time
+
+### Domain Verification Extensions
+
+- **DOMN-06**: File upload verification method (/.well-known/shipsecure-verify.txt)
+- **DOMN-07**: Periodic re-verification of domain ownership
+
+## Out of Scope
+
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| DNS TXT record verification | Too opaque for vibe-coder target users who often use managed DNS (Vercel/Netlify) |
+| Custom auth (JWT, sessions, passwords) | Clerk solves this completely; building auth is weeks of work |
+| Multi-user organizations/teams | Target user is solo vibe-coder; Pro+ feature |
+| Custom role/permission system | Three tiers map to a simple tier field; RBAC is over-engineering |
+| Real-time quota countdown (WebSocket) | Poll on page load is sufficient |
+| clerk-rs Rust SDK | Community-maintained, v0.4.1, 8+ months stale; security risk for JWT path |
+| Redis for rate limiting | Not needed at single-container scale; DB-backed sufficient |
+| GitHub repo scanning | Separate feature; auth foundation must land first |
+| Mobile app | Web-first |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| AUTH-01 | — | Pending |
+| AUTH-02 | — | Pending |
+| AUTH-03 | — | Pending |
+| AUTH-04 | — | Pending |
+| AUTH-05 | — | Pending |
+| AUTH-06 | — | Pending |
+| DOMN-01 | — | Pending |
+| DOMN-02 | — | Pending |
+| DOMN-03 | — | Pending |
+| DOMN-04 | — | Pending |
+| DOMN-05 | — | Pending |
+| GATE-01 | — | Pending |
+| GATE-02 | — | Pending |
+| GATE-03 | — | Pending |
+| GATE-04 | — | Pending |
+| TIER-01 | — | Pending |
+| TIER-02 | — | Pending |
+| TIER-03 | — | Pending |
+| TIER-04 | — | Pending |
+| TIER-05 | — | Pending |
+| TIER-06 | — | Pending |
+| DASH-01 | — | Pending |
+| DASH-02 | — | Pending |
+| RETN-01 | — | Pending |
+| RETN-02 | — | Pending |
+| RETN-03 | — | Pending |
+| CLEN-01 | — | Pending |
+| CLEN-02 | — | Pending |
+| CLEN-03 | — | Pending |
+| INFR-01 | — | Pending |
+| INFR-02 | — | Pending |
+| INFR-03 | — | Pending |
+| INFR-04 | — | Pending |
+
+**Coverage:**
+- v1.6 requirements: 33 total
+- Mapped to phases: 0
+- Unmapped: 33
+
+---
+*Requirements defined: 2026-02-17*
+*Last updated: 2026-02-17 after initial definition*

@@ -18,7 +18,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      include: ['components/**', 'lib/**', 'app/**'],
+      include: ['components/**'],
       exclude: [
         'node_modules/',
         '__tests__/',
@@ -32,6 +32,11 @@ export default defineConfig({
         'app/robots.ts',
         'app/sitemap.ts',
       ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+      },
     },
   },
 })

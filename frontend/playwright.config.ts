@@ -17,6 +17,7 @@ export default defineConfig({
   use: {
     baseURL: E2E_BASE_URL,
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
   projects: [
     {

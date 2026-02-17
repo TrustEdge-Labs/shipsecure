@@ -23,9 +23,9 @@ function createIco(pngBuffers) {
   let offset = dataOffset
 
   for (const png of pngBuffers) {
-    // Parse dimensions from PNG header (width/height at bytes 16-23)
+    // Parse dimensions from PNG IHDR chunk (width at byte 16, height at byte 20)
     const width = png.readUInt32BE(16)
-    const height = png.readUInt32BE(18)
+    const height = png.readUInt32BE(20)
 
     const entry = Buffer.alloc(dirEntrySize)
     entry.writeUInt8(width >= 256 ? 0 : width, 0)

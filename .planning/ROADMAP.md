@@ -86,7 +86,7 @@ See: `.planning/milestones/v1.4-ROADMAP.md`
 - [x] **Phase 25: Test Infrastructure** — Vitest, MSW, RTL setup with working foundation and first passing test (completed 2026-02-17)
 - [x] **Phase 26: Component Tests** — Unit tests for all 9 client components plus dark mode, loading, and error states (completed 2026-02-17)
 - [x] **Phase 27: E2E Tests** — Playwright setup with free scan flow, paid audit flow, and error flow coverage (completed 2026-02-17)
-- [ ] **Phase 28: CI/CD and Quality Gates** — GitHub Actions pipeline with parallel test jobs, caching, and coverage enforcement
+- [ ] **Phase 28: CI/CD and Quality Gates** — GitHub Actions pipeline with test jobs, caching, coverage enforcement, and branch protection
 
 ## Phase Details
 
@@ -150,11 +150,11 @@ Plans:
   3. Failed Playwright tests upload screenshots and traces as artifacts for debugging
   4. PRs cannot merge when any test job fails
   5. CI fails when code coverage drops below 80% lines, 80% functions, or 75% branches
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 28-01: TBD
-- [ ] 28-02: TBD
+- [ ] 28-01-PLAN.md -- CI workflow file, coverage thresholds, screenshot capture configuration
+- [ ] 28-02-PLAN.md -- Branch protection setup via gh CLI with human verification
 
 ## Progress
 

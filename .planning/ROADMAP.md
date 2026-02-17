@@ -100,11 +100,11 @@ See: `.planning/milestones/v1.4-ROADMAP.md`
   3. Components render in tests using the custom RTL wrapper with providers
   4. Environment variables from `.env.test` are available in the test environment
   5. Components using `useRouter`, `usePathname`, or `useSearchParams` render without errors in tests
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 25-01: TBD
-- [ ] 25-02: TBD
+- [ ] 25-01-PLAN.md — Vitest config, test dependencies, env, custom render wrapper, test scripts
+- [ ] 25-02-PLAN.md — MSW fixtures/handlers/server, navigation mocks, Header test, integration test
 
 ### Phase 26: Component Tests
 **Goal**: Every client component has tests verifying its rendering, interactions, and edge cases from a user's perspective

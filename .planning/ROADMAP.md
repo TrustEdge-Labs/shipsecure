@@ -133,11 +133,12 @@ Plans:
   2. Paid audit E2E test verifies UpgradeCTA click triggers Stripe Checkout redirect and return to payment success page
   3. Error flow E2E tests verify invalid URL handling, 404 for missing scans, and API error states display correctly
   4. All E2E tests run against a production build (`npm run build && npm run start`), not the dev server
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 27-01: TBD
-- [ ] 27-02: TBD
+- [ ] 27-01-PLAN.md — Playwright infrastructure, config, testProxy, E2E fixtures, route interception helpers
+- [ ] 27-02-PLAN.md — Free scan flow E2E test, paid audit flow E2E test with Stripe checkout
+- [ ] 27-03-PLAN.md — Error flow E2E tests (validation, 404, timeout, 500, recovery)
 
 ### Phase 28: CI/CD and Quality Gates
 **Goal**: Every PR and push to main automatically runs both test suites with coverage enforcement, blocking merges on failure

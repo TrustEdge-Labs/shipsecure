@@ -136,3 +136,12 @@ None - no external service configuration required.
 ---
 *Phase: 27-e2e-tests*
 *Completed: 2026-02-17*
+
+## Self-Check: PASSED
+
+- `frontend/e2e/error-flows.spec.ts` exists: FOUND
+- `frontend/playwright.config.ts` exists: FOUND
+- `.planning/phases/27-e2e-tests/27-03-SUMMARY.md` exists: FOUND
+- Task 1 commit `5da41c0` verified in git log: FOUND
+- Task 2 commit `29380f8` verified in git log: FOUND
+- Full E2E suite: 12/12 tests pass against production build

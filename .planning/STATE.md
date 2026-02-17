@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 25 of 28 (Test Infrastructure)
-Plan: 01 of 02
-Status: In progress
-Last activity: 2026-02-17 — Completed 25-01 Test Infrastructure Foundation
+Plan: 02 of 02
+Status: Completed
+Last activity: 2026-02-17 — Completed 25-02 MSW Mock Infrastructure
 
-Progress: [█████░░░░░] 50%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 65
+- Total plans completed: 66
 - Average duration: ~30 min
 - Total execution time: ~30 hours
 
@@ -32,7 +32,7 @@ Progress: [█████░░░░░] 50%
 | v1.2 Launch | 8-12 | 10 | 2 |
 | v1.3 Brand | 13-18 | 10 | 7 |
 | v1.4 Observability | 19-24 | 11 | 1 |
-| v1.5 Testing | 25-28 | 1 | — |
+| v1.5 Testing | 25-28 | 2 | — |
 
 ## Accumulated Context
 
@@ -47,6 +47,14 @@ All decisions logged in PROJECT.md Key Decisions table (44 entries across v1.0-v
 - Test scripts: test (watch+coverage), test:e2e (placeholder), test:ci (single-run)
 - Reporter: dot format for minimal output per user preference
 
+**Phase 25-02 (MSW Mock Infrastructure):**
+- MSW handlers use BASE_URL='http://localhost:3000' matching .env.test
+- Error handlers exported as factories for server.use() overrides
+- Fixtures use 'as const' for type safety and immutability
+- next/image mock uses React.createElement to avoid JSX parsing issues
+- @testing-library/jest-dom installed for custom matchers
+- Explicit cleanup() added to afterEach for test isolation
+
 ### Pending Todos
 
 None.
@@ -59,5 +67,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 25-01-PLAN.md (Test Infrastructure Foundation)
-Resume file: .planning/phases/25-test-infrastructure/25-02-PLAN.md
+Stopped at: Completed 25-02-PLAN.md (MSW Mock Infrastructure)
+Resume file: Phase 25 completed - move to Phase 26

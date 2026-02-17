@@ -83,7 +83,7 @@ See: `.planning/milestones/v1.4-ROADMAP.md`
 - Integer phases (25, 26, 27, 28): Planned milestone work
 - Decimal phases (25.1, 25.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 25: Test Infrastructure** — Vitest, MSW, RTL setup with working foundation and first passing test
+- [x] **Phase 25: Test Infrastructure** — Vitest, MSW, RTL setup with working foundation and first passing test (completed 2026-02-17)
 - [ ] **Phase 26: Component Tests** — Unit tests for all 9 client components plus dark mode, loading, and error states
 - [ ] **Phase 27: E2E Tests** — Playwright setup with free scan flow, paid audit flow, and error flow coverage
 - [ ] **Phase 28: CI/CD and Quality Gates** — GitHub Actions pipeline with parallel test jobs, caching, and coverage enforcement
@@ -185,7 +185,7 @@ Phases execute in numeric order: 01-24 (complete) → 25 → 26 → 27 → 28
 | 22 - Prometheus Metrics | v1.4 | 2/2 | Complete | 2026-02-16 |
 | 23 - Graceful Shutdown | v1.4 | 2/2 | Complete | 2026-02-16 |
 | 24 - Infrastructure Integration | v1.4 | 2/2 | Complete | 2026-02-16 |
-| 25 - Test Infrastructure | v1.5 | 0/TBD | Not started | - |
+| 25 - Test Infrastructure | v1.5 | Complete    | 2026-02-17 | - |
 | 26 - Component Tests | v1.5 | 0/TBD | Not started | - |
 | 27 - E2E Tests | v1.5 | 0/TBD | Not started | - |
 | 28 - CI/CD and Quality Gates | v1.5 | 0/TBD | Not started | - |

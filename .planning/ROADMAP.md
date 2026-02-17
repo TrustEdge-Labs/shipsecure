@@ -116,12 +116,13 @@ Plans:
   3. Layout components (Header, Footer, Logo, UpgradeCTA) render their content and interactions correctly in tests
   4. All components render correctly under both light and dark color schemes in tests
   5. Loading skeletons and error boundary fallback UI render correctly in tests
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 26-01: TBD
-- [ ] 26-02: TBD
-- [ ] 26-03: TBD
+- [ ] 26-01-PLAN.md — ScanForm tests (useActionState mock, validation errors, loading/success states, user interactions)
+- [ ] 26-02-PLAN.md — ResultsDashboard, GradeSummary, FindingAccordion tests (findings rendering, grade display, expand/collapse)
+- [ ] 26-03-PLAN.md — ProgressChecklist, UpgradeCTA, Footer, Logo tests (stage transitions, checkout flow, legal links, size variants)
+- [ ] 26-04-PLAN.md — Dark mode rendering, loading skeletons, error boundary tests (cross-cutting verification)
 
 ### Phase 27: E2E Tests
 **Goal**: Critical user journeys (free scan, paid audit, error recovery) are verified end-to-end in a production-like browser environment

@@ -92,44 +92,44 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | — | Pending |
-| INFRA-02 | — | Pending |
-| INFRA-03 | — | Pending |
-| INFRA-04 | — | Pending |
-| INFRA-05 | — | Pending |
-| INFRA-06 | — | Pending |
-| COMP-01 | — | Pending |
-| COMP-02 | — | Pending |
-| COMP-03 | — | Pending |
-| COMP-04 | — | Pending |
-| COMP-05 | — | Pending |
-| COMP-06 | — | Pending |
-| COMP-07 | — | Pending |
-| COMP-08 | — | Pending |
-| COMP-09 | — | Pending |
-| COMP-10 | — | Pending |
-| COMP-11 | — | Pending |
-| COMP-12 | — | Pending |
-| E2E-01 | — | Pending |
-| E2E-02 | — | Pending |
-| E2E-03 | — | Pending |
-| E2E-04 | — | Pending |
-| E2E-05 | — | Pending |
-| CI-01 | — | Pending |
-| CI-02 | — | Pending |
-| CI-03 | — | Pending |
-| CI-04 | — | Pending |
-| CI-05 | — | Pending |
-| CI-06 | — | Pending |
-| QUAL-01 | — | Pending |
-| QUAL-02 | — | Pending |
-| QUAL-03 | — | Pending |
+| INFRA-01 | Phase 25 | Pending |
+| INFRA-02 | Phase 25 | Pending |
+| INFRA-03 | Phase 25 | Pending |
+| INFRA-04 | Phase 25 | Pending |
+| INFRA-05 | Phase 25 | Pending |
+| INFRA-06 | Phase 25 | Pending |
+| COMP-01 | Phase 26 | Pending |
+| COMP-02 | Phase 26 | Pending |
+| COMP-03 | Phase 26 | Pending |
+| COMP-04 | Phase 26 | Pending |
+| COMP-05 | Phase 26 | Pending |
+| COMP-06 | Phase 26 | Pending |
+| COMP-07 | Phase 26 | Pending |
+| COMP-08 | Phase 26 | Pending |
+| COMP-09 | Phase 26 | Pending |
+| COMP-10 | Phase 26 | Pending |
+| COMP-11 | Phase 26 | Pending |
+| COMP-12 | Phase 26 | Pending |
+| E2E-01 | Phase 27 | Pending |
+| E2E-02 | Phase 27 | Pending |
+| E2E-03 | Phase 27 | Pending |
+| E2E-04 | Phase 27 | Pending |
+| E2E-05 | Phase 27 | Pending |
+| CI-01 | Phase 28 | Pending |
+| CI-02 | Phase 28 | Pending |
+| CI-03 | Phase 28 | Pending |
+| CI-04 | Phase 28 | Pending |
+| CI-05 | Phase 28 | Pending |
+| CI-06 | Phase 28 | Pending |
+| QUAL-01 | Phase 28 | Pending |
+| QUAL-02 | Phase 28 | Pending |
+| QUAL-03 | Phase 28 | Pending |
 
 **Coverage:**
 - v1.5 requirements: 32 total
-- Mapped to phases: 0
-- Unmapped: 32 ⚠️
+- Mapped to phases: 32
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-16*
-*Last updated: 2026-02-16 after initial definition*
+*Last updated: 2026-02-16 after roadmap creation*

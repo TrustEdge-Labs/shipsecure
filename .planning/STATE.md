@@ -5,14 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.5 Frontend Testing — component tests, E2E tests, CI integration
+**Current focus:** v1.5 Frontend Testing — Phase 25: Test Infrastructure
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 25 of 28 (Test Infrastructure)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-02-16 — Milestone v1.5 started
+Status: Ready to plan
+Last activity: 2026-02-16 — Roadmap created for v1.5
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -30,6 +32,7 @@ Last activity: 2026-02-16 — Milestone v1.5 started
 | v1.2 Launch | 8-12 | 10 | 2 |
 | v1.3 Brand | 13-18 | 10 | 7 |
 | v1.4 Observability | 19-24 | 11 | 1 |
+| v1.5 Testing | 25-28 | TBD | — |
 
 ## Accumulated Context
 
@@ -43,10 +46,11 @@ None.
 
 ### Blockers/Concerns
 
-None.
+- Phase 26: `useActionState` mock pattern for ScanForm not well-documented — may need experimentation
+- Phase 27: Stripe Checkout UI cannot be automated — test up to redirect and return page only
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Defining v1.5 requirements
-Resume file: .planning/REQUIREMENTS.md
+Stopped at: Roadmap created for v1.5 Frontend Testing
+Resume file: .planning/ROADMAP.md

@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.5 Frontend Testing — Phase 26: Component Tests
+**Current focus:** v1.5 Frontend Testing — Phase 27: E2E Tests
 
 ## Current Position
 
-Phase: 26 of 28 (Component Tests)
-Plan: 04 of 04
-Status: Completed
-Last activity: 2026-02-17 — Completed 26-04 Dark Mode, Loading, Error Boundary Tests
+Phase: 27 of 28 (E2E Tests)
+Plan: 01 of 04
+Status: In Progress
+Last activity: 2026-02-17 — Completed 27-01 E2E Infrastructure (Playwright + fixtures)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 70
+- Total plans completed: 71
 - Average duration: ~30 min
 - Total execution time: ~30 hours
 
@@ -32,7 +32,7 @@ Progress: [██████████] 100%
 | v1.2 Launch | 8-12 | 10 | 2 |
 | v1.3 Brand | 13-18 | 10 | 7 |
 | v1.4 Observability | 19-24 | 11 | 1 |
-| v1.5 Testing | 25-28 | 6 | — |
+| v1.5 Testing | 25-28 | 7 | — |
 
 **Recent Plans:**
 
@@ -42,6 +42,7 @@ Progress: [██████████] 100%
 | Phase 26 P02 | 1m | 2 | 3 |
 | Phase 26 P03 | 2m | 2 | 4 |
 | Phase 26 P04 | 2m | 2 | 3 |
+| Phase 27 P01 | 3m | 2 | 8 |
 
 ## Accumulated Context
 
@@ -85,6 +86,15 @@ All decisions logged in PROJECT.md Key Decisions table (44 entries across v1.0-v
 - Loading tests verify both text content and skeleton structure presence
 - Error boundary tests suppress console.error for intentional error rendering
 
+**Phase 27-01 (E2E Infrastructure):**
+- defineConfig from next/experimental/testmode/playwright (not @playwright/test) for Next.js testProxy support
+- testProxy conditioned on PLAYWRIGHT_TEST=1 so production/dev builds are unaffected
+- webServer uses npm run start (production build) — E2E tests run against built app
+- Single worker (workers: 1) to avoid port conflicts
+- E2E fixtures separate from MSW fixtures — different test layer
+- 200ms delays on mocked responses to simulate real timing and catch race conditions
+- page.route() for client-side fetch interception, next.onFetch() for Server Action/Component fetch
+
 ### Pending Todos
 
 None.
@@ -95,6 +105,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-16
-Stopped at: Phase 27 context gathered
-Resume file: .planning/phases/27-e2e-tests/27-CONTEXT.md
+Last session: 2026-02-17
+Stopped at: Completed 27-01 E2E Infrastructure (Playwright + fixtures + helpers)
+Resume file: .planning/phases/27-e2e-tests/27-01-SUMMARY.md

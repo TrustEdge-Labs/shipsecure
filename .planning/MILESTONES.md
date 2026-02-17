@@ -131,3 +131,29 @@
 
 ---
 
+
+## v1.5 Frontend Testing (Shipped: 2026-02-17)
+
+**Delivered:** Comprehensive frontend test suite — Vitest unit/component tests, Playwright E2E tests, and GitHub Actions CI pipeline with coverage enforcement and branch protection
+
+**Phases completed:** 25-28 (11 plans total)
+
+**Key accomplishments:**
+- Vitest + React Testing Library test infrastructure with happy-dom, MSW mock handlers, and custom RTL render wrapper
+- 106 unit/component tests covering all 9 client components plus dark mode, loading, and error boundary states
+- Playwright E2E tests for free scan flow, paid audit flow (up to Stripe redirect), and 6 error scenarios against production builds
+- GitHub Actions CI pipeline with unit-tests and e2e-tests jobs, node_modules caching, and failure artifact uploads
+- Coverage enforcement at 80% lines / 80% functions / 75% branches (actual: 96.77% / 94.11% / 89.32%)
+- Branch protection on main requiring all CI checks to pass with no admin bypass
+
+**Stats:**
+- 72 files changed (+14,424 / -669 lines)
+- 4 phases, 11 plans, 48 commits
+- 2 days (Feb 16-17, 2026)
+
+**Git range:** `docs(25)` → `docs(phase-28)`
+
+**What's next:** Demand validation with real users. Then repo scanning, continuous monitoring, and subscription tiers.
+
+---
+

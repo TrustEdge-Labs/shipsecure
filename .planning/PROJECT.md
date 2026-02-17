@@ -61,14 +61,16 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - ✓ Rich GET /health endpoint with DB connectivity, scanner availability, queue depth — v1.4
 - ✓ Graceful shutdown handling (SIGTERM/SIGINT) with in-flight scan draining — v1.4
 - ✓ Ansible playbook updates for all infrastructure changes (metrics agent, Nginx, systemd) — v1.4
+- ✓ Vitest + React Testing Library test infrastructure with MSW mock handlers and custom render wrapper — v1.5
+- ✓ 106 unit/component tests covering all client components, dark mode, loading, and error states — v1.5
+- ✓ Playwright E2E tests for free scan, paid audit, and error flows against production builds — v1.5
+- ✓ GitHub Actions CI pipeline with unit-tests and e2e-tests jobs on every PR and push to main — v1.5
+- ✓ Coverage enforcement at 80/80/75 thresholds via Vitest config (actual: 96.77/94.11/89.32) — v1.5
+- ✓ Branch protection on main requiring all CI checks to pass with no admin bypass — v1.5
 
 ### Active
 
-**Current Milestone: v1.5 Frontend Testing**
-
-**Goal:** Add comprehensive frontend testing with Vitest + React Testing Library for component tests and Playwright for E2E tests covering both scan and payment flows, integrated into CI/CD.
-
-(Requirements defined in REQUIREMENTS.md)
+(No active milestone — define next with `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -98,8 +100,8 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **v1.2 shipped 2026-02-10:** Launch-ready polish, 67 files changed, 5 phases, 10 plans, 2 days
 - **v1.3 shipped 2026-02-11:** Brand identity — design tokens, logo, header, icons, favicon, 62 files changed, 6 phases, 10 plans
 - **v1.4 shipped 2026-02-16:** Observability — structured logging, request tracing, health checks, Prometheus metrics, graceful shutdown, 47 files changed, 6 phases, 11 plans
-- **Current:** ~7,877 LOC Rust, 5 milestones shipped, 24 phases, 64 plans completed
-- **v1.5 focus:** Frontend testing — zero test coverage today, adding component + E2E tests with CI integration
+- **v1.5 shipped 2026-02-17:** Frontend testing — 106 unit tests, Playwright E2E, CI pipeline with branch protection, 72 files changed, 4 phases, 11 plans
+- **Current:** ~7,877 LOC Rust, 6 milestones shipped, 28 phases, 75 plans completed
 
 ## Constraints
 
@@ -150,6 +152,13 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Shutdown middleware as outermost layer | Rejects new scans with 503 while draining in-flight | ✓ Good — clean separation of concerns |
 | systemd TimeoutStopSec=95s (Docker 90s + 5s buffer) | Prevents systemd from killing Docker before graceful shutdown completes | ✓ Good — clean shutdown chain verified in production |
 | Remove app-level /metrics IP check | Docker networking breaks is_loopback(); Nginx + Docker port binding sufficient | ✓ Good — defense-in-depth at infrastructure layer |
+| Vitest over Jest for unit tests | Better ESM support, faster, Next.js recommended | ✓ Good — happy-dom + tsconfigPaths work seamlessly |
+| MSW for API mocking in tests | Realistic request interception, reusable handlers | ✓ Good — consistent mocking across unit and integration tests |
+| Playwright over Cypress for E2E | Faster, lighter, Next.js testmode integration | ✓ Good — testProxy enables clean server component mocking |
+| Coverage scoped to components/** only | Server-side app/lib files have 0% unit coverage (tested by E2E) | ✓ Good — 96.77% lines achievable without gaming thresholds |
+| E2E tests on port 3001 | Avoids conflict with dev server or other services on 3000 | ✓ Good — clean isolation for CI and local runs |
+| Sequential CI jobs (unit → E2E) | Avoid wasting E2E resources if unit tests fail | ✓ Good — fast feedback on unit failures, E2E only runs on passing code |
+| Branch protection with enforce_admins | No bypass even for repo owner, strict quality gate | ✓ Good — first PR through CI caught a real bug (browser mismatch) |
 
 ---
-*Last updated: 2026-02-16 after v1.5 milestone started*
+*Last updated: 2026-02-17 after v1.5 milestone complete*

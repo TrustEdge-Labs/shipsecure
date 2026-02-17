@@ -1,12 +1,18 @@
+import React from 'react'
 import { beforeAll, afterEach, afterAll, vi } from 'vitest'
+import { cleanup } from '@testing-library/react'
 import { server } from './__tests__/helpers/msw/server'
+import '@testing-library/jest-dom/vitest'
 
 // --- MSW Server Lifecycle ---
 // Enable API mocking before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
 
 // Reset handlers to initial state between tests (critical for test isolation)
-afterEach(() => server.resetHandlers())
+afterEach(() => {
+  cleanup()
+  server.resetHandlers()
+})
 
 // Clean up after all tests
 afterAll(() => server.close())
@@ -31,7 +37,6 @@ vi.mock('next/navigation', () => ({
 // Mock next/image to render a plain img tag (happy-dom doesn't support Next.js Image optimization)
 vi.mock('next/image', () => ({
   default: ({ src, alt, ...props }: { src: string; alt: string; [key: string]: unknown }) => {
-    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-    return <img src={src} alt={alt} {...props} />
+    return React.createElement('img', { src, alt, ...props })
   },
 }))

@@ -1,239 +1,301 @@
-# Feature Landscape: Observability in Rust/Axum Applications
+# Feature Landscape: Auth, Domain Verification & Tiered Access
 
-**Domain:** Production observability for security scanning SaaS
-**Researched:** 2026-02-16
-**Confidence:** MEDIUM (based on training data and Rust ecosystem standards; web access restricted)
+**Domain:** Auth/tier gating for security scanning SaaS targeting vibe-coders
+**Researched:** 2026-02-17
+**Milestone:** v1.6 Auth & Tiered Access
+**Overall confidence:** HIGH (Clerk docs official, SaaS gating patterns widely documented, domain verification is a well-established industry pattern)
+
+---
 
 ## Table Stakes
 
-Features users expect from production-grade observability. Missing = operational blindness.
+Features users expect. Missing = product feels incomplete or untrustworthy.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **Structured JSON logging** | Production log aggregators (DataDog, Grafana Loki) require JSON. Human-readable text logs are useless at scale. | Low | tracing-subscriber with JSON formatter. MUST include: timestamp, level, target, message, span context, custom fields. |
-| **Request correlation IDs** | Trace a single request through logs. Without this, debugging distributed failures is impossible. | Low | tower-http TraceLayer with x-request-id propagation. Auto-generate if missing, return in response headers. |
-| **Health check endpoints** | Load balancers, orchestrators (k8s, Docker Swarm) need /health. Basic "ok" is insufficient - must check dependencies. | Low | /health (shallow), /health/ready (deep checks: DB, external services). Return 200 (healthy) or 503 (unhealthy). |
-| **Basic metrics endpoint** | Prometheus is industry standard. /metrics endpoint exposing request counts, latencies, errors is expected. | Medium | prometheus crate with axum integration. Histograms for latency, counters for requests/errors, gauges for active connections. |
-| **Graceful shutdown** | Prevents data loss, interrupted scans, broken database transactions. K8s sends SIGTERM before killing pod. | Medium | axum::serve with graceful shutdown signal. Must: stop accepting new requests, wait for in-flight requests (timeout), close DB pool, flush metrics. |
-| **Error tracking** | Differentiate user errors (400s) from system errors (500s). Track error rates by type. | Low | Structured error types with context. Log at appropriate levels (warn for 4xx, error for 5xx). Include request_id, endpoint, error_type. |
-| **Resource metrics** | CPU, memory, open connections, thread pool utilization. Needed for capacity planning and detecting leaks. | Low | Process-level metrics via prometheus (process_cpu_seconds_total, process_resident_memory_bytes). tokio-metrics for async runtime stats. |
-| **Log levels** | Dynamic filtering by component (debug DB queries, but only errors from HTTP client). | Low | tracing EnvFilter with RUST_LOG="info,trustedge_audit=debug,sqlx=warn". Already implemented but needs structured output. |
+| **Clerk SignIn/SignUp embedded components** | Industry-standard auth flow. Redirecting to external hosted page creates friction and erodes trust for security tool. | Low | Embed `<SignIn />` / `<SignUp />` in dedicated `/sign-in` and `/sign-up` routes. Use modal mode for CTA from results page to preserve context. |
+| **Google/GitHub OAuth** | Solo devs expect social login. Email+password alone feels dated. Signup abandonment increases without SSO options. | Low | Clerk handles OAuth automatically — configure providers in Clerk Dashboard, zero backend code. |
+| **Persistent sessions across browser restarts** | Users expect to stay logged in. Expiring sessions = perceived brokenness. | Low | Clerk manages session cookies automatically. Short-lived JWT (__session cookie) + long-lived cookie on Clerk domain. |
+| **UserButton in header** | Standard SaaS pattern — avatar/initials dropdown with "Sign out" and "Manage account". Users expect this. | Low | `<UserButton />` component renders the Google-style user menu. Drop into sticky header alongside existing nav. |
+| **Protected dashboard routes** | `/dashboard`, `/settings` must redirect unauthenticated users to sign-in. | Low | `clerkMiddleware()` in `middleware.ts` with `auth().protect()` on route groups. |
+| **Email address as user identity** | Users expect their account tied to email, not just OAuth UID. | Low | Clerk captures email during signup. Expose via `currentUser().emailAddresses[0].emailAddress` in server components. |
+| **Domain ownership verification** | Cannot let users run authenticated scans against sites they don't own. Verification is a table-stakes security requirement for the product. | Medium | Two methods: meta tag (add `<meta name="shipsecure-verification" content="[token]">`) or file upload (`/.well-known/shipsecure-verification.txt`). Backend polls on demand. |
+| **Scan quota display** | Users need to see how many scans remain. No visibility = frustration and confusion at the paywall. | Low | Show "3 of 5 scans used this month" in header or dashboard. Resets at month boundary. |
+| **Results gating for anonymous scans** | The core conversion mechanic. Low/med findings shown in full; high/critical shown as teaser cards with "Sign up to see full details." | Medium | Severity-based conditional rendering in results page. Server-side: never return finding details for high/critical on anonymous scans — return count + severity only. |
+| **Scan history list** | Authenticated users expect to see their past scans. Without this, the Developer tier offers no persistence advantage over anonymous. | Medium | Simple list: domain, scan date, severity summary (N critical, N high, N med, N low), link to full results. |
+| **Data retention enforcement** | Anonymous scans deleted after 24hr. Developer scans after 7-14 days. Users must see expiry. | Medium | Backend cron/cleanup job. Show "expires in 2 days" timestamp in scan history. |
+| **Rate limit feedback** | When a user hits their quota, show a clear, non-hostile message. Silent 429s are a conversion killer. | Low | Display "You've used all 5 scans this month. Resets February 28." with upgrade CTA. |
+
+---
 
 ## Differentiators
 
-Features that set observability apart. Not expected, but highly valued for operational excellence.
+Features that set ShipSecure apart. Not universally expected, but high value for conversion and retention.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Distributed tracing (OpenTelemetry)** | See request flow across scanner workers, external API calls (SSL Labs, Stripe). Pinpoint slowdowns in pipeline. | High | tracing-opentelemetry with OTLP exporter. Requires external collector (Jaeger, Tempo). Spans for: API request, scan orchestration, each scanner, DB queries. |
-| **Scan-specific metrics** | Business metrics: scan duration by tier, scanner success rate, findings distribution, queue depth. | Medium | Custom Prometheus metrics: scan_duration_seconds (histogram with tier label), scanner_success_total (counter with scanner label), scan_queue_depth (gauge). |
-| **Alerting rules** | Proactive notifications: high error rate, scan queue backing up, DB connection exhaustion, webhook failures. | Medium | Prometheus AlertManager rules. Examples: error_rate > 5% for 5min, scan_duration_p99 > 300s, db_connections_available < 2. |
-| **Structured error context** | Rich error details: SSRF violation details, scanner timeout context, Stripe webhook signature mismatch. | Low | error_stack or anyhow for error context chains. Log structured fields: error.kind, error.scanner, error.target_url, error.duration. |
-| **Real-time scan progress** | WebSocket or SSE updates during long scans. Show which scanner is running, progress %. | High | Not traditional observability, but improves user experience during 60-300s scans. Requires state synchronization. |
-| **Background job monitoring** | Track tokio::spawn tasks: active count, completion rate, panic detection. | Medium | tokio-console (dev) or custom metrics tracking spawn/completion events. Helps detect leaked tasks or deadlocks. |
-| **Request rate limiting visibility** | Expose rate limit metrics: requests blocked, tokens remaining, bucket fill rate per IP/email. | Low | Augment existing rate_limit module with Prometheus counters: rate_limit_blocked_total{limiter="email"}, rate_limit_allowed_total. |
-| **External service health** | Dedicated health checks for SSL Labs API, Stripe API, Resend email, database pool. | Medium | /health/ready with component checks. Return detailed status: {"db": "healthy", "stripe": "degraded", "email": "healthy"}. |
-| **Log sampling** | Reduce log volume in high-traffic scenarios without losing critical errors. | Medium | tracing-subscriber with sampling filter: log 100% of errors/warns, 10% of info, 1% of debug. Saves storage costs. |
-| **Performance profiling** | Continuous profiling (CPU flamegraphs, memory allocation tracking) in production. | High | pprof-rs for CPU profiling, dhat for memory. Requires debug symbols in release builds, small performance overhead. |
+| **FOMO teaser cards for high/critical findings** | Anonymous users see locked cards with finding category (e.g., "Critical: API Key Exposed in JavaScript Bundle") but not the file path or value. Creates real urgency because the finding is real, not fabricated. Overlay pattern shows 17% average conversion, up to 40% for engaged users. | Medium | Client component: render teaser card with blurred/redacted content and lock icon overlay. "Sign up free to see 3 critical findings" CTA inside the card. Server enforces — finding details never in the API response for anonymous tier. |
+| **Inline upgrade prompts at quota limit** | Warn at 80% quota (4/5 scans used), not just at 100%. Proactive warning increases conversion 31.4% vs. silent limit. | Low | Track scan count in user metadata or DB. Frontend banner: "1 scan remaining this month — upgrade for unlimited." |
+| **Post-scan signup flow** | After anonymous scan completes, if high/critical findings exist, show modal: "We found 3 critical vulnerabilities. Sign up free to see the full details and remediation steps." | Medium | Modal triggered by scan results page when `anonymousTier && criticalCount > 0`. Clerk SignUp in modal mode preserves current page context. After signup, redirect back to results and reveal findings. |
+| **Domain verification status in dashboard** | Show verified badge on domain. "Verified" green check creates trust and communicates security posture. | Low | Domain verification status row in dashboard. States: unverified, pending (user added tag, awaiting check), verified, failed. |
+| **Scan comparison across time** | "Last scan vs. this scan" delta. Vibe-coders ship fast — seeing regressions since last scan is high value. | High | Requires structured findings schema that enables diff. Defer to a phase after scan history is solid. |
+| **One-click re-scan** | From scan history, "Re-scan" button re-runs the same URL with current scan config. | Low | POST to existing scan endpoint with pre-filled URL. Deduct quota. |
+| **Scan share link for verified sites** | Authenticated users can generate a shareable results URL for their verified domain. | Low | Extend existing capability URL pattern. Restrict generation to verified domain owners. |
+| **Onboarding checklist for new signups** | After signup: "1. Verify your site 2. Run your first full scan 3. Fix a finding." Turns empty state into a guided journey. | Low | Simple client-side progress tracker. Not a heavy onboarding tool — just 3 steps shown in dashboard empty state. |
+
+---
 
 ## Anti-Features
 
-Features to explicitly NOT build in early stages.
+Features to explicitly NOT build in v1.6.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| **Custom log aggregation system** | Don't build what exists. DataDog, Grafana, Loki, CloudWatch all consume structured JSON. | Emit structured JSON logs to stdout. Let container orchestrator/log shipper forward to aggregator. |
-| **In-app dashboards** | Grafana exists. Building custom visualization is scope creep. | Export Prometheus metrics, point Grafana at them. Use pre-built dashboards from community. |
-| **Custom metrics format** | Prometheus is de facto standard. Inventing custom format limits tooling. | Use prometheus crate, expose /metrics in OpenMetrics format. |
-| **Synchronous health checks** | Deep health checks (DB query, external API call) in critical path slow down /health. | Shallow /health (always fast), deep /health/ready (allowed to be slow). Cache health check results with TTL. |
-| **Logging to files** | Container environments expect stdout/stderr. File-based logs require volume mounts, rotation, cleanup. | Log to stdout (JSON format). Infrastructure captures and routes logs. |
-| **Metrics in logs** | "Request completed in 235ms" is not queryable. Metrics belong in Prometheus, not log lines. | Emit request_duration_seconds histogram to Prometheus. Logs are for events, metrics are for measurements. |
-| **Excessive span depth** | tracing::instrument on every function creates noise. Too many spans = performance hit and unreadable traces. | Instrument boundaries: API handlers, scanner entry points, DB queries. NOT helper functions or inner loops. |
-| **Blocking health checks** | /health that queries DB synchronously can timeout, fail health checks, trigger cascading failures. | Use async checks with short timeouts. Health check failure should not DoS the service. |
+| **DNS TXT record verification** | DNS management is opaque and intimidating for vibe-coders (the target user). They often use Vercel/Netlify managed DNS and may not have direct DNS access. High abandonment risk. | Use meta tag (requires access to HTML/head) or file upload (requires access to deploy pipeline). Both are natural for developers. |
+| **Email verification before scan** | Adds a round-trip before the user sees value. Anonymous scan already captures email for follow-up. Don't gate the scan behind email confirmation. | Let anonymous scan complete immediately. Email verification happens naturally as part of Clerk signup flow for Developer tier. |
+| **Custom auth from scratch (JWT, sessions, passwords)** | Clerk solves this completely. Building auth is weeks of work, creates security liability, and produces an inferior UX. | Use Clerk. This is not a differentiator to build in-house. |
+| **Storing Clerk user data locally in PostgreSQL** | Duplicating Clerk's user table creates sync complexity and double-source-of-truth bugs. | Use Clerk user ID as foreign key in the local `users` table. Store only: `clerk_user_id`, `tier`, `scan_count_this_month`, `quota_reset_at`, `created_at`. Fetch email/name from Clerk on demand. |
+| **Scan gating on email verification** | Requiring verified email before any authenticated scan is overkill for a security scanner. | Require domain verification before *authenticated full scans*, not before account creation. Clerk handles email verification for password signups automatically. |
+| **Multi-user organizations/teams** | Significant complexity. Target user is solo vibe-coder. Org management is a Pro+ feature. | One user = one account. Pro tier (future) can add team seats. |
+| **Custom role/permission system beyond tier** | Over-engineering. Three tiers (anonymous, developer, pro) map cleanly to a tier field on the user record. | Store `tier: "anonymous" | "developer" | "pro"` in DB. Check tier in Rust API handlers. |
+| **Stripe subscription for Developer tier** | Developer tier is free. Adding Stripe complexity now for a free tier is waste. | Stripe only when Pro tier is built. Developer signup is just Clerk auth + DB record. |
+| **Real-time quota countdown** | WebSocket for quota tracking is overengineered. Users don't need millisecond quota updates. | Poll quota on page load. Update optimistically on scan completion. |
+
+---
 
 ## Feature Dependencies
 
 ```
-Graceful Shutdown → Requires structured logging (log shutdown events)
-Distributed Tracing → Requires request correlation IDs (trace context propagation)
-Alerting Rules → Requires metrics endpoint (Prometheus as data source)
-Background Job Monitoring → Requires structured logging (task lifecycle events)
-External Service Health → Requires basic health checks (extend with component checks)
-Scan-specific Metrics → Requires metrics endpoint (expose business metrics)
+Clerk SDK installed & configured
+  → clerkMiddleware() in Next.js middleware
+    → Protected routes (/dashboard, /settings, /verify)
+    → auth() helper in server components
+    → currentUser() for user identity
+      → User record created in PostgreSQL on signup (via Clerk webhook user.created)
+        → Tier field (default: "developer")
+        → Scan quota fields (scan_count_this_month, quota_reset_at)
+        → Domain verification table (user_id FK, domain, verification_token, status, verified_at)
+
+Domain Verification Flow
+  → Requires: Clerk auth (user must be signed in)
+  → Requires: PostgreSQL domain table
+  → Generates: unique verification token (stored in DB)
+  → Backend check: HTTP GET to domain for meta tag OR file
+    → On success: update domain.status = "verified", domain.verified_at = now()
+  → Unlocks: authenticated full scans against verified domain
+
+Scan Tier Logic (Backend, Rust)
+  → Requires: Clerk user ID extracted from JWT (via Authorization header or session cookie)
+  → Requires: DB lookup of user tier and quota
+  → Anonymous tier: rate limit by IP + email, return full low/med, return teaser for high/critical
+  → Developer tier: rate limit by user ID (3-5/month), require verified domain, return full results
+
+Results Gating (Frontend, Next.js)
+  → Anonymous: server returns FindingSummary{severity, category, count} for high/critical (NO details)
+  → Developer: server returns FullFinding{severity, category, location, remediation} for all
+  → Teaser card component: renders locked state when finding.details is null
+    → Lock icon overlay + "Sign up to see 3 critical findings" CTA
+    → Clerk SignUp in modal mode (preserves results page)
+    → After auth redirect: results page re-fetches with auth header, findings unlock
+
+Scan History Dashboard
+  → Requires: Clerk auth
+  → Requires: scans table with clerk_user_id column (add in migration)
+  → Lists scans by user, sorted by created_at desc
+  → Shows: domain, scan date, severity counts, expiry date, re-scan button
+  → Empty state: "No scans yet. Verify your site to run your first full scan." + CTA
+
+Rate Limiting (Backend)
+  → Anonymous: IP-based sliding window (existing) + email-based (1 scan total)
+  → Developer: per clerk_user_id in PostgreSQL (scan_count_this_month column)
+  → Quota check on POST /api/v1/scans
+  → Return 429 with JSON: {error: "quota_exceeded", resets_at: "2026-03-01", tier: "developer"}
+  → Frontend: display friendly quota exhausted UI on 429
 ```
 
-## Domain-Specific Observability Signals
+---
 
-### Security Scanning SaaS Operational Priorities
+## User Journey: Each Tier
 
-| Signal Category | Key Metrics | Why Critical |
-|-----------------|-------------|--------------|
-| **Scan Health** | scan_duration_seconds{tier, status}, scan_success_rate{tier}, scan_queue_depth | Detect scanner hangs, queue backlog, tier-specific issues. |
-| **Scanner Performance** | scanner_duration_seconds{scanner}, scanner_success_total{scanner}, scanner_timeout_total{scanner} | Identify unreliable scanners (TLS timeout, exposed_files DNS failures). |
-| **Payment Flow** | stripe_webhook_received_total{event_type}, stripe_webhook_failed_total{reason}, paid_scan_initiated_total | Revenue-critical: webhook failures = lost conversions. |
-| **Email Delivery** | email_sent_total{type}, email_failed_total{reason, smtp_code} | Customer communication: email failure = poor UX. |
-| **Database Health** | db_connections_active, db_connections_idle, db_query_duration_seconds{query_type} | Connection exhaustion = service degradation. |
-| **API Latency** | http_request_duration_seconds{endpoint, method, status}, http_requests_total{endpoint, status} | Track API performance by endpoint (scans, results, webhooks). |
-| **Rate Limiting** | rate_limit_blocked_total{limiter}, rate_limit_allowed_total{limiter} | Detect abuse patterns, tune rate limits. |
-| **SSRF Protection** | ssrf_blocked_total{reason}, ssrf_allowed_total | Security telemetry: track blocked internal/localhost scans. |
+### Journey 1 — Instant Audit (Anonymous)
 
-### Structured Log Field Conventions (Rust tracing ecosystem)
-
-| Field Name | Purpose | Example |
-|------------|---------|---------|
-| `request_id` | Correlation across logs for single request | "req_a3f9c2b1" |
-| `scan_id` | Track scan lifecycle | "550e8400-e29b-41d4-a716-446655440000" |
-| `scanner` | Which scanner emitted log | "tls", "js_secrets" |
-| `target_url` | Scan target (redact sensitive params) | "https://example.com" |
-| `duration_ms` | Operation duration | 1234 |
-| `status` | Operation outcome | "success", "timeout", "error" |
-| `error_type` | Error category | "DatabaseError", "ScannerTimeout", "SSRFViolation" |
-| `tier` | Scan tier | "free", "paid" |
-| `endpoint` | API endpoint hit | "/api/v1/scans" |
-| `method` | HTTP method | "POST" |
-| `status_code` | HTTP status | 200, 500 |
-| `client_ip` | Request origin (anonymized if needed) | "203.0.113.42" |
-| `user_email` | User identifier (hash if privacy concern) | "user@example.com" |
-
-### Health Check Signal Design
-
-#### Shallow Health Check (`/health`)
-
-**Purpose:** Fast liveness check for load balancer
-**Response time:** < 10ms
-**Checks:** Process is running, can accept connections
-
-```rust
-// Returns 200 OK immediately
-async fn health() -> &'static str { "ok" }
+```
+1. Land on homepage (unchanged)
+2. Paste URL → accept CFAA checkbox → click "Scan Now"
+   [No email capture upfront — or optional email for report delivery]
+3. Scan runs (existing progress UI)
+4. Results page loads:
+   - Full details for low/medium findings (existing behavior)
+   - Teaser cards for high/critical:
+       [!] Critical Finding (3)
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       🔒 Sign up to see full details
+       [Sign up free — takes 30 seconds]
+5. If critical/high findings exist:
+   - Modal appears: "We found X critical issues.
+     Sign up free to see full remediation steps."
+   - [Sign up with GitHub] [Sign up with Google] [Sign up with email]
+6. If user ignores/closes:
+   - Results page persists for 24hr (existing behavior)
+   - Email sent with summary (if email captured)
+7. On return after 24hr: results expired, prompt to re-scan
 ```
 
-#### Deep Health Check (`/health/ready`)
+### Journey 2 — Developer (Free Signup)
 
-**Purpose:** Readiness check for traffic routing
-**Response time:** < 1000ms
-**Checks:**
-- Database: Can execute `SELECT 1` (with 500ms timeout)
-- External services: Cached status from periodic background checks (don't hit APIs in /health path)
-- Scan queue: Not critically backed up (< 100 pending)
-- Semaphore: Available permits (not deadlocked)
+```
+1. Signup triggered from:
+   a. Teaser card on results page (modal context — stays on results)
+   b. Header "Sign up free" CTA (redirect to /sign-up)
+   c. Direct navigation to /sign-up
 
-**Response format:**
-```json
-{
-  "status": "healthy",
-  "components": {
-    "database": {"status": "healthy", "latency_ms": 5},
-    "scan_queue": {"status": "healthy", "pending": 3, "active": 2},
-    "semaphore": {"status": "healthy", "available_permits": 3}
-  },
-  "uptime_seconds": 86400
-}
+2. Signup with Clerk (Google OAuth takes 1 click, email takes 3 fields)
+   - Clerk sends verification email for password signups (automatic)
+   - On success: Clerk fires user.created webhook
+
+3. Webhook received (POST /api/webhooks/clerk):
+   - Create users row: {clerk_user_id, tier: "developer", scan_count_this_month: 0, quota_reset_at: end_of_month}
+   - Log: user onboarded
+
+4. Redirect to /dashboard after signup
+   - Dashboard empty state:
+     ┌────────────────────────────────┐
+     │  Welcome to ShipSecure         │
+     │                                │
+     │  To run full scans, verify     │
+     │  ownership of your site first. │
+     │                                │
+     │  [Verify your site →]          │
+     └────────────────────────────────┘
+
+5. Domain Verification (/dashboard/verify):
+   a. User enters their domain (e.g., myapp.vercel.app)
+   b. System generates unique token: shipsecure-abc123
+   c. User sees two options:
+      Option A — Meta Tag:
+        Add this to your <head>:
+        <meta name="shipsecure-verification" content="shipsecure-abc123">
+        Then click: [Verify now]
+      Option B — File Upload:
+        Create file at: /.well-known/shipsecure-verification.txt
+        With contents: shipsecure-abc123
+        Then click: [Verify now]
+   d. User clicks "Verify now"
+   e. Backend fetches domain, checks for token
+      - Success: domain.status = "verified", show green check
+      - Failure: show error "Token not found. Did you publish your changes?"
+        with retry button and instructions
+   f. Verified domain appears in dashboard with green badge
+
+6. Run authenticated scan (/dashboard or homepage):
+   a. URL pre-filled with verified domain (or user pastes any URL — server validates against verified domains)
+   b. Scan runs with full scanner config
+   c. Results: ALL severity levels shown with full details + remediation
+   d. Scan stored in history, associated with clerk_user_id
+   e. scan_count_this_month incremented
+
+7. Quota tracking:
+   - Header/dashboard shows: "3 of 5 scans used this month (resets Mar 1)"
+   - At 4/5: yellow banner "1 scan remaining this month"
+   - At 5/5: scan button disabled, friendly message: "Quota reached. Resets March 1."
+   - POST /api/v1/scans returns 429 with resets_at timestamp
+
+8. Scan history (/dashboard/history):
+   - List of past scans with severity summary, expiry countdown
+   - Re-scan button (consumes quota)
+   - After 7-14 days: scan marked "expired", results unavailable
 ```
 
-### Graceful Shutdown Pattern for Long-Running Scans
+### Journey 3 — Pro (Future, not v1.6)
 
-**Challenge:** Scans take 60-300s. SIGTERM gives 30s before SIGKILL. How to avoid killing in-flight scans?
-
-**Pattern:**
-1. **Shutdown signal received** (SIGTERM)
-   - Stop accepting new scan requests (return 503)
-   - Set shutdown flag in AppState
-2. **Wait for in-flight scans** (with timeout)
-   - Background tokio::spawn tasks hold Arc<Semaphore> permits
-   - Track active scan count via Arc<AtomicUsize>
-   - Wait up to 60s for count to reach 0
-3. **Force shutdown after timeout**
-   - Log warning: "Forced shutdown with N scans in-flight"
-   - Update DB: set in-progress scans to "interrupted" status
-   - Close DB pool gracefully
-   - Flush metrics buffer
-4. **Exit**
-
-**Implementation approach:**
-```rust
-// Use tokio::signal::ctrl_c() or tokio::signal::unix::signal(SignalKind::terminate())
-// Wrap axum::serve with graceful_shutdown(shutdown_signal)
-// Track active scans in Arc<AtomicUsize>, decrement on completion
-// Use tokio::select! to wait for scans or timeout
 ```
+[Placeholder — build after Developer tier proves conversion]
+- Unlimited sites via verified domain list
+- Unlimited scans
+- Permanent history
+- Deep scan mode (extended Nuclei templates, full TLS analysis)
+- PDF/CSV export
+- Stripe subscription ($X/month)
+- API access
+```
+
+---
 
 ## MVP Recommendation
 
-Prioritize for first observability milestone (estimated 2-3 days):
+### Must Build (v1.6)
 
-### Phase 1: Foundation (Day 1)
-1. **Structured JSON logging**
-   - Replace tracing_subscriber::fmt() with JSON formatter
-   - Add request_id, scan_id fields to all logs
-   - Test with jq: `cargo run | jq .`
-2. **Request correlation middleware**
-   - tower-http TraceLayer with x-request-id
-   - Propagate to tracing spans
-3. **Basic Prometheus metrics**
-   - Add prometheus crate
-   - Expose /metrics endpoint
-   - Instrument: http_requests_total, http_request_duration_seconds
+1. **Clerk SDK integration** — `@clerk/nextjs`, `clerkMiddleware()`, `<ClerkProvider>`, SignIn/SignUp pages at `/sign-in` and `/sign-up`
+2. **Clerk webhook handler** — POST `/api/webhooks/clerk`, verify with svix, create user row in DB on `user.created`
+3. **Database schema additions** — `users` table (clerk_user_id, tier, scan_count_this_month, quota_reset_at), `verified_domains` table (user_id, domain, token, status, verified_at)
+4. **Results gating** — Backend: never return finding details for high/critical on anonymous requests. Frontend: teaser card component with locked overlay and signup CTA
+5. **Post-scan signup modal** — Triggered when anonymous scan has high/critical findings. Clerk SignUp in modal mode
+6. **Domain verification flow** — `/dashboard/verify` page with meta tag and file upload options, backend verification endpoint
+7. **Scan history dashboard** — `/dashboard` with scan list, severity summaries, expiry dates, re-scan button
+8. **Per-user rate limiting** — Developer tier quota tracked in DB (scan_count_this_month), 429 with resets_at on exhaustion
+9. **Quota display** — In header (when authenticated) and dashboard. Warning at 80% used
+10. **Remove $49 Stripe audit** — Remove Stripe checkout flow, paid audit route, audit-specific scan config
 
-### Phase 2: Production Readiness (Day 2)
-4. **Deep health checks**
-   - Keep /health shallow
-   - Add /health/ready with DB check
-   - Return component status JSON
-5. **Graceful shutdown**
-   - Handle SIGTERM
-   - Wait for in-flight scans (60s timeout)
-   - Log shutdown events
-6. **Scan-specific metrics**
-   - scan_duration_seconds histogram
-   - scanner_success_total counter
-   - scan_queue_depth gauge
+### Defer (After v1.6)
 
-### Phase 3: Operational Visibility (Day 3)
-7. **Error context enrichment**
-   - Add scanner, target_url to error logs
-   - Structured error types
-8. **Background job tracking**
-   - Log task spawn/completion with scan_id
-   - Detect orphaned tasks
-9. **Rate limit metrics**
-   - Augment existing rate limiter with counters
+| Feature | Reason to Defer |
+|---------|-----------------|
+| Scan result comparison / delta view | Requires stable findings schema across multiple scans; adds significant schema complexity |
+| Scan share links for verified sites | Low priority; existing capability URL already shareable |
+| Email drip campaign after anonymous scan | Requires Resend sequence integration; separate feature |
+| Pro tier (Stripe subscription) | Build after Developer tier conversion proves out |
+| Scheduled/automated re-scans | Pro tier feature |
 
-### Defer to Later Milestones
-- **Distributed tracing (OpenTelemetry)**: Requires external infrastructure (Jaeger/Tempo). Add when multi-service architecture emerges.
-- **Alerting rules**: Requires metrics to stabilize, baseline to establish. Add after 1-2 weeks of production data.
-- **Log sampling**: Premature optimization. Add if log volume becomes cost concern.
-- **Performance profiling**: Complex setup, specialized use case. Add if performance issues emerge.
+---
 
-## Complexity Analysis
+## Complexity Notes
 
-| Feature | Implementation Effort | Operational Benefit | Priority |
-|---------|----------------------|---------------------|----------|
-| Structured JSON logging | 2 hours | High (enables all downstream analysis) | P0 |
-| Request correlation IDs | 1 hour | High (debugging critical) | P0 |
-| Basic metrics endpoint | 4 hours | High (visibility into system health) | P0 |
-| Deep health checks | 3 hours | High (production deployment requirement) | P0 |
-| Graceful shutdown | 4 hours | High (prevents data loss) | P0 |
-| Scan metrics | 2 hours | Medium (business visibility) | P1 |
-| Error context | 2 hours | Medium (faster debugging) | P1 |
-| Distributed tracing | 2-3 days | Medium (nice-to-have, not critical) | P2 |
-| Alerting rules | 1 day | Low initially (need baseline first) | P2 |
+| Feature | Effort | Complexity Driver |
+|---------|--------|------------------|
+| Clerk SDK + middleware | 2-3 hours | Straightforward — excellent Next.js docs |
+| Clerk webhook handler | 2 hours | svix signature verification, DB insert |
+| Results gating (backend) | 3-4 hours | Modify scan response serialization by tier; test anonymous vs authenticated |
+| Results gating (frontend teaser card) | 3 hours | New component, conditional rendering, modal integration |
+| Domain verification flow | 4-6 hours | UI + token generation + backend HTTP check + status polling |
+| Scan history dashboard | 4-5 hours | New page, DB query, empty state, expiry logic |
+| Per-user rate limiting | 3-4 hours | DB-backed counter, quota reset logic, 429 response format |
+| Remove Stripe audit | 1-2 hours | Delete routes, components, references; clean DB migration |
+| Clerk webhook + DB user creation | 2 hours | One-time setup, well-documented pattern |
+
+**Total estimated effort: 24-30 hours (3-4 development days)**
+
+---
 
 ## Sources
 
-**Confidence Assessment:**
-- Structured logging patterns: HIGH (tracing ecosystem convention, widely documented)
-- Prometheus metrics: HIGH (industry standard, well-established patterns)
-- Health check patterns: HIGH (k8s probe patterns, documented extensively)
-- Graceful shutdown: MEDIUM (tokio patterns documented, specific scan handling is custom)
-- OpenTelemetry: MEDIUM (integration complexity varies, ecosystem still maturing)
+**Clerk documentation (HIGH confidence):**
+- [Clerk Next.js App Router Quickstart](https://clerk.com/docs/nextjs/getting-started/quickstart)
+- [clerkMiddleware() reference](https://clerk.com/docs/reference/nextjs/clerk-middleware)
+- [auth() App Router reference](https://clerk.com/docs/reference/nextjs/app-router/auth)
+- [User metadata](https://clerk.com/docs/users/metadata)
+- [Sync Clerk data via webhooks](https://clerk.com/docs/guides/development/webhooks/syncing)
+- [Basic RBAC with metadata](https://clerk.com/docs/guides/secure/basic-rbac)
+- [SignIn component](https://clerk.com/docs/nextjs/reference/components/authentication/sign-in)
+- [SignUp component](https://clerk.com/docs/nextjs/reference/components/authentication/sign-up)
+- [UserButton component](https://clerk.com/docs/nextjs/reference/components/user/user-button)
+- [Complete Auth Guide for Next.js App Router 2025](https://clerk.com/articles/complete-authentication-guide-for-nextjs-app-router)
 
-**Training data limitations:**
-- Web access restricted (cannot verify latest crate versions or 2026 best practices)
-- Rust observability ecosystem evolves rapidly (tracing-opentelemetry, tokio-console)
-- Specific Axum 0.8.8 observability middleware may have changed since training cutoff
+**Domain verification (MEDIUM-HIGH confidence — based on Google Search Console pattern, widely adopted):**
+- [Google Search Console verification methods](https://support.google.com/webmasters/answer/9008080?hl=en)
+- [WorkOS developer guide to domain verification](https://workos.com/blog/the-developers-guide-to-domain-verification)
+- [DomainDetails KB — verification methods 2025](https://domaindetails.com/kb/domain-management/how-to-verify-domain-ownership)
 
-**Recommendation:** Verify latest crate compatibility and best practices from:
-- docs.rs for tracing, tracing-subscriber, prometheus, tower-http
-- Axum examples repository for observability patterns
-- tokio docs for graceful shutdown examples
+**Tiered access and feature gating (MEDIUM confidence — general SaaS patterns, not security-tool-specific):**
+- [Feature gating strategies for SaaS freemium](https://demogo.com/2025/06/25/feature-gating-strategies-for-your-saas-freemium-model-to-boost-conversions/)
+- [Freemium conversion rate benchmarks 2026](https://firstpagesage.com/seo-blog/saas-freemium-conversion-rates/)
+- [Feature gating guide — Orb](https://www.withorb.com/blog/feature-gating)
+- [Gated content conversion statistics 2025](https://www.amraandelma.com/gated-content-conversion-statistics/)
+
+**Rate limiting (HIGH confidence — well-established patterns):**
+- [Rate limiting in PostgreSQL — Neon](https://neon.com/guides/rate-limiting)
+- [10 best practices for API rate limiting 2025 — Zuplo](https://zuplo.com/learning-center/10-best-practices-for-api-rate-limiting-in-2025)
+- [token-bucket-postgres on GitHub](https://github.com/fafl/token-bucket-postgres)
+
+**Empty states and dashboard UX (MEDIUM confidence — general SaaS patterns):**
+- [Empty state in SaaS applications — Userpilot](https://userpilot.com/blog/empty-state-saas/)
+- [Dashboard design UX patterns — Pencil & Paper](https://www.pencilandpaper.io/articles/ux-pattern-analysis-data-dashboards)

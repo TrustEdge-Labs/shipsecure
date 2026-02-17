@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 27 of 28 (E2E Tests)
-Plan: 02 of 04
+Plan: 03 of 04
 Status: In Progress
-Last activity: 2026-02-17 — Completed 27-02 E2E User Journey Tests (free scan + paid audit)
+Last activity: 2026-02-17 — Completed 27-03 E2E Error Flow Tests (error-flows.spec.ts + full suite)
 
 Progress: [█████████░] 90%
 
@@ -44,6 +44,7 @@ Progress: [█████████░] 90%
 | Phase 26 P04 | 2m | 2 | 3 |
 | Phase 27 P01 | 3m | 2 | 8 |
 | Phase 27 P02 | 2m | 2 | 2 |
+| Phase 27 P03 | 13m | 2 | 4 |
 
 ## Accumulated Context
 
@@ -102,6 +103,14 @@ All decisions logged in PROJECT.md Key Decisions table (44 entries across v1.0-v
 - Payment cancel path modeled as direct navigation to results page (no dedicated /payment/cancel route)
 - next.onFetch() interceptors called synchronously before page.goto(); page.route() set up with await
 
+**Phase 27-03 (E2E Error Flow Tests):**
+- testMatch: '**/*.spec.ts' override required — defineConfig from next/experimental/testmode/playwright defaults to {app,pages}/**/*.spec.ts
+- Port 3001 for E2E tests to avoid conflict with services on port 3000 (e.g. dev tools); reuseExistingServer: false
+- Network timeout test: first fetch returns in-progress scan so scan state is populated, subsequent aborts build errorCount >= 3 to trigger "Having trouble connecting" warning
+- Grade badge selectors: [class*="grade-X-bg"] not text='X' — avoids strict mode violations from ambiguous single-letter text
+- CFAA consent test: assert validity.valid = false on authorization checkbox (browser HTML5 validation) not Zod error
+- Stripe redirect Location: capture appOrigin from page.url() after goto() for port-agnostic redirects
+
 ### Pending Todos
 
 None.
@@ -113,5 +122,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 27-02 E2E User Journey Tests (free scan + paid audit specs)
-Resume file: .planning/phases/27-e2e-tests/27-02-SUMMARY.md
+Stopped at: Completed 27-03 E2E Error Flow Tests (error-flows + full suite)
+Resume file: .planning/phases/27-e2e-tests/27-03-SUMMARY.md

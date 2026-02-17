@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A SaaS security scanning platform that targets developers using AI code generation tools (Cursor, Bolt, Lovable, etc.) who ship fast but lack security expertise. It orchestrates open-source security tools as native subprocesses, applies vibe-code-specific detection rules, auto-detects frameworks, and delivers actionable remediation guidance with copy-paste code fixes — no security expertise required. Includes a free tier (no signup) and a paid deep audit ($49) with professional PDF reports. Live at https://shipsecure.ai.
+A SaaS security scanning platform that targets developers using AI code generation tools (Cursor, Bolt, Lovable, etc.) who ship fast but lack security expertise. It orchestrates open-source security tools as native subprocesses, applies vibe-code-specific detection rules, auto-detects frameworks, and delivers actionable remediation guidance with copy-paste code fixes — no security expertise required. Three-tier access model: anonymous instant audit (lead gen), free Developer tier with domain verification and scan history, and future Pro tier for businesses. Live at https://shipsecure.ai.
 
 ## Core Value
 
@@ -70,19 +70,31 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 ### Active
 
-(No active milestone — define next with `/gsd:new-milestone`)
+**Current Milestone: v1.6 Auth & Tiered Access**
+
+**Goal:** Add user authentication (Clerk), domain ownership verification, and a tiered access model that converts anonymous scanners into registered users through a "teaser" strategy — revealing critical findings only to authenticated users with verified domains.
+
+**Target features:**
+- Clerk auth integration (signup, signin, sessions, Next.js middleware)
+- Domain ownership verification (meta tag or file upload)
+- Tiered scan configuration (anonymous-light vs authenticated-full)
+- Severity-based results gating (full details for low/med, teaser for high/critical on anonymous scans)
+- Scan history dashboard for authenticated users
+- Per-tier scan rate limits (1 anonymous, 3-5/month Developer)
+- Data retention enforcement (24hr anonymous, 7-14 days Developer)
+- Remove $49 one-time Stripe audit (replaced by tier model)
+- User dashboard with verified domain, scan history, quota status
 
 ### Out of Scope
 
-- GitHub repo scanning (Semgrep, Gitleaks, dependency analysis) — fast follow after launch validation
-- Pro subscription tier ($149/month continuous monitoring) — add after validating one-time audit demand
+- GitHub repo scanning (Semgrep, Gitleaks, dependency analysis) — fast follow after auth foundation
+- Pro subscription tier (unlimited sites, deep scans, automation, API, PDF/CSV exports, permanent history) — build after Developer tier proves conversion
 - Agency tier (white-label reports, multi-repo) — future tier after Pro is proven
 - Certificate expiration monitoring — Pro tier feature
 - GitHub webhook triggers for automated re-scanning — Pro tier feature
-- OAuth/social login — email-based flow sufficient for now
+- Scheduled scans / CI/CD integration — Pro tier feature
 - Mobile app — web-first
 - Real-time scan progress (WebSocket) — polling sufficient for now
-- User accounts / scan history — massive scope; free tier explicitly avoids signup
 - Cookie consent banner — not needed with cookieless Plausible analytics
 
 ## Context
@@ -92,8 +104,9 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - Lovable's built-in scanner catches vulnerabilities only 66% of the time; Bolt's fails entirely
 - Founder has 40+ years cybersecurity experience (Bose, Ford, TrustEdge Labs) — deep domain credibility
 - Target audience: solo developers and small teams shipping with AI tools who don't have security expertise
-- Free tier is the lead generation funnel — low friction (no signup), email capture for follow-up
-- One-time audit is the first revenue product — validate willingness to pay before building subscriptions
+- Three-tier access: anonymous instant audit (lead gen) → free Developer tier (verified domain, history) → paid Pro tier (future)
+- "Teaser" conversion strategy: anonymous scans show full low/medium findings but gate high/critical behind signup — proves scanner power while creating FOMO
+- Anonymous instant audit remains zero-friction lead gen (no signup), but now capped at 1 scan with 24hr retention
 - Remediation playbooks are a key differentiator — not just "you have a vulnerability" but "here's exactly how to fix it"
 - **v1.0 shipped 2026-02-06:** ~7,000 LOC Rust, ~21,000 LOC TypeScript, 165 files, 4 phases, 23 plans
 - **v1.1 shipped 2026-02-08:** Production live at https://shipsecure.ai, 77 files changed, 3 phases, 10 plans
@@ -108,10 +121,10 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **Tech Stack**: Rust backend (Axum), Next.js frontend, PostgreSQL
 - **Hosting**: DigitalOcean — single droplet with Docker, Nginx reverse proxy, Let's Encrypt SSL
 - **Scanning Tools**: Native subprocesses (Nuclei, testssl.sh, custom probes) — installed on host
-- **Payments**: Stripe — standard, reliable
+- **Auth**: Clerk — managed auth with Next.js middleware, pre-built components, session management
 - **Email**: Resend — transactional email for scan results and PDF reports
-- **Free Tier**: No signup required — URL + email only, maximum conversion
-- **Launch Model**: Free + One-Time Audit first, subscriptions later
+- **Access Model**: Anonymous instant audit (1 scan, 24hr) → Developer tier (signup, 3-5/month, verified domain) → Pro tier (future)
+- **Domain Verification**: Meta tag or file upload — user proves site ownership before authenticated scanning
 - **CI/CD**: GitHub Actions → GHCR images → auto SSH deploy to production
 
 ## Key Decisions
@@ -160,5 +173,11 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Sequential CI jobs (unit → E2E) | Avoid wasting E2E resources if unit tests fail | ✓ Good — fast feedback on unit failures, E2E only runs on passing code |
 | Branch protection with enforce_admins | No bypass even for repo owner, strict quality gate | ✓ Good — first PR through CI caught a real bug (browser mismatch) |
 
+| Tiered access over open scanning | Domain verification prevents unauthorized scanning of others' sites; teaser strategy converts anonymous → registered | — Pending |
+| Clerk over Auth.js/Supabase Auth | Managed service, fastest path to production auth, pre-built Next.js components | — Pending |
+| Remove $49 one-time audit | Replace with tier model — deep scans become Developer/Pro feature, simplifies product | — Pending |
+| Teaser results gating | Show full low/med findings, gate high/critical behind signup — proves value while driving conversion | — Pending |
+| Meta tag + file upload for domain verification | Lower friction than DNS TXT for target audience (vibe-coders may not control DNS) | — Pending |
+
 ---
-*Last updated: 2026-02-17 after v1.5 milestone complete*
+*Last updated: 2026-02-17 after v1.6 milestone started*

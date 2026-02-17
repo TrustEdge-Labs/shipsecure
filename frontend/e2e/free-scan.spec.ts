@@ -41,12 +41,12 @@ test.describe('Free Scan Flow', () => {
     await expect(page.locator('h1')).toContainText('Security Scan Results');
 
     // Grade display — freeGradeB fixture has score 'B'
-    await expect(page.locator('text=B')).toBeVisible();
+    // Use exact text match scoped to the grade circle element to avoid ambiguity
+    await expect(page.locator('[class*="grade-b-bg"]')).toBeVisible();
 
-    // Severity badges — freeGradeB has high and medium findings
-    // FindingAccordion renders severity as uppercase CSS but text content is lowercase
-    await expect(page.locator('text=high').first()).toBeVisible();
-    await expect(page.locator('text=medium').first()).toBeVisible();
+    // Severity counts in grade summary — freeGradeB has 1 high and 1 medium
+    await expect(page.locator('text=1 High')).toBeVisible();
+    await expect(page.locator('text=1 Medium')).toBeVisible();
 
     // Verify finding title from fixture is visible
     await expect(page.locator('text=Missing Content-Security-Policy Header')).toBeVisible();
@@ -70,18 +70,21 @@ test.describe('Free Scan Flow', () => {
     // 3. Click submit without checking authorization
     await page.click('button[type="submit"]');
 
-    // 4. Verify validation error message
-    await expect(
-      page.locator('text=You must confirm you have authorization to scan this website')
-    ).toBeVisible();
+    // 4. Browser native validation prevents form submission — authorization checkbox is invalid
+    const authCheckbox = page.locator('input[name="authorization"]');
+    const authValid = await authCheckbox.evaluate((el: HTMLInputElement) => el.validity.valid);
+    expect(authValid).toBe(false);
 
-    // 5. Now check the authorization checkbox
+    // Page stays on home page (not navigated to scan page)
+    expect(page.url()).not.toContain('/scan/');
+
+    // 5. Now check the authorization checkbox to consent
     await page.check('input[name="authorization"]');
 
     // 6. Set up polling mock for the successful submission
     await mockScanPolling(page, scanFixtures);
 
-    // 7. Click submit again
+    // 7. Click submit again — all fields valid now
     await page.click('button[type="submit"]');
 
     // 8. Verify form progresses to scan page

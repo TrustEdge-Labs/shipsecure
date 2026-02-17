@@ -25,6 +25,12 @@ test.describe('Paid Audit Flow', () => {
       });
     });
 
+    // 1. Navigate to results page
+    await page.goto('/results/tok_e2e_abc123');
+
+    // Capture the origin after navigation so Stripe redirect points to the right port
+    const appOrigin = new URL(page.url()).origin;
+
     // Mock Stripe redirect: intercept the Stripe Checkout URL and assert cs_test_ pattern (E2E-05)
     await page.route('https://checkout.stripe.com/**', async (route) => {
       // Assert that the checkout URL targets Stripe test mode
@@ -34,14 +40,11 @@ test.describe('Paid Audit Flow', () => {
       await route.fulfill({
         status: 302,
         headers: {
-          Location: 'http://localhost:3000/payment/success?session_id=mock_123',
+          Location: `${appOrigin}/payment/success?session_id=mock_123`,
         },
         body: '',
       });
     });
-
-    // 1. Navigate to results page
-    await page.goto('/results/tok_e2e_abc123');
 
     // 2. Verify UpgradeCTA is visible
     await expect(page.locator('text=Upgrade for $49')).toBeVisible();
@@ -80,8 +83,8 @@ test.describe('Paid Audit Flow', () => {
     // 1. Navigate to results page
     await page.goto('/results/tok_e2e_abc123');
 
-    // 2. Verify grade A is shown
-    await expect(page.locator('text=A')).toBeVisible();
+    // 2. Verify grade A is shown — use class selector to avoid strict mode ambiguity
+    await expect(page.locator('[class*="grade-a-bg"]')).toBeVisible();
 
     // 3. Verify UpgradeCTA is NOT visible (tier is 'paid')
     await expect(page.locator('text=Upgrade to Deep Audit')).not.toBeVisible();

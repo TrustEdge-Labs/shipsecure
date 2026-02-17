@@ -43,8 +43,8 @@ Requirements for the Frontend Testing milestone. Each maps to roadmap phases.
 
 - [ ] **CI-01**: GitHub Actions workflow running Vitest unit/component tests on every PR and push to main
 - [ ] **CI-02**: GitHub Actions workflow running Playwright E2E tests on every PR and push to main
-- [ ] **CI-03**: Vitest and Playwright jobs run in parallel for faster CI feedback
-- [ ] **CI-04**: npm dependency caching and Playwright browser caching configured for CI performance
+- [ ] **CI-03**: Vitest and Playwright jobs run as separate CI jobs with E2E gated on unit test success for resource efficiency
+- [ ] **CI-04**: npm dependency caching (node_modules) configured for CI performance; Playwright browsers installed fresh each run per official recommendation
 - [ ] **CI-05**: Playwright test artifacts (screenshots, traces) uploaded on test failure for debugging
 - [ ] **CI-06**: PR merges blocked when any test job fails
 

@@ -5,15 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** All milestones complete (v1.0-v1.4). Ready for next milestone.
+**Current focus:** v1.5 Frontend Testing — component tests, E2E tests, CI integration
 
 ## Current Position
 
-Milestone: v1.4 Observability — SHIPPED 2026-02-16
-Status: Complete — all 5 milestones shipped
-Last activity: 2026-02-16 — v1.4 milestone archived
-
-Progress: [████████████████████████] 100% (24 of 24 phases complete)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-16 — Milestone v1.5 started
 
 ## Performance Metrics
 
@@ -44,10 +43,10 @@ None.
 
 ### Blockers/Concerns
 
-None. All milestones shipped and verified in production.
+None.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: v1.4 milestone archived, ready for `/gsd:new-milestone`
-Resume file: .planning/MILESTONES.md
+Stopped at: Defining v1.5 requirements
+Resume file: .planning/REQUIREMENTS.md

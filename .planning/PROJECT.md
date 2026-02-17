@@ -64,7 +64,11 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 ### Active
 
-(No active requirements — define next milestone with `/gsd:new-milestone`)
+**Current Milestone: v1.5 Frontend Testing**
+
+**Goal:** Add comprehensive frontend testing with Vitest + React Testing Library for component tests and Playwright for E2E tests covering both scan and payment flows, integrated into CI/CD.
+
+(Requirements defined in REQUIREMENTS.md)
 
 ### Out of Scope
 
@@ -95,6 +99,7 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **v1.3 shipped 2026-02-11:** Brand identity — design tokens, logo, header, icons, favicon, 62 files changed, 6 phases, 10 plans
 - **v1.4 shipped 2026-02-16:** Observability — structured logging, request tracing, health checks, Prometheus metrics, graceful shutdown, 47 files changed, 6 phases, 11 plans
 - **Current:** ~7,877 LOC Rust, 5 milestones shipped, 24 phases, 64 plans completed
+- **v1.5 focus:** Frontend testing — zero test coverage today, adding component + E2E tests with CI integration
 
 ## Constraints
 
@@ -147,4 +152,4 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Remove app-level /metrics IP check | Docker networking breaks is_loopback(); Nginx + Docker port binding sufficient | ✓ Good — defense-in-depth at infrastructure layer |
 
 ---
-*Last updated: 2026-02-16 after v1.4 milestone*
+*Last updated: 2026-02-16 after v1.5 milestone started*

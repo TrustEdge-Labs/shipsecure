@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 27 of 28 (E2E Tests)
-Plan: 01 of 04
+Plan: 02 of 04
 Status: In Progress
-Last activity: 2026-02-17 — Completed 27-01 E2E Infrastructure (Playwright + fixtures)
+Last activity: 2026-02-17 — Completed 27-02 E2E User Journey Tests (free scan + paid audit)
 
 Progress: [█████████░] 90%
 
@@ -43,6 +43,7 @@ Progress: [█████████░] 90%
 | Phase 26 P03 | 2m | 2 | 4 |
 | Phase 26 P04 | 2m | 2 | 3 |
 | Phase 27 P01 | 3m | 2 | 8 |
+| Phase 27 P02 | 2m | 2 | 2 |
 
 ## Accumulated Context
 
@@ -95,6 +96,12 @@ All decisions logged in PROJECT.md Key Decisions table (44 entries across v1.0-v
 - 200ms delays on mocked responses to simulate real timing and catch race conditions
 - page.route() for client-side fetch interception, next.onFetch() for Server Action/Component fetch
 
+**Phase 27-02 (E2E User Journey Tests):**
+- CFAA validation error text from scan action: 'You must confirm you have authorization to scan this website'
+- Stripe test mode (E2E-05) verified inline in page.route handler via expect(route.request().url()).toContain('cs_test_')
+- Payment cancel path modeled as direct navigation to results page (no dedicated /payment/cancel route)
+- next.onFetch() interceptors called synchronously before page.goto(); page.route() set up with await
+
 ### Pending Todos
 
 None.
@@ -106,5 +113,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 27-01 E2E Infrastructure (Playwright + fixtures + helpers)
-Resume file: .planning/phases/27-e2e-tests/27-01-SUMMARY.md
+Stopped at: Completed 27-02 E2E User Journey Tests (free scan + paid audit specs)
+Resume file: .planning/phases/27-e2e-tests/27-02-SUMMARY.md

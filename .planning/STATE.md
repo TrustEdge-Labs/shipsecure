@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.5 Frontend Testing — Phase 27: E2E Tests
+**Current focus:** v1.5 Frontend Testing — Phase 28: CI/CD and Quality Gates
 
 ## Current Position
 
-Phase: 27 of 28 (E2E Tests)
-Plan: 03 of 04
+Phase: 28 of 28 (CI/CD and Quality Gates)
+Plan: 01 of 02
 Status: In Progress
-Last activity: 2026-02-17 — Completed 27-03 E2E Error Flow Tests (error-flows.spec.ts + full suite)
+Last activity: 2026-02-17 — Completed 28-01 CI Workflow and Quality Gates (ci.yml + vitest thresholds + playwright screenshots)
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 95%
 
 ## Performance Metrics
 
@@ -45,6 +45,7 @@ Progress: [█████████░] 90%
 | Phase 27 P01 | 3m | 2 | 8 |
 | Phase 27 P02 | 2m | 2 | 2 |
 | Phase 27 P03 | 13m | 2 | 4 |
+| Phase 28 P01 | 2m | 1 | 3 |
 
 ## Accumulated Context
 
@@ -111,6 +112,12 @@ All decisions logged in PROJECT.md Key Decisions table (44 entries across v1.0-v
 - CFAA consent test: assert validity.valid = false on authorization checkbox (browser HTML5 validation) not Zod error
 - Stripe redirect Location: capture appOrigin from page.url() after goto() for port-agnostic redirects
 
+**Phase 28-01 (CI Workflow and Quality Gates):**
+- Coverage include restricted to components/** — server-side app/** and lib/** have 0% unit test coverage (tested by E2E), making 80% thresholds impossible without scope restriction
+- E2E job depends on unit-tests job (needs: [unit-tests]) — sequential per user decision
+- Playwright browsers installed fresh each run — no browser caching per user decision
+- Artifact upload on failure only (if: failure()) — avoids wasting storage on successful runs
+
 ### Pending Todos
 
 None.
@@ -122,5 +129,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 27-03 E2E Error Flow Tests (error-flows + full suite)
-Resume file: .planning/phases/27-e2e-tests/27-03-SUMMARY.md
+Stopped at: Completed 28-01 CI Workflow and Quality Gates (ci.yml + vitest thresholds + playwright screenshots)
+Resume file: .planning/phases/28-ci-cd-and-quality-gates/28-01-SUMMARY.md

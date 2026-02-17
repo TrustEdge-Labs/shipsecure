@@ -10,7 +10,7 @@ use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio_util::sync::CancellationToken;
 use tokio_util::task::TaskTracker;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use tracing::Span;
 use tracing_subscriber::EnvFilter;
@@ -233,11 +233,15 @@ async fn main() {
         shutdown_token: shutdown_token.clone(),
     };
 
-    // CORS middleware for frontend communication
+    // CORS middleware — restrict origin to configured frontend URL
+    let frontend_url: axum::http::HeaderValue = std::env::var("FRONTEND_URL")
+        .expect("FRONTEND_URL must be set")
+        .parse()
+        .expect("FRONTEND_URL must be a valid header value");
     let cors = CorsLayer::new()
-        .allow_origin(Any) // For development; restrict in production
+        .allow_origin(frontend_url)
         .allow_methods([Method::GET, Method::POST])
-        .allow_headers(Any);
+        .allow_headers([axum::http::header::CONTENT_TYPE]);
 
     // TraceLayer middleware for request tracing
     let trace_layer = TraceLayer::new_for_http()

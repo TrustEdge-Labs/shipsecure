@@ -11,6 +11,16 @@ use crate::api::scans::AppState;
 use crate::models::Severity;
 use crate::{db, models};
 
+/// Extract the bare domain from a scan target URL using the same normalization
+/// as `domains::normalize_domain` — lowercase, www-stripped — to prevent
+/// normalization mismatch (Phase 32 Pitfall 6).
+fn extract_domain_from_url(target_url: &str) -> Option<String> {
+    let parsed = url::Url::parse(target_url).ok()?;
+    let host = parsed.host_str()?;
+    let domain = host.strip_prefix("www.").unwrap_or(host);
+    Some(domain.to_lowercase())
+}
+
 /// Optionally extract the Clerk user ID from the Authorization header.
 ///
 /// Returns `None` if no Authorization header is present, the token is malformed,
@@ -50,9 +60,22 @@ pub async fn get_results_by_token(
             }
         })?;
 
-    // 3. Compute owner_verified — BOTH sides must be Some; None == None returns false
+    // 3. Compute owner_verified — identity match AND active domain verification required.
+    //    None == None returns false (anonymous scans always gated for anonymous callers).
+    //    If domain verification has expired, owner_verified becomes false and results are re-gated.
     let owner_verified = match (&authenticated_user_id, &scan.clerk_user_id) {
-        (Some(caller), Some(owner)) => caller == owner,
+        (Some(caller), Some(owner)) if caller == owner => {
+            // Identity matches — also check active domain verification
+            let domain = extract_domain_from_url(&scan.target_url);
+            match domain {
+                Some(ref d) => {
+                    db::domains::is_domain_verified(&state.pool, caller, d)
+                        .await
+                        .unwrap_or(false)
+                }
+                None => false,
+            }
+        }
         _ => false,
     };
 
@@ -166,9 +189,22 @@ pub async fn download_results_markdown(
             }
         })?;
 
-    // 3. Compute owner_verified — BOTH sides must be Some; None == None returns false
+    // 3. Compute owner_verified — identity match AND active domain verification required.
+    //    None == None returns false (anonymous scans always gated for anonymous callers).
+    //    If domain verification has expired, owner_verified becomes false and results are re-gated.
     let owner_verified = match (&authenticated_user_id, &scan.clerk_user_id) {
-        (Some(caller), Some(owner)) => caller == owner,
+        (Some(caller), Some(owner)) if caller == owner => {
+            // Identity matches — also check active domain verification
+            let domain = extract_domain_from_url(&scan.target_url);
+            match domain {
+                Some(ref d) => {
+                    db::domains::is_domain_verified(&state.pool, caller, d)
+                        .await
+                        .unwrap_or(false)
+                }
+                None => false,
+            }
+        }
         _ => false,
     };
 

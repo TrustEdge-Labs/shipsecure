@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Finding } from '@/lib/types'
+import { AuthGate } from './auth-gate'
 
 interface FindingAccordionProps {
   finding: Finding
@@ -72,15 +73,21 @@ export function FindingAccordion({ finding, defaultExpanded = false }: FindingAc
         } overflow-hidden`}
       >
         <div className="px-4 py-4 bg-surface-secondary border-t border-border-subtle">
-          <p className="text-sm text-text-secondary mb-4 break-words">
-            {finding.description}
-          </p>
-          <h4 className="text-sm font-semibold text-text-primary mb-2">
-            How to Fix
-          </h4>
-          <p className="text-sm text-text-secondary whitespace-pre-line break-words">
-            {finding.remediation}
-          </p>
+          <AuthGate
+            gated={finding.gated === true}
+            severity={finding.severity}
+            scannerName={getScannerDisplayName(finding.scanner_name)}
+          >
+            <p className="text-sm text-text-secondary mb-4 break-words">
+              {finding.description}
+            </p>
+            <h4 className="text-sm font-semibold text-text-primary mb-2">
+              How to Fix
+            </h4>
+            <p className="text-sm text-text-secondary whitespace-pre-line break-words">
+              {finding.remediation}
+            </p>
+          </AuthGate>
         </div>
       </div>
     </div>

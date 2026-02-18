@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { auth } from '@clerk/nextjs/server'
 import { GradeSummary } from '@/components/grade-summary'
 import { ResultsDashboard } from '@/components/results-dashboard'
 import { ScanResponse } from '@/lib/types'
@@ -14,8 +15,15 @@ export async function generateMetadata({ params }: ResultsPageProps) {
 
   try {
     const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
+    const { getToken } = await auth()
+    const sessionToken = await getToken()
+    const metaHeaders: Record<string, string> = {}
+    if (sessionToken) {
+      metaHeaders['Authorization'] = `Bearer ${sessionToken}`
+    }
     const res = await fetch(`${BACKEND_URL}/api/v1/results/${token}`, {
       cache: 'no-store',
+      headers: metaHeaders,
     })
 
     if (!res.ok) {
@@ -55,6 +63,14 @@ export async function generateMetadata({ params }: ResultsPageProps) {
 export default async function ResultsPage({ params }: ResultsPageProps) {
   const { token } = await params
 
+  // Extract Clerk session token (if authenticated) to forward to backend
+  const { getToken } = await auth()
+  const sessionToken = await getToken()
+  const requestHeaders: Record<string, string> = {}
+  if (sessionToken) {
+    requestHeaders['Authorization'] = `Bearer ${sessionToken}`
+  }
+
   // Fetch results server-side
   const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
 
@@ -62,6 +78,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   try {
     const res = await fetch(`${BACKEND_URL}/api/v1/results/${token}`, {
       cache: 'no-store',
+      headers: requestHeaders,
     })
 
     if (!res.ok) {
@@ -178,17 +195,19 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
         {/* Actions */}
         <div className="flex gap-4 flex-wrap">
-          <a
-            href={downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-6 py-2 min-h-[44px] w-full sm:w-auto border-2 border-brand-primary text-brand-primary rounded-md hover:bg-info-bg transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download Markdown Report
-          </a>
+          {data.owner_verified && (
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2 min-h-[44px] w-full sm:w-auto border-2 border-brand-primary text-brand-primary rounded-md hover:bg-info-bg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Markdown Report
+            </a>
+          )}
 
           <a
             href={`/?url=${encodeURIComponent(data.target_url)}`}

@@ -129,10 +129,10 @@ Plans:
   1. The application compiles with async-stripe, hmac, sha2, and genpdf removed from Cargo.toml — no compilation errors
   2. Deleting a scan row does not cascade-delete rows in paid_audits — historical payment records are preserved
   3. The scans table accepts a clerk_user_id value and an 'authenticated' tier value without constraint violations
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 30-01: Stripe removal and schema migration — remove async-stripe/hmac/sha2/genpdf from Cargo.toml, delete Stripe checkout/webhook handlers, remove paid audit frontend components, run migration changing paid_audits FK to ON DELETE SET NULL, add clerk_user_id column and extend tier constraint, verify E2E free scan still passes
+- [ ] 30-01-PLAN.md — Stripe removal and schema migration: remove 5 Rust crates and all Stripe backend code, delete frontend UpgradeCTA/payment components and fix affected tests, create migration for paid_audits FK SET NULL + tier constraint + clerk_user_id column
 
 ### Phase 31: Results Gating
 **Goal**: Anonymous users see teaser cards for high/critical findings that drive signup — and cannot bypass gating by calling the API directly

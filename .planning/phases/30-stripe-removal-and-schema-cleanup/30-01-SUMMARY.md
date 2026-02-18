@@ -160,3 +160,16 @@ None - no external service configuration required. Migration will apply automati
 ---
 *Phase: 30-stripe-removal-and-schema-cleanup*
 *Completed: 2026-02-18*
+
+## Self-Check: PASSED
+
+- FOUND: .planning/phases/30-stripe-removal-and-schema-cleanup/30-01-SUMMARY.md
+- FOUND: migrations/20260218000001_stripe_removal_schema.sql
+- FOUND: checkout.rs DELETED (src/api/checkout.rs does not exist)
+- FOUND: upgrade-cta.tsx DELETED (frontend/components/upgrade-cta.tsx does not exist)
+- FOUND commit: a2fca7c (Task 1 - backend cleanup)
+- FOUND commit: 04ff8b0 (Task 2 - frontend cleanup)
+- FOUND commit: 190f8a2 (metadata/docs)
+- cargo check: passes with 0 errors (3 pre-existing warnings)
+- npm run build: passes cleanly (no Stripe/UpgradeCTA errors)
+- REQUIREMENTS marked: CLEN-01, CLEN-02, CLEN-03

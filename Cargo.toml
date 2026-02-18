@@ -6,6 +6,9 @@ edition = "2024"
 [dependencies]
 async-stripe = { version = "0.41", default-features = false, features = ["runtime-tokio-hyper", "checkout"] }
 axum = "0.8.8"
+axum-jwt-auth = "0.6"
+http = "1.0"
+jsonwebtoken = "10"
 base64 = "0.22"
 chrono = { version = "0.4.43", features = ["serde"] }
 dotenvy = "0.15.7"
@@ -21,6 +24,7 @@ scraper = "0.22"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
+svix = "1"
 sqlx = { version = "0.8.6", features = ["runtime-tokio", "tls-rustls", "postgres", "migrate", "uuid", "chrono"] }
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["rt"] }

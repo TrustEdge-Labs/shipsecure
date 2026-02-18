@@ -1,6 +1,7 @@
 use axum::extract::{ConnectInfo, Path, State, Extension};
 use axum::http::StatusCode;
 use axum::Json;
+use axum_jwt_auth::Decoder;
 use metrics_exporter_prometheus::PrometheusHandle;
 use serde_json::json;
 use sqlx::PgPool;
@@ -9,6 +10,7 @@ use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
+use crate::api::auth::ClerkClaims;
 use crate::api::errors::ApiError;
 use crate::api::health::HealthCache;
 use crate::models::{CreateScanRequest, Severity};
@@ -22,6 +24,8 @@ pub struct AppState {
     pub health_cache: HealthCache,
     pub metrics_handle: PrometheusHandle,
     pub shutdown_token: CancellationToken,
+    /// JWKS decoder for verifying Clerk JWTs. Implements `JwtDecoder<ClerkClaims>`.
+    pub jwt_decoder: Decoder<ClerkClaims>,
 }
 
 /// POST /api/v1/scans - Create a new scan

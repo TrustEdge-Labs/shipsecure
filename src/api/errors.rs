@@ -10,6 +10,7 @@ pub enum ApiError {
     SsrfBlocked(String),
     RateLimited(String),
     NotFound,
+    Unauthorized,
     InternalError(String),
     Custom {
         status: StatusCode,
@@ -54,6 +55,12 @@ impl IntoResponse for ApiError {
                 "Not Found".to_string(),
                 StatusCode::NOT_FOUND,
                 "The requested scan was not found.".to_string(),
+            ),
+            ApiError::Unauthorized => (
+                "about:blank".to_string(),
+                "Unauthorized".to_string(),
+                StatusCode::UNAUTHORIZED,
+                "Authentication required".to_string(),
             ),
             ApiError::InternalError(msg) => {
                 // Log the actual error but don't expose it to the client

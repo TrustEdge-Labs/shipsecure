@@ -3,6 +3,7 @@ use axum::middleware;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::Router;
+use axum_jwt_auth::RemoteJwksDecoder;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -17,6 +18,7 @@ use tracing_subscriber::EnvFilter;
 use tracing_panic::panic_hook;
 
 // Import from lib
+use shipsecure::api::auth::ClerkClaims;
 use shipsecure::api::scans::{self, AppState};
 use shipsecure::api::{checkout, health, results, stats, webhooks};
 use shipsecure::metrics;
@@ -164,6 +166,7 @@ async fn main() {
         "SHIPSECURE_BASE_URL",
         "FRONTEND_URL",
         "MAX_CONCURRENT_SCANS",
+        "CLERK_JWKS_URL",
     ]).expect("Configuration error");
 
     // Init logging with format switching
@@ -224,6 +227,26 @@ async fn main() {
     // Create health cache
     let health_cache = health::HealthCache::new();
 
+    // Initialize JWKS decoder for Clerk JWT verification
+    // Fetches public keys from Clerk's JWKS endpoint and caches them with background refresh.
+    let jwks_url = std::env::var("CLERK_JWKS_URL")
+        .expect("CLERK_JWKS_URL must be set");
+    let mut validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
+    // Clerk session tokens do not include an aud claim by default
+    validation.validate_aud = false;
+    let jwks_decoder = RemoteJwksDecoder::builder()
+        .jwks_url(jwks_url)
+        .validation(validation)
+        .build()
+        .expect("Failed to build JWKS decoder");
+    let jwks_decoder = Arc::new(jwks_decoder);
+    let _jwks_shutdown = jwks_decoder
+        .initialize()
+        .await
+        .expect("Failed to initialize JWKS decoder");
+    // Cast to Decoder<ClerkClaims> = Arc<dyn JwtDecoder<ClerkClaims> + Send + Sync>
+    let jwt_decoder: axum_jwt_auth::Decoder<ClerkClaims> = jwks_decoder;
+
     // App state
     let state = AppState {
         pool: pool.clone(),
@@ -231,6 +254,7 @@ async fn main() {
         health_cache,
         metrics_handle: metrics_handle.clone(),
         shutdown_token: shutdown_token.clone(),
+        jwt_decoder,
     };
 
     // CORS middleware — restrict origin to configured frontend URL
@@ -241,7 +265,7 @@ async fn main() {
     let cors = CorsLayer::new()
         .allow_origin(frontend_url)
         .allow_methods([Method::GET, Method::POST])
-        .allow_headers([axum::http::header::CONTENT_TYPE]);
+        .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION]);
 
     // TraceLayer middleware for request tracing
     let trace_layer = TraceLayer::new_for_http()

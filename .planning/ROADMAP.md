@@ -218,7 +218,7 @@ Plans:
 | 19-24. Observability | v1.4 | 11/11 | Complete | 2026-02-16 |
 | 25-28. Testing | v1.5 | 11/11 | Complete | 2026-02-17 |
 | 29. Auth Foundation | v1.6 | Complete    | 2026-02-18 | 2026-02-18 |
-| 30. Stripe Removal & Schema | 1/1 | Complete   | 2026-02-18 | - |
+| 30. Stripe Removal & Schema | 1/1 | Complete    | 2026-02-18 | - |
 | 31. Results Gating | v1.6 | 0/2 | Not started | - |
 | 32. Domain Verification | v1.6 | 0/2 | Not started | - |
 | 33. Tiered Access & Rate Limiting | v1.6 | 0/2 | Not started | - |

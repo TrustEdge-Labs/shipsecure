@@ -114,45 +114,45 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| AUTH-04 | — | Pending |
-| AUTH-05 | — | Pending |
-| AUTH-06 | — | Pending |
-| DOMN-01 | — | Pending |
-| DOMN-02 | — | Pending |
-| DOMN-03 | — | Pending |
-| DOMN-04 | — | Pending |
-| DOMN-05 | — | Pending |
-| GATE-01 | — | Pending |
-| GATE-02 | — | Pending |
-| GATE-03 | — | Pending |
-| GATE-04 | — | Pending |
-| TIER-01 | — | Pending |
-| TIER-02 | — | Pending |
-| TIER-03 | — | Pending |
-| TIER-04 | — | Pending |
-| TIER-05 | — | Pending |
-| TIER-06 | — | Pending |
-| DASH-01 | — | Pending |
-| DASH-02 | — | Pending |
-| RETN-01 | — | Pending |
-| RETN-02 | — | Pending |
-| RETN-03 | — | Pending |
-| CLEN-01 | — | Pending |
-| CLEN-02 | — | Pending |
-| CLEN-03 | — | Pending |
-| INFR-01 | — | Pending |
-| INFR-02 | — | Pending |
-| INFR-03 | — | Pending |
-| INFR-04 | — | Pending |
+| AUTH-01 | Phase 29 | Pending |
+| AUTH-02 | Phase 29 | Pending |
+| AUTH-03 | Phase 29 | Pending |
+| AUTH-04 | Phase 29 | Pending |
+| AUTH-05 | Phase 29 | Pending |
+| AUTH-06 | Phase 29 | Pending |
+| DOMN-01 | Phase 32 | Pending |
+| DOMN-02 | Phase 32 | Pending |
+| DOMN-03 | Phase 32 | Pending |
+| DOMN-04 | Phase 32 | Pending |
+| DOMN-05 | Phase 32 | Pending |
+| GATE-01 | Phase 31 | Pending |
+| GATE-02 | Phase 31 | Pending |
+| GATE-03 | Phase 31 | Pending |
+| GATE-04 | Phase 31 | Pending |
+| TIER-01 | Phase 33 | Pending |
+| TIER-02 | Phase 33 | Pending |
+| TIER-03 | Phase 33 | Pending |
+| TIER-04 | Phase 33 | Pending |
+| TIER-05 | Phase 33 | Pending |
+| TIER-06 | Phase 33 | Pending |
+| DASH-01 | Phase 34 | Pending |
+| DASH-02 | Phase 34 | Pending |
+| RETN-01 | Phase 35 | Pending |
+| RETN-02 | Phase 35 | Pending |
+| RETN-03 | Phase 35 | Pending |
+| CLEN-01 | Phase 30 | Pending |
+| CLEN-02 | Phase 30 | Pending |
+| CLEN-03 | Phase 30 | Pending |
+| INFR-01 | Phase 29 | Pending |
+| INFR-02 | Phase 29 | Pending |
+| INFR-03 | Phase 29 | Pending |
+| INFR-04 | Phase 29 | Pending |
 
 **Coverage:**
 - v1.6 requirements: 33 total
-- Mapped to phases: 0
-- Unmapped: 33
+- Mapped to phases: 33
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-17*
-*Last updated: 2026-02-17 after initial definition*
+*Last updated: 2026-02-17 — traceability populated after roadmap creation*

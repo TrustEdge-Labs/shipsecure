@@ -98,5 +98,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 31-02-PLAN.md
-Resume file: None
+Stopped at: Phase 32 context gathered
+Resume file: .planning/phases/32-domain-verification/32-CONTEXT.md

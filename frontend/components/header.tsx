@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
 export function Header() {
   return (
@@ -30,13 +31,18 @@ export function Header() {
             </div>
           </Link>
 
-          {/* CTA Button */}
-          <Link
-            href="/#scan-form"
-            className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-text-inverse font-semibold rounded-lg transition text-sm sm:text-base"
-          >
-            Scan Now
-          </Link>
+          {/* Auth CTA */}
+          <SignedOut>
+            <Link
+              href="/sign-in"
+              className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-text-inverse font-semibold rounded-lg transition text-sm sm:text-base"
+            >
+              Sign In
+            </Link>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         </div>
       </nav>
     </header>

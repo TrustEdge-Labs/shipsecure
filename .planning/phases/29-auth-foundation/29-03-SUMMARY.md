@@ -106,6 +106,15 @@ Ansible vault must be populated with these variables before deployment:
 - Production env template is ready for deployment once Ansible vault is populated with Clerk credentials
 - Phase 29 backend plans (29-04 onwards) can proceed with confidence that infrastructure-layer auth bypass is closed
 
+## Self-Check: PASSED
+
+- FOUND: infrastructure/templates/shipsecure.nginx.conf.j2 (x-middleware-subrequest appears 2 times)
+- FOUND: infrastructure/templates/env.production.j2 (CLERK_JWKS_URL, CLERK_SECRET_KEY, CLERK_WEBHOOK_SIGNING_SECRET, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY all present)
+- FOUND: .planning/phases/29-auth-foundation/29-03-SUMMARY.md
+- FOUND: commit 7b3ed72 (Task 1: Nginx CVE mitigation)
+- FOUND: commit c857e13 (Task 2: Clerk env variables)
+- FOUND: commit f56ba18 (Plan metadata)
+
 ---
 *Phase: 29-auth-foundation*
 *Completed: 2026-02-18*

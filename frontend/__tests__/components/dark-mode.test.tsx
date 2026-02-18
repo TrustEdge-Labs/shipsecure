@@ -6,7 +6,6 @@ import { ResultsDashboard } from '@/components/results-dashboard'
 import { GradeSummary } from '@/components/grade-summary'
 import { FindingAccordion } from '@/components/finding-accordion'
 import { ProgressChecklist } from '@/components/progress-checklist'
-import { UpgradeCTA } from '@/components/upgrade-cta'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Logo } from '@/components/logo'
@@ -74,13 +73,6 @@ beforeEach(() => {
   mockState = {}
   mockFormAction = vi.fn()
   mockPending = false
-
-  // Mock window.location to prevent navigation errors (needed for UpgradeCTA)
-  Object.defineProperty(window, 'location', {
-    value: { href: '' },
-    writable: true,
-    configurable: true,
-  })
 })
 
 describe('Dark mode rendering', () => {
@@ -116,12 +108,6 @@ describe('Dark mode rendering', () => {
     renderWithProviders(<ProgressChecklist stages={mockStages} status="in_progress" />)
     const label = screen.getByText(/detecting framework/i)
     expect(label).toBeInTheDocument()
-  })
-
-  test('UpgradeCTA renders in dark mode', () => {
-    renderWithProviders(<UpgradeCTA scanId="scan-123" token="tok-abc" />)
-    const heading = screen.getByRole('heading', { name: /upgrade to deep audit/i })
-    expect(heading).toBeInTheDocument()
   })
 
   test('Header renders in dark mode', () => {
@@ -176,12 +162,6 @@ describe('Light mode rendering', () => {
     renderWithProviders(<ProgressChecklist stages={mockStages} status="in_progress" />)
     const label = screen.getByText(/detecting framework/i)
     expect(label).toBeInTheDocument()
-  })
-
-  test('UpgradeCTA renders in light mode', () => {
-    renderWithProviders(<UpgradeCTA scanId="scan-123" token="tok-abc" />)
-    const heading = screen.getByRole('heading', { name: /upgrade to deep audit/i })
-    expect(heading).toBeInTheDocument()
   })
 
   test('Header renders in light mode', () => {

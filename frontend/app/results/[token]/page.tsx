@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { GradeSummary } from '@/components/grade-summary'
 import { ResultsDashboard } from '@/components/results-dashboard'
-import { UpgradeCTA } from '@/components/upgrade-cta'
 import { ScanResponse } from '@/lib/types'
 
 interface ResultsPageProps {
@@ -176,13 +175,6 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           </h2>
           <ResultsDashboard findings={data.findings} />
         </div>
-
-        {/* Upgrade CTA (only for free tier) */}
-        {data.tier === 'free' && (
-          <div className="mb-6">
-            <UpgradeCTA scanId={data.id} token={token} />
-          </div>
-        )}
 
         {/* Actions */}
         <div className="flex gap-4 flex-wrap">

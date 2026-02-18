@@ -1,7 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { scanFixtures } from '../fixtures/scan'
 import { resultsFixtures } from '../fixtures/results'
-import { checkoutFixtures } from '../fixtures/checkout'
 
 const BASE_URL = 'http://localhost:3000'
 
@@ -19,16 +18,6 @@ export const handlers = [
   // GET /api/v1/results/:token - Get results by token (happy path)
   http.get(`${BASE_URL}/api/v1/results/:token`, () => {
     return HttpResponse.json(resultsFixtures.gradeA)
-  }),
-
-  // POST /api/v1/checkout - Create checkout session (happy path)
-  http.post(`${BASE_URL}/api/v1/checkout`, () => {
-    return HttpResponse.json(checkoutFixtures.success)
-  }),
-
-  // POST /api/v1/webhooks/stripe - Stripe webhook (happy path: 200 OK)
-  http.post(`${BASE_URL}/api/v1/webhooks/stripe`, () => {
-    return new HttpResponse(null, { status: 200 })
   }),
 
   // GET /api/v1/stats/scan-count - Scan counter (happy path)
@@ -79,9 +68,5 @@ export const errorHandlers = {
       { type: 'https://shipsecure.io/errors/internal', title: 'Internal Server Error', status: 500, detail: 'Failed to create scan' },
       { status: 500 }
     )
-  }),
-
-  checkoutServerError: http.post(`${BASE_URL}/api/v1/checkout`, () => {
-    return HttpResponse.json(checkoutFixtures.error, { status: 500 })
   }),
 }

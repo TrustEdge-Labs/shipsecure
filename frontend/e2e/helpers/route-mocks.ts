@@ -38,39 +38,6 @@ export async function mockScanPolling(
 }
 
 /**
- * Intercepts checkout POST requests and returns a checkout URL.
- * Also intercepts Stripe checkout redirect with a 302 to a success page.
- * Adds 150ms delay.
- */
-export async function mockCheckout(
-  page: Page,
-  checkoutUrl: string
-): Promise<void> {
-  await page.route('**/api/v1/checkout', async (route) => {
-    if (route.request().method() !== 'POST') {
-      await route.continue();
-      return;
-    }
-    await new Promise((r) => setTimeout(r, 150));
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ checkout_url: checkoutUrl }),
-    });
-  });
-
-  await page.route('https://checkout.stripe.com/**', async (route) => {
-    await route.fulfill({
-      status: 302,
-      headers: {
-        Location: 'http://localhost:3000/payment/success?session_id=mock_session_123',
-      },
-      body: '',
-    });
-  });
-}
-
-/**
  * Aborts all requests matching the given URL pattern with a network failure.
  * Use this to simulate network errors and timeouts.
  */

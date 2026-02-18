@@ -50,9 +50,6 @@ test.describe('Free Scan Flow', () => {
 
     // Verify finding title from fixture is visible
     await expect(page.locator('text=Missing Content-Security-Policy Header')).toBeVisible();
-
-    // UpgradeCTA for free tier
-    await expect(page.locator('text=Upgrade to Deep Audit')).toBeVisible();
   });
 
   test('CFAA consent required before submission', async ({ page, next }) => {

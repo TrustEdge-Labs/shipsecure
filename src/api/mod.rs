@@ -6,3 +6,4 @@ pub mod stats;
 pub mod webhooks;
 pub mod health;
 pub mod metrics;
+pub mod domains;

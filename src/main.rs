@@ -20,7 +20,7 @@ use tracing_panic::panic_hook;
 // Import from lib
 use shipsecure::api::auth::ClerkClaims;
 use shipsecure::api::scans::{self, AppState};
-use shipsecure::api::{health, results, stats, webhooks};
+use shipsecure::api::{domains, health, results, stats, webhooks};
 use shipsecure::metrics;
 use shipsecure::api::metrics as api_metrics;
 use shipsecure::orchestrator::ScanOrchestrator;
@@ -318,6 +318,11 @@ async fn main() {
         )
         .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
         .route("/api/v1/webhooks/clerk", post(webhooks::handle_clerk_webhook))
+        // Domain verification routes
+        .route("/api/v1/domains/verify-start", post(domains::verify_start))
+        .route("/api/v1/domains/verify-confirm", post(domains::verify_confirm))
+        .route("/api/v1/domains/verify-check", post(domains::verify_check))
+        .route("/api/v1/domains", get(domains::list_domains))
         .layer(axum::middleware::from_fn(metrics::middleware::track_http_metrics))
         .layer(cors)
         .layer(trace_layer)

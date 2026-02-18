@@ -53,9 +53,9 @@ Requirements for Auth & Tiered Access milestone. Each maps to roadmap phases.
 
 ### Cleanup
 
-- [ ] **CLEN-01**: Remove Stripe checkout flow, paid audit routes, and async-stripe/hmac/sha2/genpdf dependencies
-- [ ] **CLEN-02**: Change paid_audits FK to ON DELETE SET NULL; preserve all historical payment records
-- [ ] **CLEN-03**: Add clerk_user_id column to scans; extend tier constraint to include 'authenticated'
+- [x] **CLEN-01**: Remove Stripe checkout flow, paid audit routes, and async-stripe/hmac/sha2/genpdf dependencies
+- [x] **CLEN-02**: Change paid_audits FK to ON DELETE SET NULL; preserve all historical payment records
+- [x] **CLEN-03**: Add clerk_user_id column to scans; extend tier constraint to include 'authenticated'
 
 ### Infrastructure
 
@@ -140,9 +140,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RETN-01 | Phase 35 | Pending |
 | RETN-02 | Phase 35 | Pending |
 | RETN-03 | Phase 35 | Pending |
-| CLEN-01 | Phase 30 | Pending |
-| CLEN-02 | Phase 30 | Pending |
-| CLEN-03 | Phase 30 | Pending |
+| CLEN-01 | Phase 30 | Complete |
+| CLEN-02 | Phase 30 | Complete |
+| CLEN-03 | Phase 30 | Complete |
 | INFR-01 | Phase 29 | Complete |
 | INFR-02 | Phase 29 | Complete |
 | INFR-03 | Phase 29 | Complete |

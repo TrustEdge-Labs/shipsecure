@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.6 Auth & Tiered Access — Phase 29: Auth Foundation
+**Current focus:** v1.6 Auth & Tiered Access — Phase 30: Stripe Removal and Schema Cleanup (complete)
 
 ## Current Position
 
-Phase: 29 of 35 (Auth Foundation)
-Plan: 2 of 3 in current phase (29-01, 29-02 complete; 29-03 remains)
-Status: In progress
-Last activity: 2026-02-18 — Phase 29 plan 02 complete (frontend auth: Clerk integration, sign-in/sign-up, UserButton header, dashboard)
+Phase: 30 of 35 (Stripe Removal and Schema Cleanup)
+Plan: 1 of 1 in current phase (30-01 complete)
+Status: Phase 30 complete — Phase 31 (Results Gating) is next
+Last activity: 2026-02-18 — Phase 30 plan 01 complete (Stripe removal: backend crates, routes, schema migration, frontend cleanup)
 
-Progress: [█████████░░░░░░░░░░░] 45% (30/66 plans)
+Progress: [█████████░░░░░░░░░░░] 47% (31/66 plans)
 
 ## Performance Metrics
 
@@ -67,6 +67,13 @@ All decisions logged in PROJECT.md Key Decisions table.
 - Axum HeaderMap passes directly to svix::Webhook::verify() — both use http 1.x, no conversion loop needed
 - sqlx::query() non-macro for users INSERT — avoids compile-time DB connection requirement
 
+**Phase 30 Plan 01 decisions:**
+- Keep 'paid' in tier CHECK — existing paid_audits rows reference scans with tier='paid'; removing requires data migration first
+- Keep base64 crate — still used in worker_pool.rs for results token generation (URL_SAFE_NO_PAD.encode); not Stripe-specific
+- Keep svix crate — used in handle_clerk_webhook for Clerk signature verification; never Stripe-specific
+- Remove hex crate — only usage was Stripe HMAC hex encoding; safe to remove with webhook handler
+- tier match in run_scanners simplified to tuple assignment after paid arm removal
+
 ### Pending Todos
 
 None.
@@ -74,12 +81,11 @@ None.
 ### Blockers/Concerns
 
 - Phase 29: axum-jwt-auth 0.6.3 confirmed on crates.io (resolved — implemented successfully)
-- Phase 30: Confirm genpdf has no usage outside Stripe PDF path before removing (grep needed at plan time)
 - Phase 32: Shared-hosting TLD blocklist scope is a policy call — confirm list before implementation (github.io, vercel.app, netlify.app, pages.dev confirmed; others may need addition)
 - Phase 33: Rate limit window confirmed as 5/month Developer — ARCHITECTURE.md "10/day" is superseded
 
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 29-auth-foundation/29-02-PLAN.md
+Stopped at: Completed 30-01-PLAN.md
 Resume file: None

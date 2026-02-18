@@ -186,11 +186,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Authenticated user navigating to `/dashboard` sees a paginated list of their scans — each row shows domain, scan date, severity counts (critical/high/medium/low), and days until expiry
   2. Dashboard shows current quota status in a persistent banner: "X of 5 scans used this month, resets [Date]"
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 34-01: Scan history backend — GET /api/v1/users/me/scans paginated endpoint requiring non-optional ClerkUser, returns domain, created_at, severity counts, expires_at
-- [ ] 34-02: Dashboard frontend — frontend/app/dashboard/ protected route, scan history list component, empty state with verify-domain CTA, quota status banner, expiry countdown display
+- [ ] 34-01-PLAN.md — Scan history backend: ScanHistoryRow struct, paginated aggregation query with severity counts via LEFT JOIN, active scans query, GET /api/v1/users/me/scans handler with mandatory JWT auth, route registration
+- [ ] 34-02-PLAN.md — Dashboard frontend: ScanHistoryItem/ScanHistoryResponse types, ScanHistoryTable component with severity badges/tier badges/expiry countdown/pagination, two-column dashboard layout with scan history (main) and sidebar (quota card + verified domains), active scans section, context-aware empty states, mobile responsive cards
 
 ### Phase 35: Data Retention
 **Goal**: Expired scans are automatically deleted on schedule — anonymous scans after 24 hours, Developer scans after 30 days — without touching in-progress scans or payment records

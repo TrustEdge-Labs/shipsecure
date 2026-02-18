@@ -94,7 +94,7 @@ See: `.planning/milestones/v1.5-ROADMAP.md`
 
 #### Phases
 
-- [ ] **Phase 29: Auth Foundation** — Clerk Next.js integration, Axum JWT verification with JWKS caching, CORS fix, CVE-2025-29927 Nginx mitigation, users table, and webhook sync
+- [x] **Phase 29: Auth Foundation** — Clerk Next.js integration, Axum JWT verification with JWKS caching, CORS fix, CVE-2025-29927 Nginx mitigation, users table, and webhook sync
 - [ ] **Phase 30: Stripe Removal and Schema Cleanup** — Remove async-stripe/hmac/sha2/genpdf, delete Stripe checkout routes, change paid_audits FK to SET NULL, extend tier constraint, add clerk_user_id to scans
 - [ ] **Phase 31: Results Gating** — Server-side high/critical finding suppression for anonymous tokens, gated flag in API response, frontend teaser cards with lock overlay and signup CTA
 - [ ] **Phase 32: Domain Verification** — verified_domains table, verify-start/verify-confirm API endpoints, meta tag verification, shared-hosting TLD blocklist, 30-day TTL, domain wizard UI
@@ -117,9 +117,9 @@ See: `.planning/milestones/v1.5-ROADMAP.md`
 **Plans**: 3 plans
 
 Plans:
-- [ ] 29-01-PLAN.md — Backend auth infrastructure: CORS Authorization header fix, ClerkUser Axum extractor with JWKS caching, users table migration, Clerk webhook handler with svix signature verification
-- [ ] 29-02-PLAN.md — Frontend auth integration: @clerk/nextjs install, ClerkProvider in root layout, proxy.ts middleware, /sign-in and /sign-up routes, UserButton in header, dashboard route protection skeleton
-- [ ] 29-03-PLAN.md — Nginx CVE mitigation and production wiring: x-middleware-subrequest header strip in Nginx config, environment variable wiring for CLERK_SECRET_KEY and JWKS URL
+- [x] 29-01-PLAN.md — Backend auth infrastructure: CORS Authorization header fix, ClerkUser Axum extractor with JWKS caching, users table migration, Clerk webhook handler with svix signature verification
+- [x] 29-02-PLAN.md — Frontend auth integration: @clerk/nextjs install, ClerkProvider in root layout, proxy.ts middleware, /sign-in and /sign-up routes, UserButton in header, dashboard route protection skeleton
+- [x] 29-03-PLAN.md — Nginx CVE mitigation and production wiring: x-middleware-subrequest header strip in Nginx config, environment variable wiring for CLERK_SECRET_KEY and JWKS URL
 
 ### Phase 30: Stripe Removal and Schema Cleanup
 **Goal**: The codebase is free of Stripe dependencies and the schema is ready for authenticated scan ownership
@@ -217,7 +217,7 @@ Plans:
 | 13-18. Brand | v1.3 | 10/10 | Complete | 2026-02-11 |
 | 19-24. Observability | v1.4 | 11/11 | Complete | 2026-02-16 |
 | 25-28. Testing | v1.5 | 11/11 | Complete | 2026-02-17 |
-| 29. Auth Foundation | 2/3 | In Progress|  | - |
+| 29. Auth Foundation | v1.6 | 3/3 | Complete | 2026-02-18 |
 | 30. Stripe Removal & Schema | v1.6 | 0/1 | Not started | - |
 | 31. Results Gating | v1.6 | 0/2 | Not started | - |
 | 32. Domain Verification | v1.6 | 0/2 | Not started | - |
@@ -226,4 +226,4 @@ Plans:
 | 35. Data Retention | v1.6 | 0/1 | Not started | - |
 
 ---
-*Last updated: 2026-02-17*
+*Last updated: 2026-02-18*

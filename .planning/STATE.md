@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 29 of 35 (Auth Foundation)
-Plan: 1 of 3 in current phase (29-01 complete; 29-02 and 29-03 remain)
+Plan: 2 of 3 in current phase (29-01, 29-02 complete; 29-03 remains)
 Status: In progress
-Last activity: 2026-02-18 — Phase 29 plan 01 complete (backend auth: CORS fix, JWKS decoder, Clerk webhook, users migration)
+Last activity: 2026-02-18 — Phase 29 plan 02 complete (frontend auth: Clerk integration, sign-in/sign-up, UserButton header, dashboard)
 
-Progress: [████████░░░░░░░░░░░░] 43% (29/66 plans)
+Progress: [█████████░░░░░░░░░░░] 45% (30/66 plans)
 
 ## Performance Metrics
 
@@ -55,6 +55,12 @@ All decisions logged in PROJECT.md Key Decisions table.
 - Strip x-middleware-subrequest in BOTH /api/ and / Nginx location blocks — missing either block leaves CVE-2025-29927 exploitable since requests traverse Next.js middleware via both paths
 - CLERK_JWKS_URL unconditional in env template (required for JWT verification); CLERK_SECRET_KEY and CLERK_WEBHOOK_SIGNING_SECRET conditional (only needed for webhooks)
 
+**Phase 29 Plan 02 decisions:**
+- proxy.ts (not middleware.ts) for Next.js 16.1.6 middleware convention
+- Valid-format placeholder publishable key so npm run build succeeds without real Clerk keys — Clerk validates key format during static page generation
+- Force-add .env.example despite .gitignore .env* rule — template file with no secrets
+- UserButton uses Clerk defaults only — no custom menu items or tier badge
+
 **Phase 29 Plan 01 decisions:**
 - jsonwebtoken = "10" not "9" — axum-jwt-auth 0.6.3 depends on jsonwebtoken 10.x; using 9 would create incompatible types
 - RemoteJwksDecoder has no generic parameter — generics appear at JwtDecoder<T> impl level; use Decoder<ClerkClaims> type annotation on the Arc
@@ -75,5 +81,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 29-auth-foundation/29-01-PLAN.md
+Stopped at: Completed 29-auth-foundation/29-02-PLAN.md
 Resume file: None

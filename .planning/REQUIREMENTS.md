@@ -9,12 +9,12 @@ Requirements for Auth & Tiered Access milestone. Each maps to roadmap phases.
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can sign up with email/password via Clerk
-- [ ] **AUTH-02**: User can sign up/in with Google OAuth
-- [ ] **AUTH-03**: User can sign up/in with GitHub OAuth
-- [ ] **AUTH-04**: User session persists across browser restarts
-- [ ] **AUTH-05**: Signed-in user sees UserButton (avatar/menu) in sticky header
-- [ ] **AUTH-06**: Dashboard routes redirect unauthenticated users to sign-in
+- [x] **AUTH-01**: User can sign up with email/password via Clerk
+- [x] **AUTH-02**: User can sign up/in with Google OAuth
+- [x] **AUTH-03**: User can sign up/in with GitHub OAuth
+- [x] **AUTH-04**: User session persists across browser restarts
+- [x] **AUTH-05**: Signed-in user sees UserButton (avatar/menu) in sticky header
+- [x] **AUTH-06**: Dashboard routes redirect unauthenticated users to sign-in
 
 ### Domain Verification
 
@@ -114,12 +114,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 29 | Pending |
-| AUTH-02 | Phase 29 | Pending |
-| AUTH-03 | Phase 29 | Pending |
-| AUTH-04 | Phase 29 | Pending |
-| AUTH-05 | Phase 29 | Pending |
-| AUTH-06 | Phase 29 | Pending |
+| AUTH-01 | Phase 29 | Complete |
+| AUTH-02 | Phase 29 | Complete |
+| AUTH-03 | Phase 29 | Complete |
+| AUTH-04 | Phase 29 | Complete |
+| AUTH-05 | Phase 29 | Complete |
+| AUTH-06 | Phase 29 | Complete |
 | DOMN-01 | Phase 32 | Pending |
 | DOMN-02 | Phase 32 | Pending |
 | DOMN-03 | Phase 32 | Pending |
@@ -155,4 +155,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-17*
-*Last updated: 2026-02-17 — traceability populated after roadmap creation*
+*Last updated: 2026-02-18 — AUTH-01 through AUTH-06 marked complete (Phase 29 Plan 02)*

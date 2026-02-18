@@ -148,96 +148,6 @@ impl ScanOrchestrator {
         }.instrument(span));
     }
 
-    /// Spawn a PAID tier scan task in the background
-    ///
-    /// This clears existing findings, resets the scan to pending, and runs with paid tier configuration:
-    /// - 50 JS files scanned (vs 20 for free)
-    /// - Extended exposed file paths
-    /// - Additional Nuclei templates from templates/nuclei/paid/
-    /// - 600s timeout for vibecode scanner (vs 180s)
-    ///
-    /// Errors are logged but not propagated.
-    pub fn spawn_paid_scan(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>) {
-        let pool = self.pool.clone();
-        let semaphore = self.semaphore.clone();
-        let timeout = self.max_scanner_timeout;
-        let shutdown_token = self.shutdown_token.clone();
-        let span = info_span!(
-            "scan",
-            scan_id = %scan_id,
-            target_url = %target_url,
-            tier = "paid",
-            request_id = request_id.map(|id| id.to_string()).as_deref().unwrap_or(""),
-        );
-
-        self.task_tracker.spawn(async move {
-            // Check shutdown before queuing
-            if shutdown_token.is_cancelled() {
-                tracing::info!("Shutdown in progress, skipping queued scan");
-                return;
-            }
-
-            // Track queue depth (waiting for permit)
-            metrics::gauge!("scan_queue_depth").increment(1.0);
-            let _permit = semaphore.acquire().await.expect("Semaphore closed");
-            metrics::gauge!("scan_queue_depth").decrement(1.0);
-
-            // Check shutdown after acquiring permit
-            if shutdown_token.is_cancelled() {
-                tracing::info!("Shutdown in progress, aborting scan before execution");
-                return;
-            }
-
-            // Track active scans (executing)
-            metrics::gauge!("active_scans").increment(1.0);
-            tracing::info!("scan_started");
-            let start = Instant::now();
-
-            // Clear existing findings before paid rescan
-            if let Err(e) = crate::db::paid_audits::clear_findings_by_scan(&pool, scan_id).await {
-                let duration_ms = start.elapsed().as_millis() as u64;
-                tracing::error!(duration_ms, error = %e, "scan_failed");
-                metrics::gauge!("active_scans").decrement(1.0);
-                return;
-            }
-
-            // Reset scan status to pending
-            if let Err(e) = scans_db::update_scan_status(&pool, scan_id, ScanStatus::Pending, None, None).await {
-                let duration_ms = start.elapsed().as_millis() as u64;
-                tracing::error!(duration_ms, error = %e, "scan_failed");
-                metrics::gauge!("active_scans").decrement(1.0);
-                return;
-            }
-
-            // Execute scan and track metrics
-            let result = Self::execute_scan_internal(pool, scan_id, target_url, timeout, "paid").await;
-            let is_success = result.is_ok();
-            let duration_secs = start.elapsed().as_secs_f64();
-
-            // Record scan duration metric
-            metrics::histogram!(
-                "scan_duration_seconds",
-                "tier" => "paid",
-                "status" => if is_success { "success" } else { "failure" }
-            ).record(duration_secs);
-
-            // Existing logging
-            match result {
-                Ok(()) => {
-                    let duration_ms = start.elapsed().as_millis() as u64;
-                    tracing::info!(duration_ms, "scan_completed");
-                }
-                Err(e) => {
-                    let duration_ms = start.elapsed().as_millis() as u64;
-                    tracing::error!(duration_ms, error = %e, "scan_failed");
-                }
-            }
-
-            // Decrement active scans
-            metrics::gauge!("active_scans").decrement(1.0);
-        }.instrument(span));
-    }
-
     /// Execute a scan synchronously (for testing or controlled execution)
     ///
     /// This acquires a semaphore permit and runs the scan to completion.
@@ -402,11 +312,9 @@ impl ScanOrchestrator {
         platform: Option<String>,
         tier: &str,
     ) -> Vec<ScannerResult> {
-        // Tier-specific configuration
-        let (max_js_files, extended_files, vibecode_timeout, other_timeout) = match tier {
-            "paid" => (50, true, Duration::from_secs(600), Duration::from_secs(60)),
-            _ => (20, false, Duration::from_secs(180), Duration::from_secs(60)),
-        };
+        // Tier-specific configuration — all tiers use free-tier config
+        let (max_js_files, extended_files, vibecode_timeout, other_timeout) =
+            (20, false, Duration::from_secs(180), Duration::from_secs(60));
         // Spawn each scanner independently so stage updates happen as each completes
         let pool_clone1 = pool.clone();
         let pool_clone2 = pool.clone();

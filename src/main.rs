@@ -20,7 +20,7 @@ use tracing_panic::panic_hook;
 // Import from lib
 use shipsecure::api::auth::ClerkClaims;
 use shipsecure::api::scans::{self, AppState};
-use shipsecure::api::{checkout, health, results, stats, webhooks};
+use shipsecure::api::{health, results, stats, webhooks};
 use shipsecure::metrics;
 use shipsecure::api::metrics as api_metrics;
 use shipsecure::orchestrator::ScanOrchestrator;
@@ -317,8 +317,6 @@ async fn main() {
             get(results::download_results_markdown),
         )
         .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
-        .route("/api/v1/checkout", post(checkout::create_checkout))
-        .route("/api/v1/webhooks/stripe", post(webhooks::handle_stripe_webhook))
         .route("/api/v1/webhooks/clerk", post(webhooks::handle_clerk_webhook))
         .layer(axum::middleware::from_fn(metrics::middleware::track_http_metrics))
         .layer(cors)

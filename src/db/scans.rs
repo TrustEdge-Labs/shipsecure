@@ -11,10 +11,12 @@ pub async fn create_scan(
     email: &str,
     submitter_ip: Option<&str>,
     request_id: Option<Uuid>,
+    tier: &str,
+    clerk_user_id: Option<&str>,
 ) -> Result<Scan, sqlx::Error> {
     let scan = sqlx::query_as::<_, Scan>(
-        "INSERT INTO scans (target_url, email, submitter_ip, request_id)
-         VALUES ($1, $2, $3::inet, $4)
+        "INSERT INTO scans (target_url, email, submitter_ip, request_id, tier, clerk_user_id)
+         VALUES ($1, $2, $3::inet, $4, $5, $6)
          RETURNING id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
                    expires_at::timestamp, detected_framework, detected_platform,
                    stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
@@ -25,6 +27,8 @@ pub async fn create_scan(
     .bind(email)
     .bind(submitter_ip)
     .bind(request_id)
+    .bind(tier)
+    .bind(clerk_user_id)
     .fetch_one(pool)
     .await?;
 
@@ -261,4 +265,22 @@ pub async fn update_detected_platform(pool: &PgPool, scan_id: Uuid, platform: &s
     .await?;
 
     Ok(())
+}
+
+/// Count scans submitted by a Clerk user in the current calendar month (UTC).
+///
+/// Used for the Developer tier monthly quota (5 scans/month).
+#[allow(dead_code)]
+pub async fn count_scans_by_user_this_month(pool: &PgPool, clerk_user_id: &str) -> Result<i64, sqlx::Error> {
+    let count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*)
+         FROM scans
+         WHERE clerk_user_id = $1
+           AND created_at >= DATE_TRUNC('month', NOW() AT TIME ZONE 'UTC')"
+    )
+    .bind(clerk_user_id)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(count.0)
 }

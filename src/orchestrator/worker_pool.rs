@@ -79,12 +79,11 @@ impl ScanOrchestrator {
         (active, self.max_concurrent)
     }
 
-    /// Spawn a scan task in the background (fire-and-forget)
+    /// Spawn a scan task in the background (fire-and-forget) with a specific tier.
     ///
     /// The scan will acquire a semaphore permit, run scanners, and update the database.
     /// Errors are logged but not propagated.
-    /// This spawns a FREE tier scan.
-    pub fn spawn_scan(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>) {
+    fn spawn_scan_with_tier(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>, tier: &'static str) {
         let pool = self.pool.clone();
         let semaphore = self.semaphore.clone();
         let timeout = self.max_scanner_timeout;
@@ -93,7 +92,7 @@ impl ScanOrchestrator {
             "scan",
             scan_id = %scan_id,
             target_url = %target_url,
-            tier = "free",
+            tier = tier,
             request_id = request_id.map(|id| id.to_string()).as_deref().unwrap_or(""),
         );
 
@@ -120,14 +119,14 @@ impl ScanOrchestrator {
             tracing::info!("scan_started");
             let start = Instant::now();
 
-            let result = Self::execute_scan_internal(pool, scan_id, target_url, timeout, "free").await;
+            let result = Self::execute_scan_internal(pool, scan_id, target_url, timeout, tier).await;
             let is_success = result.is_ok();
             let duration_secs = start.elapsed().as_secs_f64();
 
             // Record scan duration metric
             metrics::histogram!(
                 "scan_duration_seconds",
-                "tier" => "free",
+                "tier" => tier,
                 "status" => if is_success { "success" } else { "failure" }
             ).record(duration_secs);
 
@@ -146,6 +145,24 @@ impl ScanOrchestrator {
             // Decrement active scans
             metrics::gauge!("active_scans").decrement(1.0);
         }.instrument(span));
+    }
+
+    /// Spawn a FREE tier scan task in the background (fire-and-forget).
+    ///
+    /// The scan will acquire a semaphore permit, run scanners with light config
+    /// (20 JS files, 180s vibecode timeout), and update the database.
+    /// Errors are logged but not propagated.
+    pub fn spawn_scan(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>) {
+        self.spawn_scan_with_tier(scan_id, target_url, request_id, "free");
+    }
+
+    /// Spawn an AUTHENTICATED tier scan task in the background (fire-and-forget).
+    ///
+    /// The scan will acquire a semaphore permit, run scanners with enhanced config
+    /// (30 JS files, 300s vibecode timeout, extended exposed files), and update the database.
+    /// Errors are logged but not propagated.
+    pub fn spawn_authenticated_scan(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>) {
+        self.spawn_scan_with_tier(scan_id, target_url, request_id, "authenticated");
     }
 
     /// Execute a scan synchronously (for testing or controlled execution)
@@ -312,9 +329,11 @@ impl ScanOrchestrator {
         platform: Option<String>,
         tier: &str,
     ) -> Vec<ScannerResult> {
-        // Tier-specific configuration — all tiers use free-tier config
-        let (max_js_files, extended_files, vibecode_timeout, other_timeout) =
-            (20, false, Duration::from_secs(180), Duration::from_secs(60));
+        // Tier-specific configuration — activate enhanced config for authenticated/paid tiers
+        let (max_js_files, extended_files, vibecode_timeout, other_timeout) = match tier {
+            "authenticated" | "paid" => (30, true, Duration::from_secs(300), Duration::from_secs(60)),
+            _ => (20, false, Duration::from_secs(180), Duration::from_secs(60)),
+        };
         // Spawn each scanner independently so stage updates happen as each completes
         let pool_clone1 = pool.clone();
         let pool_clone2 = pool.clone();

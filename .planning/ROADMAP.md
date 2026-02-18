@@ -158,11 +158,11 @@ Plans:
   2. After placing the meta tag, user can confirm verification — domain shows green "Verified" badge in the dashboard
   3. Attempting to verify a domain on a shared-hosting TLD (github.io, vercel.app, netlify.app, pages.dev) returns an error — not a token
   4. A domain verified more than 30 days ago is treated as unverified — user must re-verify before running authenticated scans
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 32-01: Domain verification backend — verified_domains table migration, POST /api/v1/domains/verify-start and /verify-confirm endpoints, meta tag fetch/parse using existing reqwest+scraper, domain normalization, SSRF protection, shared-hosting TLD blocklist, 30-day TTL enforcement in scan submission
-- [ ] 32-02: Domain verification frontend — /verify-domain/ wizard UI, domain input with normalization display, meta tag snippet copy, verify button with polling, verified/pending/failed badge, integration into dashboard layout
+- [ ] 32-01-PLAN.md — Backend domain verification: verified_domains table migration, verify-start/verify-confirm/verify-check/list API endpoints with mandatory JWT auth, domain normalization, shared-hosting TLD root blocklist, SSRF-protected meta tag fetch+parse, 30-day TTL, extended owner_verified in results.rs to require active domain verification
+- [ ] 32-02-PLAN.md — Frontend domain verification: TypeScript types and API client functions, /verify-domain wizard page with step-by-step flow (input/snippet/verify), domain-badge and meta-tag-snippet components, dashboard verified domains section with color-coded badges, route protection in proxy.ts
 
 ### Phase 33: Tiered Scan Access and Rate Limiting
 **Goal**: Anonymous and authenticated scans run with appropriate depth limits, and each tier is enforced at the API layer

@@ -26,8 +26,8 @@ Requirements for Auth & Tiered Access milestone. Each maps to roadmap phases.
 
 ### Results Gating
 
-- [ ] **GATE-01**: API strips description/remediation from high/critical findings for anonymous scan tokens
-- [ ] **GATE-02**: API returns `gated: true` flag and `owner_verified` field on results
+- [x] **GATE-01**: API strips description/remediation from high/critical findings for anonymous scan tokens
+- [x] **GATE-02**: API returns `gated: true` flag and `owner_verified` field on results
 - [ ] **GATE-03**: Frontend renders teaser cards with lock overlay for gated findings
 - [ ] **GATE-04**: Teaser cards show severity and category but not details, with "Sign up free" CTA
 
@@ -125,8 +125,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DOMN-03 | Phase 32 | Pending |
 | DOMN-04 | Phase 32 | Pending |
 | DOMN-05 | Phase 32 | Pending |
-| GATE-01 | Phase 31 | Pending |
-| GATE-02 | Phase 31 | Pending |
+| GATE-01 | Phase 31 | Complete |
+| GATE-02 | Phase 31 | Complete |
 | GATE-03 | Phase 31 | Pending |
 | GATE-04 | Phase 31 | Pending |
 | TIER-01 | Phase 33 | Pending |

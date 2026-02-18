@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.6 Auth & Tiered Access — Phase 32 complete, Phase 33 (Rate Limiting) next
+**Current focus:** v1.6 Auth & Tiered Access — Phase 33 (Tiered Scan Access) in progress
 
 ## Current Position
 
-Phase: 32 of 35 (Domain Verification)
-Plan: 2 of 2 in current phase (32-02 frontend wizard complete)
-Status: Phase 32 complete — full domain verification system (backend + frontend) implemented
-Last activity: 2026-02-18 — Phase 32 plan 02 complete (Domain verification frontend: wizard page, DomainBadge, MetaTagSnippet, dashboard domains section)
+Phase: 33 of 35 (Tiered Scan Access and Rate Limiting)
+Plan: 1 of 2 in current phase (33-01 backend tiering complete)
+Status: Phase 33 plan 01 complete — tier-aware scan orchestration, domain gate, quota endpoint implemented
+Last activity: 2026-02-18 — Phase 33 plan 01 complete (spawn_scan_with_tier, enhanced config activation, create_scan tier+clerk_user_id, domain verification gate, GET /api/v1/quota)
 
-Progress: [█████████░░░░░░░░░░░] 51% (34/66 plans)
+Progress: [█████████░░░░░░░░░░░] 53% (35/66 plans)
 
 ## Performance Metrics
 
@@ -81,6 +81,13 @@ All decisions logged in PROJECT.md Key Decisions table.
 - generateMetadata also forwards session token — consistent auth posture with main page handler
 - Spacer div in AuthGate lock overlay maintains accordion height for visual continuity
 
+**Phase 33 Plan 01 decisions:**
+- extract_optional_clerk_user and extract_domain_from_url made pub(crate) in results.rs — single normalization source, avoids www-stripping mismatch
+- spawn_scan_with_tier takes &'static str tier — tracing spans and metrics labels require &'static lifetime for tier value
+- Domain gate returns HTTP 403 — identity confirmed but domain ownership not; semantically correct
+- rate_limit::check_rate_limits removed from create_scan — old email-based signature replaced in 33-02 with Option<clerk_user_id> routing
+- first_of_next_month_utc placed in scans.rs — quota handler owns this; rate limit module will handle its own in 33-02
+
 **Phase 32 Plan 02 decisions:**
 - confirmedExpiresAt stored as separate string | null state — TypeScript rejects spreading VerifyConfirmResponse into VerifyStartResponse typed state; separate state eliminates type-unsafe spread
 - DomainBadge is a server component (no 'use client') — purely presentational, no clipboard or useState needed
@@ -109,5 +116,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 32-02-PLAN.md
-Resume file: .planning/phases/32-domain-verification/32-02-SUMMARY.md
+Stopped at: Completed 33-01-PLAN.md
+Resume file: .planning/phases/33-tiered-scan-access-and-rate-limiting/33-01-SUMMARY.md

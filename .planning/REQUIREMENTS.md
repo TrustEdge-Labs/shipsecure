@@ -33,12 +33,12 @@ Requirements for Auth & Tiered Access milestone. Each maps to roadmap phases.
 
 ### Scan Tiering
 
-- [ ] **TIER-01**: Anonymous scans use lighter config (20 JS files, 180s vibecode timeout)
-- [ ] **TIER-02**: Authenticated scans use enhanced config (30 JS files, 300s vibecode timeout, extended exposed files)
+- [x] **TIER-01**: Anonymous scans use lighter config (20 JS files, 180s vibecode timeout)
+- [x] **TIER-02**: Authenticated scans use enhanced config (30 JS files, 300s vibecode timeout, extended exposed files)
 - [ ] **TIER-03**: Anonymous users limited to 1 scan per IP per 24 hours
 - [ ] **TIER-04**: Developer tier users limited to 5 scans per calendar month
 - [ ] **TIER-05**: Rate limit exceeded returns 429 with friendly message and `resets_at` timestamp
-- [ ] **TIER-06**: Authenticated scans require verified domain ownership
+- [x] **TIER-06**: Authenticated scans require verified domain ownership
 
 ### Dashboard
 
@@ -129,12 +129,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GATE-02 | Phase 31 | Complete |
 | GATE-03 | Phase 31 | Complete |
 | GATE-04 | Phase 31 | Complete |
-| TIER-01 | Phase 33 | Pending |
-| TIER-02 | Phase 33 | Pending |
+| TIER-01 | Phase 33 | Complete |
+| TIER-02 | Phase 33 | Complete |
 | TIER-03 | Phase 33 | Pending |
 | TIER-04 | Phase 33 | Pending |
 | TIER-05 | Phase 33 | Pending |
-| TIER-06 | Phase 33 | Pending |
+| TIER-06 | Phase 33 | Complete |
 | DASH-01 | Phase 34 | Pending |
 | DASH-02 | Phase 34 | Pending |
 | RETN-01 | Phase 35 | Pending |

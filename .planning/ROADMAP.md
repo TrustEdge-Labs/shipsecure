@@ -114,12 +114,12 @@ See: `.planning/milestones/v1.5-ROADMAP.md`
   3. Navigating to any `/dashboard/*` route while unauthenticated redirects to the sign-in page
   4. Axum accepts an `Authorization: Bearer <JWT>` header without preflight errors — CORS allows the Authorization header
   5. Nginx strips `x-middleware-subrequest` from all upstream requests — CVE-2025-29927 mitigated at infrastructure layer
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 29-01: Backend auth infrastructure — CORS Authorization header fix, ClerkUser Axum extractor with JWKS caching, users table migration, Clerk webhook handler with svix signature verification
-- [ ] 29-02: Frontend auth integration — @clerk/nextjs install, ClerkProvider in root layout, proxy.ts middleware, /sign-in and /sign-up routes, UserButton in header, dashboard route protection skeleton
-- [ ] 29-03: Nginx CVE mitigation and production wiring — x-middleware-subrequest header strip in Nginx config, Ansible playbook update, environment variable wiring for CLERK_SECRET_KEY and JWKS URL
+- [ ] 29-01-PLAN.md — Backend auth infrastructure: CORS Authorization header fix, ClerkUser Axum extractor with JWKS caching, users table migration, Clerk webhook handler with svix signature verification
+- [ ] 29-02-PLAN.md — Frontend auth integration: @clerk/nextjs install, ClerkProvider in root layout, proxy.ts middleware, /sign-in and /sign-up routes, UserButton in header, dashboard route protection skeleton
+- [ ] 29-03-PLAN.md — Nginx CVE mitigation and production wiring: x-middleware-subrequest header strip in Nginx config, environment variable wiring for CLERK_SECRET_KEY and JWKS URL
 
 ### Phase 30: Stripe Removal and Schema Cleanup
 **Goal**: The codebase is free of Stripe dependencies and the schema is ready for authenticated scan ownership

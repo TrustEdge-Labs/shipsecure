@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.6 Auth & Tiered Access — Phase 31: Results Gating (plan 01 complete)
+**Current focus:** v1.6 Auth & Tiered Access — Phase 31: Results Gating complete, Phase 32 next
 
 ## Current Position
 
-Phase: 31 of 35 (Results Gating)
-Plan: 1 of 2 in current phase (31-01 complete)
-Status: Phase 31 plan 01 complete — Phase 31 plan 02 (frontend AuthGate) is next
-Last activity: 2026-02-18 — Phase 31 plan 01 complete (Server-side results gating: high/critical findings stripped for non-owners via optional JWT extraction)
+Phase: 32 of 35 (Domain Verification)
+Plan: 0 of 2 in current phase (Phase 31 complete)
+Status: Phase 31 complete — Phase 32 (domain verification) is next
+Last activity: 2026-02-18 — Phase 31 plan 02 complete (Frontend AuthGate: lock overlay for gated findings, Clerk SignUp CTA, JWT forwarding from Server Component)
 
-Progress: [█████████░░░░░░░░░░░] 48% (32/66 plans)
+Progress: [█████████░░░░░░░░░░░] 50% (33/66 plans)
 
 ## Performance Metrics
 
@@ -74,6 +74,11 @@ All decisions logged in PROJECT.md Key Decisions table.
 - Remove hex crate — only usage was Stripe HMAC hex encoding; safe to remove with webhook handler
 - tier match in run_scanners simplified to tuple assignment after paid arm removal
 
+**Phase 31 Plan 02 decisions:**
+- AuthGate receives pre-computed gated bool from server-rendered finding data — no client-side JWT check needed
+- generateMetadata also forwards session token — consistent auth posture with main page handler
+- Spacer div in AuthGate lock overlay maintains accordion height for visual continuity
+
 **Phase 31 Plan 01 decisions:**
 - Gate high/critical findings for ALL scans regardless of tier — tier is irrelevant; gating is based on severity + caller identity only
 - None == None returns owner_verified: false — anonymous scans (clerk_user_id IS NULL) are always gated for anonymous callers
@@ -93,5 +98,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 31-01-PLAN.md
+Stopped at: Completed 31-02-PLAN.md
 Resume file: None

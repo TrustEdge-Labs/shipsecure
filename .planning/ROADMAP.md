@@ -96,7 +96,7 @@ See: `.planning/milestones/v1.5-ROADMAP.md`
 
 - [x] **Phase 29: Auth Foundation** — Clerk Next.js integration, Axum JWT verification with JWKS caching, CORS fix, CVE-2025-29927 Nginx mitigation, users table, and webhook sync
 - [x] **Phase 30: Stripe Removal and Schema Cleanup** — Remove async-stripe/hmac/sha2/genpdf, delete Stripe checkout routes, change paid_audits FK to SET NULL, extend tier constraint, add clerk_user_id to scans (completed 2026-02-18)
-- [ ] **Phase 31: Results Gating** — Server-side high/critical finding suppression for anonymous tokens, gated flag in API response, frontend teaser cards with lock overlay and signup CTA
+- [x] **Phase 31: Results Gating** — Server-side high/critical finding suppression for anonymous tokens, gated flag in API response, frontend teaser cards with lock overlay and signup CTA (completed 2026-02-18)
 - [ ] **Phase 32: Domain Verification** — verified_domains table, verify-start/verify-confirm API endpoints, meta tag verification, shared-hosting TLD blocklist, 30-day TTL, domain wizard UI
 - [ ] **Phase 33: Tiered Scan Access and Rate Limiting** — Tiered scan configs (anonymous-light vs authenticated-full), per-IP anonymous rate limit, per-user monthly quota, 429 with resets_at, quota display
 - [ ] **Phase 34: Scan History Dashboard** — Paginated scan history endpoint, protected dashboard route, scan list with severity counts and expiry, quota status display
@@ -219,7 +219,7 @@ Plans:
 | 25-28. Testing | v1.5 | 11/11 | Complete | 2026-02-17 |
 | 29. Auth Foundation | v1.6 | Complete    | 2026-02-18 | 2026-02-18 |
 | 30. Stripe Removal & Schema | 1/1 | Complete    | 2026-02-18 | - |
-| 31. Results Gating | 1/2 | In Progress|  | - |
+| 31. Results Gating | 2/2 | Complete   | 2026-02-18 | - |
 | 32. Domain Verification | v1.6 | 0/2 | Not started | - |
 | 33. Tiered Access & Rate Limiting | v1.6 | 0/2 | Not started | - |
 | 34. Scan History Dashboard | v1.6 | 0/2 | Not started | - |

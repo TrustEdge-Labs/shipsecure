@@ -316,6 +316,7 @@ async fn main() {
             "/api/v1/results/{token}/download",
             get(results::download_results_markdown),
         )
+        .route("/api/v1/quota", get(scans::get_quota))
         .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
         .route("/api/v1/webhooks/clerk", post(webhooks::handle_clerk_webhook))
         // Domain verification routes

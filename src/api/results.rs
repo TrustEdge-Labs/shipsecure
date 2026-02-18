@@ -14,7 +14,7 @@ use crate::{db, models};
 /// Extract the bare domain from a scan target URL using the same normalization
 /// as `domains::normalize_domain` — lowercase, www-stripped — to prevent
 /// normalization mismatch (Phase 32 Pitfall 6).
-fn extract_domain_from_url(target_url: &str) -> Option<String> {
+pub(crate) fn extract_domain_from_url(target_url: &str) -> Option<String> {
     let parsed = url::Url::parse(target_url).ok()?;
     let host = parsed.host_str()?;
     let domain = host.strip_prefix("www.").unwrap_or(host);
@@ -26,7 +26,7 @@ fn extract_domain_from_url(target_url: &str) -> Option<String> {
 /// Returns `None` if no Authorization header is present, the token is malformed,
 /// or the JWT fails verification. Never fails the request — anonymous callers
 /// simply get `None`.
-async fn extract_optional_clerk_user(
+pub(crate) async fn extract_optional_clerk_user(
     state: &AppState,
     headers: &axum::http::HeaderMap,
 ) -> Option<String> {

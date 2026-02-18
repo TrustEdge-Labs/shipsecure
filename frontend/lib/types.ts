@@ -66,3 +66,33 @@ export interface CreateScanResponse {
   status: string
   url: string
 }
+
+export interface VerifiedDomain {
+  id: string
+  domain: string
+  status: 'pending' | 'verified'
+  verified_at: string | null
+  expires_at: string | null
+  created_at: string
+}
+
+export interface VerifyStartResponse {
+  domain: string
+  token: string
+  meta_tag: string
+  already_verified?: boolean
+  expires_in_days?: number
+}
+
+export interface VerifyConfirmResponse {
+  verified: boolean
+  domain: string
+  expires_at?: string
+  failure_reason?: string
+}
+
+export interface VerifyCheckResponse {
+  found: boolean
+  domain: string
+  message: string
+}

@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.6 Auth & Tiered Access — Phase 31: Results Gating complete, Phase 32 next
+**Current focus:** v1.6 Auth & Tiered Access — Phase 32: Domain Verification backend complete, Phase 32 Plan 02 (frontend wizard) next
 
 ## Current Position
 
 Phase: 32 of 35 (Domain Verification)
-Plan: 0 of 2 in current phase (Phase 31 complete)
-Status: Phase 31 complete — Phase 32 (domain verification) is next
-Last activity: 2026-02-18 — Phase 31 plan 02 complete (Frontend AuthGate: lock overlay for gated findings, Clerk SignUp CTA, JWT forwarding from Server Component)
+Plan: 1 of 2 in current phase (32-01 backend complete)
+Status: Phase 32 Plan 01 complete — domain verification backend implemented
+Last activity: 2026-02-18 — Phase 32 plan 01 complete (Domain verification backend: migration, DB queries, API handlers, owner_verified extended)
 
 Progress: [█████████░░░░░░░░░░░] 50% (33/66 plans)
 
@@ -33,6 +33,7 @@ Progress: [█████████░░░░░░░░░░░] 50% (33
 | v1.3 Brand | 13-18 | 10 | 7 |
 | v1.4 Observability | 19-24 | 11 | 1 |
 | v1.5 Testing | 25-28 | 11 | 2 |
+| Phase 32 P01 | 4 | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,10 @@ All decisions logged in PROJECT.md Key Decisions table.
 - None == None returns owner_verified: false — anonymous scans (clerk_user_id IS NULL) are always gated for anonymous callers
 - download_results_markdown also applies gating — consistent OWASP A01; curl to /download cannot bypass gating
 - Optional auth pattern: extract_optional_clerk_user() helper calls state.jwt_decoder.decode() directly; do NOT use Claims<T> extractor for optional auth (it rejects all anonymous requests with 401)
+- [Phase 32]: Claims struct pattern not tuple: axum-jwt-auth 0.6.3 Claims<T> uses struct destructuring Claims { claims, .. } not tuple Claims(claims)
+- [Phase 32]: r#gen raw identifier required for Rust 2024 edition — gen is a reserved keyword
+- [Phase 32]: TagInBody is soft warning — meta tag anywhere in HTML proves control, verification succeeds
+- [Phase 32]: owner_verified is now two-step: identity match AND is_domain_verified — expired domain re-gates results
 
 ### Pending Todos
 
@@ -98,5 +103,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Phase 32 context gathered
-Resume file: .planning/phases/32-domain-verification/32-CONTEXT.md
+Stopped at: Completed 32-01-PLAN.md
+Resume file: .planning/phases/32-domain-verification/32-01-SUMMARY.md

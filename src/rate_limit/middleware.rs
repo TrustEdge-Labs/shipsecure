@@ -1,50 +1,70 @@
+use chrono::{Datelike, TimeZone, Utc};
 use sqlx::PgPool;
 
 use crate::api::errors::ApiError;
 use crate::db::scans;
 
-/// Check rate limits for both email and IP address.
+fn next_midnight_utc() -> chrono::DateTime<chrono::Utc> {
+    let now = Utc::now();
+    let tomorrow = now.date_naive().succ_opt().unwrap();
+    let tomorrow_midnight = tomorrow.and_hms_opt(0, 0, 0).unwrap();
+    chrono::DateTime::from_naive_utc_and_offset(tomorrow_midnight, chrono::Utc)
+}
+
+fn first_of_next_month_utc() -> chrono::DateTime<chrono::Utc> {
+    let now = Utc::now();
+    let (year, month) = if now.month() == 12 {
+        (now.year() + 1, 1u32)
+    } else {
+        (now.year(), now.month() + 1)
+    };
+    Utc.with_ymd_and_hms(year, month, 1, 0, 0, 0).unwrap()
+}
+
+/// Check rate limits based on caller identity.
 ///
-/// Returns Ok(()) if limits are not exceeded, or ApiError::RateLimited if exceeded.
-///
-/// Rate limits:
-/// - 3 scans per email per day
-/// - 10 scans per IP address per day
+/// - Anonymous (clerk_user_id is None): 1 scan per IP per 24 hours
+/// - Authenticated Developer: 5 scans per calendar month
 pub async fn check_rate_limits(
     pool: &PgPool,
-    email: &str,
+    clerk_user_id: Option<&str>,
     ip: &str,
 ) -> Result<(), ApiError> {
-    // Check email-based rate limit (3 scans per day)
-    let email_count = scans::count_scans_by_email_today(pool, email)
-        .await?;
-
-    if email_count >= 3 {
-        metrics::counter!(
-            "rate_limit_total",
-            "limiter" => "scan_email",
-            "action" => "blocked"
-        ).increment(1);
-        return Err(ApiError::RateLimited(
-            "You've reached your daily scan limit of 3 scans per email. Try again tomorrow.".to_string()
-        ));
+    match clerk_user_id {
+        None => {
+            // Anonymous: 1 scan per IP per 24h
+            let count = scans::count_anonymous_scans_by_ip_today(pool, ip).await?;
+            if count >= 1 {
+                let resets_at = next_midnight_utc();
+                metrics::counter!(
+                    "rate_limit_total",
+                    "limiter" => "scan_ip",
+                    "action" => "blocked"
+                ).increment(1);
+                return Err(ApiError::RateLimitedWithReset {
+                    message: "You've used your free scan today. Sign up for more scans.".to_string(),
+                    resets_at,
+                });
+            }
+        }
+        Some(user_id) => {
+            // Authenticated Developer: 5 scans per calendar month
+            let count = scans::count_scans_by_user_this_month(pool, user_id).await?;
+            // TODO: Developer-tier limit. When Pro tier is added, gate this on the user's tier.
+            if count >= 5 {
+                let resets_at = first_of_next_month_utc();
+                metrics::counter!(
+                    "rate_limit_total",
+                    "limiter" => "scan_user",
+                    "action" => "blocked"
+                ).increment(1);
+                return Err(ApiError::RateLimitedWithReset {
+                    message: format!("{} of 5 scans used this month. Upgrade to Pro for unlimited scans.", count),
+                    resets_at,
+                });
+            }
+        }
     }
-
-    // Check IP-based rate limit (10 scans per day)
-    let ip_count = scans::count_scans_by_ip_today(pool, ip)
-        .await?;
-
-    if ip_count >= 10 {
-        metrics::counter!(
-            "rate_limit_total",
-            "limiter" => "scan_ip",
-            "action" => "blocked"
-        ).increment(1);
-        return Err(ApiError::RateLimited(
-            "You've reached your daily scan limit of 10 scans per IP address. Try again tomorrow.".to_string()
-        ));
-    }
-
     Ok(())
 }
 

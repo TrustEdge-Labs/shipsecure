@@ -9,6 +9,10 @@ pub enum ApiError {
     ValidationError(String),
     SsrfBlocked(String),
     RateLimited(String),
+    RateLimitedWithReset {
+        message: String,
+        resets_at: chrono::DateTime<chrono::Utc>,
+    },
     NotFound,
     Unauthorized,
     InternalError(String),
@@ -31,6 +35,25 @@ struct ProblemDetails {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
+        // RateLimitedWithReset needs a custom JSON body with resets_at — handle before standard ProblemDetails
+        match self {
+            ApiError::RateLimitedWithReset { message, resets_at } => {
+                let body = serde_json::json!({
+                    "type": "https://shipsecure.ai/errors/rate-limited",
+                    "title": "Rate Limit Exceeded",
+                    "status": 429,
+                    "detail": message,
+                    "resets_at": resets_at.to_rfc3339(),
+                });
+                return (
+                    StatusCode::TOO_MANY_REQUESTS,
+                    [(axum::http::header::CONTENT_TYPE, "application/problem+json")],
+                    body.to_string(),
+                ).into_response();
+            }
+            _ => {}
+        }
+
         let (problem_type, title, status, detail) = match self {
             ApiError::ValidationError(msg) => (
                 "about:blank".to_string(),
@@ -50,6 +73,7 @@ impl IntoResponse for ApiError {
                 StatusCode::TOO_MANY_REQUESTS,
                 msg,
             ),
+            ApiError::RateLimitedWithReset { .. } => unreachable!("handled above"),
             ApiError::NotFound => (
                 "about:blank".to_string(),
                 "Not Found".to_string(),

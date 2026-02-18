@@ -267,6 +267,25 @@ pub async fn update_detected_platform(pool: &PgPool, scan_id: Uuid, platform: &s
     Ok(())
 }
 
+/// Count anonymous scans from a specific IP address today (UTC).
+///
+/// Filters to only anonymous scans (clerk_user_id IS NULL) so authenticated scans from the
+/// same IP do not inflate the anonymous rate limit.
+#[allow(dead_code)]
+pub async fn count_anonymous_scans_by_ip_today(pool: &PgPool, ip: &str) -> Result<i64, sqlx::Error> {
+    let count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*)
+         FROM scans
+         WHERE submitter_ip = $1::inet
+           AND clerk_user_id IS NULL
+           AND created_at >= CURRENT_DATE"
+    )
+    .bind(ip)
+    .fetch_one(pool)
+    .await?;
+    Ok(count.0)
+}
+
 /// Count scans submitted by a Clerk user in the current calendar month (UTC).
 ///
 /// Used for the Developer tier monthly quota (5 scans/month).

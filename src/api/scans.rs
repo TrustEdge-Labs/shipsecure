@@ -15,7 +15,7 @@ use crate::api::errors::ApiError;
 use crate::api::health::HealthCache;
 use crate::models::{CreateScanRequest, Severity};
 use crate::orchestrator::ScanOrchestrator;
-use crate::{db, ssrf, RequestId};
+use crate::{db, rate_limit, ssrf, RequestId};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -92,8 +92,11 @@ pub async fn create_scan(
         }
     }
 
-    // 6. Create scan in database with tier and clerk_user_id
+    // 6. Rate limit check — anonymous: 1/IP/24h; authenticated Developer: 5/user/month
     let client_ip = addr.ip().to_string();
+    rate_limit::check_rate_limits(&state.pool, clerk_user_id.as_deref(), &client_ip).await?;
+
+    // 7. Create scan in database with tier and clerk_user_id
     let scan = db::scans::create_scan(
         &state.pool,
         &validated_url,
@@ -105,13 +108,13 @@ pub async fn create_scan(
     )
     .await?;
 
-    // 7. Spawn scan execution (fire-and-forget) — route to tier-appropriate method
+    // 8. Spawn scan execution (fire-and-forget) — route to tier-appropriate method
     match tier {
         "authenticated" => state.orchestrator.spawn_authenticated_scan(scan.id, scan.target_url.clone(), Some(request_id.0)),
         _ => state.orchestrator.spawn_scan(scan.id, scan.target_url.clone(), Some(request_id.0)),
     };
 
-    // 8. Return 201 Created
+    // 9. Return 201 Created
     let response = json!({
         "id": scan.id,
         "status": "pending",

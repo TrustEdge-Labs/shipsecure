@@ -1,6 +1,7 @@
 'use server'
 
 import { z } from 'zod'
+import { auth } from '@clerk/nextjs/server'
 
 const scanSchema = z.object({
   url: z.string()
@@ -48,23 +49,67 @@ export async function submitScan(
 
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000'
 
+  // Extract Clerk auth — anonymous users get null token
+  const { getToken, userId } = await auth()
+  const token = userId ? await getToken() : null
+
+  // If authenticated, check domain verification before submitting the scan
+  if (userId && token) {
+    try {
+      const urlObj = new URL(validatedFields.data.url)
+      const domain = urlObj.hostname.replace(/^www\./, '').toLowerCase()
+
+      const domainsRes = await fetch(`${backendUrl}/api/v1/domains`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+      const domains = domainsRes.ok ? await domainsRes.json() : []
+      const isVerified = domains.some((d: { domain: string; status: string }) =>
+        d.domain === domain && d.status === 'verified'
+      )
+      if (!isVerified) {
+        return {
+          errors: { _form: ['You must verify ownership of this domain before scanning. Go to /verify-domain to get started.'] }
+        }
+      }
+    } catch {
+      // If domain check fails, let the backend enforce it
+    }
+  }
+
+  // Build headers with optional auth token
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   try {
     const response = await fetch(`${backendUrl}/api/v1/scans`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(validatedFields.data),
     })
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}))
-      const detail = errorBody.detail || 'Failed to start scan. Please try again.'
 
       if (response.status === 429) {
+        const resetsAt = errorBody.resets_at
+        let message = errorBody.detail || 'You have reached your scan limit. Please try again later.'
+        if (resetsAt) {
+          const diff = new Date(resetsAt).getTime() - Date.now()
+          if (diff > 0) {
+            const hours = Math.floor(diff / (1000 * 60 * 60))
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+            const countdown = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
+            message = `${message} Resets in ${countdown}.`
+          }
+        }
         return {
-          errors: { _form: ['You have reached the maximum number of scans for today. Please try again tomorrow.'] }
+          errors: { _form: [message] }
         }
       }
 
+      const detail = errorBody.detail || 'Failed to start scan. Please try again.'
       return {
         errors: { _form: [detail] }
       }

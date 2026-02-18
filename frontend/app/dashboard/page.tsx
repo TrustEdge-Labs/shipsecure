@@ -2,7 +2,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { DomainBadge } from '@/components/domain-badge'
-import type { VerifiedDomain } from '@/lib/types'
+import type { VerifiedDomain, QuotaResponse } from '@/lib/types'
 
 export default async function DashboardPage() {
   const { userId, getToken } = await auth()
@@ -19,14 +19,35 @@ export default async function DashboardPage() {
   })
   const domains: VerifiedDomain[] = domainsRes.ok ? await domainsRes.json() : []
 
+  // Fetch quota info server-side
+  const quotaRes = await fetch(`${BACKEND_URL}/api/v1/quota`, {
+    cache: 'no-store',
+    headers: sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {},
+  })
+  const quota: QuotaResponse | null = quotaRes.ok ? await quotaRes.json() : null
+
+  function getQuotaStyle(used: number, limit: number) {
+    const ratio = used / limit
+    if (ratio >= 1.0) return 'bg-danger-bg text-danger-text border-danger-border'
+    if (ratio >= 0.6) return 'bg-caution-bg text-caution-text border-caution-border'
+    return 'bg-success-bg text-success-text border-success-border'
+  }
+
   return (
     <main className="container mx-auto px-4 py-16 max-w-4xl">
       <h1 className="text-3xl font-bold text-text-primary mb-2">
         Welcome, {user?.firstName ?? 'there'}
       </h1>
-      <p className="text-text-secondary mb-8">
+      <p className="text-text-secondary mb-4">
         Your security dashboard. Verify a domain to start scanning.
       </p>
+
+      {quota && (
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium mb-6 ${getQuotaStyle(quota.used, quota.limit)}`}>
+          <span>{quota.used}/{quota.limit} scans</span>
+          <span className="text-xs opacity-75">this month</span>
+        </div>
+      )}
 
       {/* Verified Domains Section */}
       <section className="mb-10">

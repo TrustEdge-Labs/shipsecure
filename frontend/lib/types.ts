@@ -96,3 +96,9 @@ export interface VerifyCheckResponse {
   domain: string
   message: string
 }
+
+export interface QuotaResponse {
+  used: number
+  limit: number
+  resets_at: string
+}

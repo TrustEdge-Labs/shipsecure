@@ -166,6 +166,17 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
               <span className="text-text-secondary">Scanned: </span>
               <span className="text-text-primary">{formatDate(data.completed_at)}</span>
             </div>
+            <div>
+              <span className="text-text-secondary">Scan type: </span>
+              {data.tier === 'free' ? (
+                <span className="inline-flex items-center gap-1">
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-secondary text-text-secondary border border-border-subtle">Basic scan</span>
+                  <a href="/sign-up" className="text-xs text-brand-primary hover:underline ml-1">Sign up for deeper analysis</a>
+                </span>
+              ) : (
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20">Enhanced scan</span>
+              )}
+            </div>
             {data.expires_at && (
               <div className={`block sm:inline-block px-3 py-1 rounded-md border ${getExpiryWarning(data.expires_at)}`}>
                 <span className="font-medium">Results available until: </span>

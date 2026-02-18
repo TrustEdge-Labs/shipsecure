@@ -59,10 +59,10 @@ Requirements for Auth & Tiered Access milestone. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFR-01**: CORS config allows Authorization header for JWT bearer tokens
-- [ ] **INFR-02**: Nginx strips x-middleware-subrequest header (CVE-2025-29927 mitigation)
-- [ ] **INFR-03**: Clerk webhook handler verifies svix signatures on user.created events
-- [ ] **INFR-04**: Axum verifies Clerk JWTs locally via cached JWKS public keys (no per-request Clerk API calls)
+- [x] **INFR-01**: CORS config allows Authorization header for JWT bearer tokens
+- [x] **INFR-02**: Nginx strips x-middleware-subrequest header (CVE-2025-29927 mitigation)
+- [x] **INFR-03**: Clerk webhook handler verifies svix signatures on user.created events
+- [x] **INFR-04**: Axum verifies Clerk JWTs locally via cached JWKS public keys (no per-request Clerk API calls)
 
 ## Future Requirements
 
@@ -143,10 +143,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLEN-01 | Phase 30 | Pending |
 | CLEN-02 | Phase 30 | Pending |
 | CLEN-03 | Phase 30 | Pending |
-| INFR-01 | Phase 29 | Pending |
-| INFR-02 | Phase 29 | Pending |
-| INFR-03 | Phase 29 | Pending |
-| INFR-04 | Phase 29 | Pending |
+| INFR-01 | Phase 29 | Complete |
+| INFR-02 | Phase 29 | Complete |
+| INFR-03 | Phase 29 | Complete |
+| INFR-04 | Phase 29 | Complete |
 
 **Coverage:**
 - v1.6 requirements: 33 total

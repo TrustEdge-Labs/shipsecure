@@ -217,7 +217,7 @@ Plans:
 | 13-18. Brand | v1.3 | 10/10 | Complete | 2026-02-11 |
 | 19-24. Observability | v1.4 | 11/11 | Complete | 2026-02-16 |
 | 25-28. Testing | v1.5 | 11/11 | Complete | 2026-02-17 |
-| 29. Auth Foundation | v1.6 | 0/3 | Not started | - |
+| 29. Auth Foundation | 2/3 | In Progress|  | - |
 | 30. Stripe Removal & Schema | v1.6 | 0/1 | Not started | - |
 | 31. Results Gating | v1.6 | 0/2 | Not started | - |
 | 32. Domain Verification | v1.6 | 0/2 | Not started | - |

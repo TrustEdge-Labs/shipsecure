@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 29 of 35 (Auth Foundation)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-02-17 — v1.6 roadmap created, 7 phases (29-35), 33 requirements mapped
+Plan: 1 of 3 in current phase (29-01 complete; 29-02 and 29-03 remain)
+Status: In progress
+Last activity: 2026-02-18 — Phase 29 plan 01 complete (backend auth: CORS fix, JWKS decoder, Clerk webhook, users migration)
 
-Progress: [████████░░░░░░░░░░░░] 42% (28/66 plans)
+Progress: [████████░░░░░░░░░░░░] 43% (29/66 plans)
 
 ## Performance Metrics
 
@@ -51,19 +51,29 @@ All decisions logged in PROJECT.md Key Decisions table.
 - Phase 29 must land CORS Authorization header fix before any dashboard routes exist
 - CVE-2025-29927 Nginx fix must land in Phase 29 — not as an afterthought
 
+**Phase 29 Plan 03 decisions:**
+- Strip x-middleware-subrequest in BOTH /api/ and / Nginx location blocks — missing either block leaves CVE-2025-29927 exploitable since requests traverse Next.js middleware via both paths
+- CLERK_JWKS_URL unconditional in env template (required for JWT verification); CLERK_SECRET_KEY and CLERK_WEBHOOK_SIGNING_SECRET conditional (only needed for webhooks)
+
+**Phase 29 Plan 01 decisions:**
+- jsonwebtoken = "10" not "9" — axum-jwt-auth 0.6.3 depends on jsonwebtoken 10.x; using 9 would create incompatible types
+- RemoteJwksDecoder has no generic parameter — generics appear at JwtDecoder<T> impl level; use Decoder<ClerkClaims> type annotation on the Arc
+- Axum HeaderMap passes directly to svix::Webhook::verify() — both use http 1.x, no conversion loop needed
+- sqlx::query() non-macro for users INSERT — avoids compile-time DB connection requirement
+
 ### Pending Todos
 
 None.
 
 ### Blockers/Concerns
 
-- Phase 29: Verify axum-jwt-auth current version on crates.io supports async JWKS refresh before writing Cargo.toml
+- Phase 29: axum-jwt-auth 0.6.3 confirmed on crates.io (resolved — implemented successfully)
 - Phase 30: Confirm genpdf has no usage outside Stripe PDF path before removing (grep needed at plan time)
 - Phase 32: Shared-hosting TLD blocklist scope is a policy call — confirm list before implementation (github.io, vercel.app, netlify.app, pages.dev confirmed; others may need addition)
 - Phase 33: Rate limit window confirmed as 5/month Developer — ARCHITECTURE.md "10/day" is superseded
 
 ## Session Continuity
 
-Last session: 2026-02-17
-Stopped at: v1.6 roadmap created — Phase 29 ready to plan
+Last session: 2026-02-18
+Stopped at: Completed 29-auth-foundation/29-01-PLAN.md
 Resume file: None

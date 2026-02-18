@@ -143,11 +143,11 @@ Plans:
   2. The results API response includes a `gated: true` field on each stripped finding and an `owner_verified` boolean at the response level
   3. Authenticated users viewing their own scan results see full description and remediation for all finding severities
   4. Unauthenticated users viewing results see lock-overlay teaser cards for high/critical findings with a "Sign up free" CTA — severity and category are visible but details are not
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 31-01: Server-side gating — extend GET /api/v1/results/:token to accept Option<ClerkUser>, compute owner_verified, strip description/remediation from high/critical for anonymous tokens, add gated field to Finding serialization
-- [ ] 31-02: Frontend AuthGate component — AuthGate client component reading useAuth() and gated field, lock overlay with severity/category visible, Clerk SignUp modal CTA, integrate into results page
+- [ ] 31-01-PLAN.md — Server-side gating: add clerk_user_id to Scan struct and all SELECT queries, optional JWT extraction, owner_verified computation, strip description/remediation from high/critical for non-owners, add gated field to findings
+- [ ] 31-02-PLAN.md — Frontend AuthGate component: TypeScript type updates, AuthGate client component with lock overlay and Clerk SignUp modal CTA, FindingAccordion integration, results page auth token forwarding
 
 ### Phase 32: Domain Verification
 **Goal**: Authenticated users can prove they own a domain, and only verified domains can receive authenticated scans

@@ -121,5 +121,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 33-02-PLAN.md
-Resume file: .planning/phases/33-tiered-scan-access-and-rate-limiting/33-02-SUMMARY.md
+Stopped at: Phase 34 context gathered
+Resume file: .planning/phases/34-scan-history-dashboard/34-CONTEXT.md

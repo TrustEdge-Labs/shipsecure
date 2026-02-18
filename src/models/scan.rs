@@ -36,6 +36,7 @@ pub struct Scan {
     pub started_at: Option<NaiveDateTime>,
     pub completed_at: Option<NaiveDateTime>,
     pub created_at: NaiveDateTime,
+    pub clerk_user_id: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -18,7 +18,8 @@ pub async fn create_scan(
          RETURNING id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
                    expires_at::timestamp, detected_framework, detected_platform,
                    stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
-                   tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp"
+                   tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
+                   clerk_user_id"
     )
     .bind(target_url)
     .bind(email)
@@ -37,7 +38,8 @@ pub async fn get_scan(pool: &PgPool, id: Uuid) -> Result<Option<Scan>, sqlx::Err
         "SELECT id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
                 expires_at::timestamp, detected_framework, detected_platform,
                 stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
-                tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp
+                tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
+                clerk_user_id
          FROM scans WHERE id = $1"
     )
     .bind(id)
@@ -64,7 +66,8 @@ pub async fn claim_pending_scan(pool: &PgPool) -> Result<Option<Scan>, sqlx::Err
          RETURNING id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
                    expires_at::timestamp, detected_framework, detected_platform,
                    stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
-                   tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp"
+                   tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
+                   clerk_user_id"
     )
     .fetch_optional(pool)
     .await?;
@@ -153,7 +156,8 @@ pub async fn get_scan_by_token(pool: &PgPool, token: &str) -> Result<Option<Scan
         "SELECT id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
                 expires_at::timestamp, detected_framework, detected_platform,
                 stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
-                tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp
+                tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
+                clerk_user_id
          FROM scans
          WHERE results_token = $1 AND (expires_at IS NULL OR expires_at > NOW())"
     )

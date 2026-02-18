@@ -1,5 +1,6 @@
 use axum::extract::{Path, State};
-use axum::http::{header, StatusCode};
+use axum::http::header::{self, AUTHORIZATION};
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use chrono::Utc;
@@ -10,12 +11,34 @@ use crate::api::scans::AppState;
 use crate::models::Severity;
 use crate::{db, models};
 
+/// Optionally extract the Clerk user ID from the Authorization header.
+///
+/// Returns `None` if no Authorization header is present, the token is malformed,
+/// or the JWT fails verification. Never fails the request — anonymous callers
+/// simply get `None`.
+async fn extract_optional_clerk_user(
+    state: &AppState,
+    headers: &axum::http::HeaderMap,
+) -> Option<String> {
+    let auth_value = headers.get(AUTHORIZATION)?.to_str().ok()?;
+    let token = auth_value.strip_prefix("Bearer ")?.trim();
+    if token.is_empty() {
+        return None;
+    }
+    let token_data = state.jwt_decoder.decode(token).await.ok()?;
+    Some(token_data.claims.sub)
+}
+
 /// GET /api/v1/results/:token - Get scan results by token
 pub async fn get_results_by_token(
     State(state): State<AppState>,
     Path(token): Path<String>,
+    headers: axum::http::HeaderMap,
 ) -> Result<Json<serde_json::Value>, ApiError> {
-    // 1. Query scan by token (checks expiry automatically)
+    // 1. Optionally extract Clerk user ID from Authorization header
+    let authenticated_user_id = extract_optional_clerk_user(&state, &headers).await;
+
+    // 2. Query scan by token (checks expiry automatically)
     let scan = db::scans::get_scan_by_token(&state.pool, &token)
         .await?
         .ok_or_else(|| {
@@ -27,10 +50,16 @@ pub async fn get_results_by_token(
             }
         })?;
 
-    // 2. Query findings
+    // 3. Compute owner_verified — BOTH sides must be Some; None == None returns false
+    let owner_verified = match (&authenticated_user_id, &scan.clerk_user_id) {
+        (Some(caller), Some(owner)) => caller == owner,
+        _ => false,
+    };
+
+    // 4. Query findings
     let findings = db::findings::get_findings_by_scan(&state.pool, scan.id).await?;
 
-    // 3. Calculate summary
+    // 5. Calculate summary
     let mut summary = json!({
         "total": findings.len(),
         "critical": 0,
@@ -56,23 +85,41 @@ pub async fn get_results_by_token(
         }
     }
 
-    // 4. Build findings array (same format as get_scan)
+    // 6. Build findings array with gating logic
+    //    Non-owners: high/critical findings have description/remediation stripped and gated: true
+    //    Owners: all findings have full details and gated: false
     let findings_json: Vec<serde_json::Value> = findings
         .iter()
         .map(|f| {
-            json!({
-                "id": f.id,
-                "title": f.title,
-                "description": f.description,
-                "severity": format!("{:?}", f.severity).to_lowercase(),
-                "remediation": f.remediation,
-                "scanner_name": f.scanner_name,
-                "vibe_code": f.vibe_code,
-            })
+            let is_gated = !owner_verified
+                && matches!(f.severity, Severity::High | Severity::Critical);
+            if is_gated {
+                json!({
+                    "id": f.id,
+                    "title": f.title,
+                    "description": null,
+                    "severity": format!("{:?}", f.severity).to_lowercase(),
+                    "remediation": null,
+                    "scanner_name": f.scanner_name,
+                    "vibe_code": f.vibe_code,
+                    "gated": true,
+                })
+            } else {
+                json!({
+                    "id": f.id,
+                    "title": f.title,
+                    "description": f.description,
+                    "severity": format!("{:?}", f.severity).to_lowercase(),
+                    "remediation": f.remediation,
+                    "scanner_name": f.scanner_name,
+                    "vibe_code": f.vibe_code,
+                    "gated": false,
+                })
+            }
         })
         .collect();
 
-    // 5. Return JSON response (NO email, NO submitter_ip, NO scan_id for privacy)
+    // 7. Return JSON response (NO email, NO submitter_ip, NO scan_id for privacy)
     let response = json!({
         "id": scan.results_token,  // Return token instead of internal ID
         "target_url": scan.target_url,
@@ -90,6 +137,7 @@ pub async fn get_results_by_token(
         "stage_files": scan.stage_files,
         "stage_secrets": scan.stage_secrets,
         "stage_vibecode": scan.stage_vibecode,
+        "owner_verified": owner_verified,
         "findings": findings_json,
         "summary": summary,
     });
@@ -101,8 +149,12 @@ pub async fn get_results_by_token(
 pub async fn download_results_markdown(
     State(state): State<AppState>,
     Path(token): Path<String>,
+    headers: axum::http::HeaderMap,
 ) -> Result<Response, ApiError> {
-    // 1. Query scan by token (checks expiry automatically)
+    // 1. Optionally extract Clerk user ID from Authorization header
+    let authenticated_user_id = extract_optional_clerk_user(&state, &headers).await;
+
+    // 2. Query scan by token (checks expiry automatically)
     let scan = db::scans::get_scan_by_token(&state.pool, &token)
         .await?
         .ok_or_else(|| {
@@ -114,10 +166,16 @@ pub async fn download_results_markdown(
             }
         })?;
 
-    // 2. Query findings
+    // 3. Compute owner_verified — BOTH sides must be Some; None == None returns false
+    let owner_verified = match (&authenticated_user_id, &scan.clerk_user_id) {
+        (Some(caller), Some(owner)) => caller == owner,
+        _ => false,
+    };
+
+    // 4. Query findings
     let findings = db::findings::get_findings_by_scan(&state.pool, scan.id).await?;
 
-    // 3. Group findings by severity
+    // 5. Group findings by severity
     let mut critical_findings = Vec::new();
     let mut high_findings = Vec::new();
     let mut medium_findings = Vec::new();
@@ -132,14 +190,14 @@ pub async fn download_results_markdown(
         }
     }
 
-    // 4. Format timestamps
+    // 6. Format timestamps
     let scanned_time = scan
         .completed_at
         .map(|dt| dt.format("%Y-%m-%d %H:%M UTC").to_string())
         .unwrap_or_else(|| "In Progress".to_string());
     let generated_time = Utc::now().format("%Y-%m-%d %H:%M UTC").to_string();
 
-    // 5. Build markdown report
+    // 7. Build markdown report
     let detected_framework = scan.detected_framework.as_deref().unwrap_or("Not detected");
     let detected_platform = scan.detected_platform.as_deref().unwrap_or("Not detected");
 
@@ -175,7 +233,7 @@ pub async fn download_results_markdown(
         findings.len()
     );
 
-    // Helper function to add findings section
+    // Helper closure to add a section of findings, applying gating for non-owners
     let add_findings_section = |md: &mut String, severity: &str, findings_list: Vec<&models::Finding>| {
         if !findings_list.is_empty() {
             md.push_str(&format!("### {}\n\n", severity));
@@ -184,6 +242,19 @@ pub async fn download_results_markdown(
                     format!("[Vibe-Code] {}", severity)
                 } else {
                     severity.to_string()
+                };
+
+                // Gate high and critical findings for non-owners in the markdown download
+                let is_gated = !owner_verified
+                    && matches!(severity, "Critical" | "High");
+
+                let (description, remediation) = if is_gated {
+                    (
+                        "[Sign up free to view full details — shipsecure.ai]".to_string(),
+                        "[Sign up free to view remediation — shipsecure.ai]".to_string(),
+                    )
+                } else {
+                    (finding.description.clone(), finding.remediation.clone())
                 };
 
                 md.push_str(&format!(
@@ -198,8 +269,8 @@ pub async fn download_results_markdown(
                     finding.title,
                     severity_label,
                     finding.scanner_name,
-                    finding.description,
-                    finding.remediation
+                    description,
+                    remediation
                 ));
             }
         }
@@ -214,7 +285,7 @@ pub async fn download_results_markdown(
     // Add footer
     markdown.push_str("---\n\n*Generated by ShipSecure - https://shipsecure.ai*\n");
 
-    // 6. Return with proper headers
+    // 8. Return with proper headers
     let token_prefix = if token.len() >= 8 {
         &token[..8]
     } else {

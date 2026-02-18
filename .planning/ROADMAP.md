@@ -173,11 +173,11 @@ Plans:
   2. An authenticated scan submission uses the enhanced config (30 JS files, 300s timeout, extended exposed-file checks) — and is rejected if the target domain is not verified
   3. A second anonymous scan submission from the same IP within 24 hours returns HTTP 429 with a `resets_at` timestamp and a human-readable message
   4. A Developer-tier user who has submitted 5 scans in the current calendar month receives HTTP 429 with a `resets_at` of the first day of next month
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 33-01: Tiered scan orchestration — spawn_authenticated_scan with enhanced config, 3-arm tier match in create_scan handler (anonymous/authenticated/paid), domain verification check at scan submission, tier value stored on scan record at creation time
-- [ ] 33-02: Rate limiting and quota display — extend check_rate_limits with Option<clerk_user_id>, per-IP 1/24h anonymous limit, per-user 5/month Developer limit using DB-backed monthly window, 429 response with resets_at, quota display in header ("3 of 5 scans used this month, resets Mar 1")
+- [ ] 33-01-PLAN.md — Tiered scan orchestration: refactor spawn_scan into tier-parameterized method, activate enhanced config (30 JS / 300s / extended files) for authenticated tier, wire JWT extraction and domain verification gate into create_scan handler, add GET /api/v1/quota endpoint
+- [ ] 33-02-PLAN.md — Rate limiting and quota display: rewrite check_rate_limits with Option<clerk_user_id> routing (1/IP/24h anonymous, 5/user/month authenticated), RateLimitedWithReset error variant with resets_at, auth-aware scan form submission with domain pre-check, tier badges on results page, quota badge on dashboard
 
 ### Phase 34: Scan History Dashboard
 **Goal**: Authenticated users can see all their past scans with severity summaries, expiry countdowns, and quota status

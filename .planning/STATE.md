@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.6 Auth & Tiered Access — Phase 32: Domain Verification backend complete, Phase 32 Plan 02 (frontend wizard) next
+**Current focus:** v1.6 Auth & Tiered Access — Phase 32 complete, Phase 33 (Rate Limiting) next
 
 ## Current Position
 
 Phase: 32 of 35 (Domain Verification)
-Plan: 1 of 2 in current phase (32-01 backend complete)
-Status: Phase 32 Plan 01 complete — domain verification backend implemented
-Last activity: 2026-02-18 — Phase 32 plan 01 complete (Domain verification backend: migration, DB queries, API handlers, owner_verified extended)
+Plan: 2 of 2 in current phase (32-02 frontend wizard complete)
+Status: Phase 32 complete — full domain verification system (backend + frontend) implemented
+Last activity: 2026-02-18 — Phase 32 plan 02 complete (Domain verification frontend: wizard page, DomainBadge, MetaTagSnippet, dashboard domains section)
 
-Progress: [█████████░░░░░░░░░░░] 50% (33/66 plans)
+Progress: [█████████░░░░░░░░░░░] 51% (34/66 plans)
 
 ## Performance Metrics
 
@@ -34,6 +34,7 @@ Progress: [█████████░░░░░░░░░░░] 50% (33
 | v1.4 Observability | 19-24 | 11 | 1 |
 | v1.5 Testing | 25-28 | 11 | 2 |
 | Phase 32 P01 | 4 | 3 tasks | 9 files |
+| Phase 32 P02 | 4 | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,11 @@ All decisions logged in PROJECT.md Key Decisions table.
 - generateMetadata also forwards session token — consistent auth posture with main page handler
 - Spacer div in AuthGate lock overlay maintains accordion height for visual continuity
 
+**Phase 32 Plan 02 decisions:**
+- confirmedExpiresAt stored as separate string | null state — TypeScript rejects spreading VerifyConfirmResponse into VerifyStartResponse typed state; separate state eliminates type-unsafe spread
+- DomainBadge is a server component (no 'use client') — purely presentational, no clipboard or useState needed
+- Dashboard uses BACKEND_URL (server-only env) not NEXT_PUBLIC_BACKEND_URL — consistent with server component pattern
+
 **Phase 31 Plan 01 decisions:**
 - Gate high/critical findings for ALL scans regardless of tier — tier is irrelevant; gating is based on severity + caller identity only
 - None == None returns owner_verified: false — anonymous scans (clerk_user_id IS NULL) are always gated for anonymous callers
@@ -103,5 +109,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 32-01-PLAN.md
-Resume file: .planning/phases/32-domain-verification/32-01-SUMMARY.md
+Stopped at: Completed 32-02-PLAN.md
+Resume file: .planning/phases/32-domain-verification/32-02-SUMMARY.md

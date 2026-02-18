@@ -20,7 +20,7 @@ Requirements for Auth & Tiered Access milestone. Each maps to roadmap phases.
 
 - [x] **DOMN-01**: User can add a domain and receive a unique verification token
 - [x] **DOMN-02**: User can verify domain ownership via HTML meta tag
-- [ ] **DOMN-03**: Verified domain displays green badge in dashboard
+- [x] **DOMN-03**: Verified domain displays green badge in dashboard
 - [x] **DOMN-04**: System blocks verification of shared hosting TLDs (github.io, vercel.app, netlify.app, pages.dev)
 - [x] **DOMN-05**: Domain verification expires after 30 days requiring re-verification
 
@@ -122,7 +122,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-06 | Phase 29 | Complete |
 | DOMN-01 | Phase 32 | Complete |
 | DOMN-02 | Phase 32 | Complete |
-| DOMN-03 | Phase 32 | Pending |
+| DOMN-03 | Phase 32 | Complete |
 | DOMN-04 | Phase 32 | Complete |
 | DOMN-05 | Phase 32 | Complete |
 | GATE-01 | Phase 31 | Complete |

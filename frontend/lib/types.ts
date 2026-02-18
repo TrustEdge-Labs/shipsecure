@@ -23,11 +23,12 @@ export interface Scan {
 export interface Finding {
   id: string
   title: string
-  description: string
+  description: string | null
   severity: 'critical' | 'high' | 'medium' | 'low'
-  remediation: string
+  remediation: string | null
   scanner_name: string
   vibe_code: boolean
+  gated?: boolean
 }
 
 export interface ScanResponse {
@@ -57,6 +58,7 @@ export interface ScanResponse {
     medium: number
     low: number
   }
+  owner_verified: boolean
 }
 
 export interface CreateScanResponse {

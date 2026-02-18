@@ -98,7 +98,7 @@ See: `.planning/milestones/v1.5-ROADMAP.md`
 - [x] **Phase 30: Stripe Removal and Schema Cleanup** — Remove async-stripe/hmac/sha2/genpdf, delete Stripe checkout routes, change paid_audits FK to SET NULL, extend tier constraint, add clerk_user_id to scans (completed 2026-02-18)
 - [x] **Phase 31: Results Gating** — Server-side high/critical finding suppression for anonymous tokens, gated flag in API response, frontend teaser cards with lock overlay and signup CTA (completed 2026-02-18)
 - [x] **Phase 32: Domain Verification** — verified_domains table, verify-start/verify-confirm API endpoints, meta tag verification, shared-hosting TLD blocklist, 30-day TTL, domain wizard UI (completed 2026-02-18)
-- [ ] **Phase 33: Tiered Scan Access and Rate Limiting** — Tiered scan configs (anonymous-light vs authenticated-full), per-IP anonymous rate limit, per-user monthly quota, 429 with resets_at, quota display
+- [x] **Phase 33: Tiered Scan Access and Rate Limiting** — Tiered scan configs (anonymous-light vs authenticated-full), per-IP anonymous rate limit, per-user monthly quota, 429 with resets_at, quota display (completed 2026-02-18)
 - [ ] **Phase 34: Scan History Dashboard** — Paginated scan history endpoint, protected dashboard route, scan list with severity counts and expiry, quota status display
 - [ ] **Phase 35: Data Retention** — Hourly Tokio cleanup task, 24-hour anonymous expiry, 30-day Developer expiry, in-progress scan protection
 
@@ -221,7 +221,7 @@ Plans:
 | 30. Stripe Removal & Schema | 1/1 | Complete    | 2026-02-18 | - |
 | 31. Results Gating | 2/2 | Complete    | 2026-02-18 | - |
 | 32. Domain Verification | 2/2 | Complete    | 2026-02-18 | - |
-| 33. Tiered Access & Rate Limiting | 1/2 | In Progress|  | - |
+| 33. Tiered Access & Rate Limiting | 2/2 | Complete   | 2026-02-18 | - |
 | 34. Scan History Dashboard | v1.6 | 0/2 | Not started | - |
 | 35. Data Retention | v1.6 | 0/1 | Not started | - |
 

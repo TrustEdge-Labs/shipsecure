@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 33 of 35 (Tiered Scan Access and Rate Limiting)
-Plan: 1 of 2 in current phase (33-01 backend tiering complete)
-Status: Phase 33 plan 01 complete — tier-aware scan orchestration, domain gate, quota endpoint implemented
-Last activity: 2026-02-18 — Phase 33 plan 01 complete (spawn_scan_with_tier, enhanced config activation, create_scan tier+clerk_user_id, domain verification gate, GET /api/v1/quota)
+Plan: 2 of 2 in current phase (33-02 frontend tier UX complete — phase 33 done)
+Status: Phase 33 complete — tier-aware rate limiting, RateLimitedWithReset with resets_at, auth-aware scan action, tier badges, quota badge implemented
+Last activity: 2026-02-18 — Phase 33 plan 02 complete (check_rate_limits Option<clerk_user_id>, 429 resets_at countdown, scan action Clerk token forwarding, results tier badge, dashboard quota badge)
 
-Progress: [█████████░░░░░░░░░░░] 53% (35/66 plans)
+Progress: [█████████░░░░░░░░░░░] 55% (36/66 plans)
 
 ## Performance Metrics
 
@@ -81,6 +81,11 @@ All decisions logged in PROJECT.md Key Decisions table.
 - generateMetadata also forwards session token — consistent auth posture with main page handler
 - Spacer div in AuthGate lock overlay maintains accordion height for visual continuity
 
+**Phase 33 Plan 02 decisions:**
+- Scan server action IS the client-side domain check — runs synchronously on button click; backend gate (33-01) provides security enforcement; no separate onClick handler needed
+- Tier history card badge deferred to Phase 34 — scan history dashboard UI doesn't exist yet; badge added when Phase 34 creates that UI
+- getQuotaStyle inline function in dashboard server component — colocation with usage, no client-side state needed
+
 **Phase 33 Plan 01 decisions:**
 - extract_optional_clerk_user and extract_domain_from_url made pub(crate) in results.rs — single normalization source, avoids www-stripping mismatch
 - spawn_scan_with_tier takes &'static str tier — tracing spans and metrics labels require &'static lifetime for tier value
@@ -116,5 +121,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 33-01-PLAN.md
-Resume file: .planning/phases/33-tiered-scan-access-and-rate-limiting/33-01-SUMMARY.md
+Stopped at: Completed 33-02-PLAN.md
+Resume file: .planning/phases/33-tiered-scan-access-and-rate-limiting/33-02-SUMMARY.md

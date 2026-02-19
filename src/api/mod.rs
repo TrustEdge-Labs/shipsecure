@@ -7,3 +7,4 @@ pub mod webhooks;
 pub mod health;
 pub mod metrics;
 pub mod domains;
+pub mod users;

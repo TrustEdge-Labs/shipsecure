@@ -221,6 +221,14 @@ async fn main() {
     let task_tracker = TaskTracker::new();
     let shutdown_token = CancellationToken::new();
 
+    // Spawn retention cleanup task (hourly DELETE of expired scans)
+    // Must be spawned before task_tracker moves into ScanOrchestrator::new()
+    shipsecure::cleanup::spawn_cleanup_task(
+        pool.clone(),
+        &task_tracker,
+        shutdown_token.clone(),
+    );
+
     // Create orchestrator with configurable concurrency
     let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), max_concurrent, task_tracker, shutdown_token.clone()));
 

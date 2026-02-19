@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.6 Auth & Tiered Access — Phase 34 (Scan History Dashboard) in progress
+**Current focus:** v1.6 Auth & Tiered Access — Phase 34 (Scan History Dashboard) complete
 
 ## Current Position
 
 Phase: 34 of 35 (Scan History Dashboard)
-Plan: 1 of 2 in current phase (34-01 backend endpoint complete)
-Status: Phase 34 plan 01 complete — GET /api/v1/users/me/scans with ScanHistoryRow, severity counts, active scans, pagination
-Last activity: 2026-02-19 — Phase 34 plan 01 complete (ScanHistoryRow, get_user_scan_history, count_user_scans_history, get_user_active_scans, users::get_user_scans handler)
+Plan: 2 of 2 in current phase (34-02 frontend dashboard complete)
+Status: Phase 34 complete — two-column dashboard with ScanHistoryTable, active scans section, quota sidebar, verified domains sidebar
+Last activity: 2026-02-19 — Phase 34 plan 02 complete (ScanHistoryItem types, ScanHistoryTable server component, refactored dashboard page.tsx)
 
-Progress: [█████████░░░░░░░░░░░] 56% (37/66 plans)
+Progress: [█████████░░░░░░░░░░░] 57% (38/66 plans)
 
 ## Performance Metrics
 
@@ -36,6 +36,7 @@ Progress: [█████████░░░░░░░░░░░] 56% (37
 | Phase 32 P01 | 4 | 3 tasks | 9 files |
 | Phase 32 P02 | 4 | 3 tasks | 7 files |
 | Phase 34 P01 | 2 | 2 tasks | 4 files |
+| Phase 34 P02 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,10 @@ All decisions logged in PROJECT.md Key Decisions table.
 - [Phase 34]: ScanHistoryRow projection type lives in src/db/scans.rs not models/ — query result types belong with DB layer
 - [Phase 34]: Per-page hardcoded at 10 for scan history pagination
 - [Phase 34]: Active scans (pending/in_progress) returned separately with zero severity counts — no findings exist yet
+- [Phase 34]: formatResetDate produces 'Mon D' format (e.g. 'Mar 1') — matches locked quota sidebar decision
+- [Phase 34]: Full-row click via overlay Link in first td — server component compatible, no event handlers
+- [Phase 34]: Expired rows at opacity-60 with Expired badge in action column — no View button
+- [Phase 34]: New Scan disabled with opacity-50 cursor-not-allowed pointer-events-none at quota limit
 
 ### Pending Todos
 
@@ -125,5 +130,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 34-01-PLAN.md
-Resume file: .planning/phases/34-scan-history-dashboard/34-02-PLAN.md
+Stopped at: Completed 34-02-PLAN.md
+Resume file: .planning/phases/35-data-retention/35-01-PLAN.md

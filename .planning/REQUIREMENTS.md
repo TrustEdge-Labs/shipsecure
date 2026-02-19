@@ -43,7 +43,7 @@ Requirements for Auth & Tiered Access milestone. Each maps to roadmap phases.
 ### Dashboard
 
 - [x] **DASH-01**: Authenticated user can view paginated scan history (domain, date, severity counts, expiry)
-- [ ] **DASH-02**: Dashboard shows quota status ("3 of 5 scans used this month, resets Mar 1")
+- [x] **DASH-02**: Dashboard shows quota status ("3 of 5 scans used this month, resets Mar 1")
 
 ### Data Retention
 
@@ -136,7 +136,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TIER-05 | Phase 33 | Complete |
 | TIER-06 | Phase 33 | Complete |
 | DASH-01 | Phase 34 | Complete |
-| DASH-02 | Phase 34 | Pending |
+| DASH-02 | Phase 34 | Complete |
 | RETN-01 | Phase 35 | Pending |
 | RETN-02 | Phase 35 | Pending |
 | RETN-03 | Phase 35 | Pending |

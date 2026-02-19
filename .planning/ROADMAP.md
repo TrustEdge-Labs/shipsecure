@@ -223,7 +223,7 @@ Plans:
 | 32. Domain Verification | 2/2 | Complete    | 2026-02-18 | - |
 | 33. Tiered Access & Rate Limiting | 2/2 | Complete    | 2026-02-18 | - |
 | 34. Scan History Dashboard | 2/2 | Complete    | 2026-02-19 | - |
-| 35. Data Retention | 1/1 | Complete   | 2026-02-19 | - |
+| 35. Data Retention | 1/1 | Complete    | 2026-02-19 | - |
 
 ---
 *Last updated: 2026-02-18*

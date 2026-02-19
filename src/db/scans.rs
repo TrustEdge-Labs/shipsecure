@@ -3,6 +3,22 @@ use uuid::Uuid;
 
 use crate::models::scan::{Scan, ScanStatus};
 
+/// Projection row for scan history queries — lives here (not models/) as it is a query result type.
+#[derive(Debug, sqlx::FromRow, serde::Serialize)]
+pub struct ScanHistoryRow {
+    pub id: uuid::Uuid,
+    pub target_url: String,
+    pub status: String,
+    pub results_token: Option<String>,
+    pub expires_at: Option<chrono::NaiveDateTime>,
+    pub tier: String,
+    pub created_at: chrono::NaiveDateTime,
+    pub critical_count: i64,
+    pub high_count: i64,
+    pub medium_count: i64,
+    pub low_count: i64,
+}
+
 /// Create a new scan record
 #[allow(dead_code)]
 pub async fn create_scan(
@@ -302,4 +318,93 @@ pub async fn count_scans_by_user_this_month(pool: &PgPool, clerk_user_id: &str) 
     .await?;
 
     Ok(count.0)
+}
+
+/// Paginated query for completed/failed scans for a given user, with severity counts via LEFT JOIN.
+///
+/// Sorted by expiring soonest first (per locked decision): non-null expires_at ASC, then created_at DESC.
+#[allow(dead_code)]
+pub async fn get_user_scan_history(
+    pool: &PgPool,
+    clerk_user_id: &str,
+    limit: i64,
+    offset: i64,
+) -> Result<Vec<ScanHistoryRow>, sqlx::Error> {
+    let rows = sqlx::query_as::<_, ScanHistoryRow>(
+        "SELECT s.id,
+                s.target_url,
+                s.status::text AS status,
+                s.results_token,
+                s.expires_at::timestamp AS expires_at,
+                s.tier,
+                s.created_at::timestamp AS created_at,
+                COUNT(CASE WHEN f.severity = 'critical' THEN 1 END) AS critical_count,
+                COUNT(CASE WHEN f.severity = 'high'     THEN 1 END) AS high_count,
+                COUNT(CASE WHEN f.severity = 'medium'   THEN 1 END) AS medium_count,
+                COUNT(CASE WHEN f.severity = 'low'      THEN 1 END) AS low_count
+         FROM scans s
+         LEFT JOIN findings f ON f.scan_id = s.id
+         WHERE s.clerk_user_id = $1
+           AND s.status NOT IN ('pending', 'in_progress')
+         GROUP BY s.id, s.target_url, s.status, s.results_token, s.expires_at, s.tier, s.created_at
+         ORDER BY CASE WHEN s.expires_at IS NULL THEN 1 ELSE 0 END ASC,
+                  s.expires_at ASC NULLS LAST,
+                  s.created_at DESC
+         LIMIT $2 OFFSET $3"
+    )
+    .bind(clerk_user_id)
+    .bind(limit)
+    .bind(offset)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows)
+}
+
+/// Total count of completed/failed scans for a user — used for pagination metadata.
+#[allow(dead_code)]
+pub async fn count_user_scans_history(pool: &PgPool, clerk_user_id: &str) -> Result<i64, sqlx::Error> {
+    let count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*)
+         FROM scans
+         WHERE clerk_user_id = $1
+           AND status NOT IN ('pending', 'in_progress')"
+    )
+    .bind(clerk_user_id)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(count.0)
+}
+
+/// Non-paginated list of in-progress/pending scans for a user.
+///
+/// Active scans have no findings yet; severity counts are hardcoded to zero.
+#[allow(dead_code)]
+pub async fn get_user_active_scans(
+    pool: &PgPool,
+    clerk_user_id: &str,
+) -> Result<Vec<ScanHistoryRow>, sqlx::Error> {
+    let rows = sqlx::query_as::<_, ScanHistoryRow>(
+        "SELECT s.id,
+                s.target_url,
+                s.status::text AS status,
+                s.results_token,
+                s.expires_at::timestamp AS expires_at,
+                s.tier,
+                s.created_at::timestamp AS created_at,
+                0::bigint AS critical_count,
+                0::bigint AS high_count,
+                0::bigint AS medium_count,
+                0::bigint AS low_count
+         FROM scans s
+         WHERE s.clerk_user_id = $1
+           AND s.status IN ('pending', 'in_progress')
+         ORDER BY s.created_at DESC"
+    )
+    .bind(clerk_user_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows)
 }

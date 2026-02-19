@@ -102,3 +102,26 @@ export interface QuotaResponse {
   limit: number
   resets_at: string
 }
+
+export interface ScanHistoryItem {
+  id: string
+  target_url: string
+  status: 'pending' | 'in_progress' | 'completed' | 'failed'
+  results_token: string | null
+  expires_at: string | null
+  tier: string
+  created_at: string
+  critical_count: number
+  high_count: number
+  medium_count: number
+  low_count: number
+}
+
+export interface ScanHistoryResponse {
+  scans: ScanHistoryItem[]
+  active_scans: ScanHistoryItem[]
+  total: number
+  page: number
+  per_page: number
+  total_pages: number
+}

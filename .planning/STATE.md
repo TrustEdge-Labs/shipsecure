@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.6 Auth & Tiered Access — Phase 33 (Tiered Scan Access) in progress
+**Current focus:** v1.6 Auth & Tiered Access — Phase 34 (Scan History Dashboard) in progress
 
 ## Current Position
 
-Phase: 33 of 35 (Tiered Scan Access and Rate Limiting)
-Plan: 2 of 2 in current phase (33-02 frontend tier UX complete — phase 33 done)
-Status: Phase 33 complete — tier-aware rate limiting, RateLimitedWithReset with resets_at, auth-aware scan action, tier badges, quota badge implemented
-Last activity: 2026-02-18 — Phase 33 plan 02 complete (check_rate_limits Option<clerk_user_id>, 429 resets_at countdown, scan action Clerk token forwarding, results tier badge, dashboard quota badge)
+Phase: 34 of 35 (Scan History Dashboard)
+Plan: 1 of 2 in current phase (34-01 backend endpoint complete)
+Status: Phase 34 plan 01 complete — GET /api/v1/users/me/scans with ScanHistoryRow, severity counts, active scans, pagination
+Last activity: 2026-02-19 — Phase 34 plan 01 complete (ScanHistoryRow, get_user_scan_history, count_user_scans_history, get_user_active_scans, users::get_user_scans handler)
 
-Progress: [█████████░░░░░░░░░░░] 55% (36/66 plans)
+Progress: [█████████░░░░░░░░░░░] 56% (37/66 plans)
 
 ## Performance Metrics
 
@@ -35,6 +35,7 @@ Progress: [█████████░░░░░░░░░░░] 55% (36
 | v1.5 Testing | 25-28 | 11 | 2 |
 | Phase 32 P01 | 4 | 3 tasks | 9 files |
 | Phase 32 P02 | 4 | 3 tasks | 7 files |
+| Phase 34 P01 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,9 @@ All decisions logged in PROJECT.md Key Decisions table.
 - [Phase 32]: r#gen raw identifier required for Rust 2024 edition — gen is a reserved keyword
 - [Phase 32]: TagInBody is soft warning — meta tag anywhere in HTML proves control, verification succeeds
 - [Phase 32]: owner_verified is now two-step: identity match AND is_domain_verified — expired domain re-gates results
+- [Phase 34]: ScanHistoryRow projection type lives in src/db/scans.rs not models/ — query result types belong with DB layer
+- [Phase 34]: Per-page hardcoded at 10 for scan history pagination
+- [Phase 34]: Active scans (pending/in_progress) returned separately with zero severity counts — no findings exist yet
 
 ### Pending Todos
 
@@ -120,6 +124,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-18
-Stopped at: Phase 34 context gathered
-Resume file: .planning/phases/34-scan-history-dashboard/34-CONTEXT.md
+Last session: 2026-02-19
+Stopped at: Completed 34-01-PLAN.md
+Resume file: .planning/phases/34-scan-history-dashboard/34-02-PLAN.md

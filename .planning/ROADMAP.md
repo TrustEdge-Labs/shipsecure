@@ -222,7 +222,7 @@ Plans:
 | 31. Results Gating | 2/2 | Complete    | 2026-02-18 | - |
 | 32. Domain Verification | 2/2 | Complete    | 2026-02-18 | - |
 | 33. Tiered Access & Rate Limiting | 2/2 | Complete    | 2026-02-18 | - |
-| 34. Scan History Dashboard | v1.6 | 0/2 | Not started | - |
+| 34. Scan History Dashboard | 1/2 | In Progress|  | - |
 | 35. Data Retention | v1.6 | 0/1 | Not started | - |
 
 ---

@@ -50,6 +50,8 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: true
+          build-args: |
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
           tags: |
             ${{ env.REGISTRY }}/trustedge-labs/shipsecure-frontend:latest
             ${{ env.REGISTRY }}/trustedge-labs/shipsecure-frontend:${{ github.sha }}

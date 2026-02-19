@@ -59,6 +59,7 @@ jobs:
         env:
           NEXT_PUBLIC_BACKEND_URL: http://localhost:3001
           NEXT_PUBLIC_SITE_URL: https://shipsecure.io
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       - name: Run E2E tests
         run: npm run test:e2e
         env:

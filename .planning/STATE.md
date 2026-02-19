@@ -2,26 +2,26 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-17)
+See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.6 Auth & Tiered Access — Phase 35 (Data Retention) in progress
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 35 of 35 (Data Retention)
-Plan: 1 of 1 in current phase (35-01 data retention backend complete)
-Status: Phase 35 plan 01 complete — tier-conditional expires_at, hourly cleanup task with graceful shutdown
-Last activity: 2026-02-19 — Phase 35 plan 01 complete (cleanup.rs, worker_pool.rs tier fix, delete_expired_scans_by_tier)
+Phase: — (no active milestone)
+Plan: —
+Status: v1.6 Auth & Tiered Access shipped — 7 phases, 13 plans, 29 tasks
+Last activity: 2026-02-19 — v1.6 milestone archived
 
-Progress: [█████████░░░░░░░░░░░] 58% (39/66 plans)
+Progress: 7 milestones shipped, 35 phases, 88 plans completed
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 75
+- Total plans completed: 88
 - Average duration: ~30 min
-- Total execution time: ~37 hours
+- Total execution time: ~44 hours
 
 **By Milestone:**
 
@@ -33,10 +33,7 @@ Progress: [█████████░░░░░░░░░░░] 58% (39
 | v1.3 Brand | 13-18 | 10 | 7 |
 | v1.4 Observability | 19-24 | 11 | 1 |
 | v1.5 Testing | 25-28 | 11 | 2 |
-| Phase 32 P01 | 4 | 3 tasks | 9 files |
-| Phase 32 P02 | 4 | 3 tasks | 7 files |
-| Phase 34 P01 | 2 | 2 tasks | 4 files |
-| Phase 34 P02 | 3 | 2 tasks | 3 files |
+| v1.6 Auth & Tiered Access | 29-35 | 13 | 2 |
 
 ## Accumulated Context
 
@@ -44,102 +41,16 @@ Progress: [█████████░░░░░░░░░░░] 58% (39
 
 All decisions logged in PROJECT.md Key Decisions table.
 
-**v1.6 key decisions (pending implementation):**
-- Clerk over Auth.js/Supabase Auth — managed service, fastest path, pre-built Next.js components
-- clerk-rs explicitly rejected — community-maintained, stale (v0.4.1, 8+ months), security risk for JWT path
-- jsonwebtoken + axum-jwt-auth for local JWKS-based JWT verification — no per-request Clerk API calls
-- Remove $49 Stripe audit — replaced by Developer tier; paid_audits FK must change to SET NULL before retention runs
-- Server-side results gating — never frontend-only; curl bypass is a real threat (OWASP A01)
-- Meta tag verification only for v1.6 — DNS TXT too opaque for vibe-coder target users
-- Rate limit: 5 scans/month for Developer tier (monthly window, not daily) — reconciles FEATURES.md vs ARCHITECTURE.md inconsistency
-- Phase 29 must land CORS Authorization header fix before any dashboard routes exist
-- CVE-2025-29927 Nginx fix must land in Phase 29 — not as an afterthought
-
-**Phase 29 Plan 03 decisions:**
-- Strip x-middleware-subrequest in BOTH /api/ and / Nginx location blocks — missing either block leaves CVE-2025-29927 exploitable since requests traverse Next.js middleware via both paths
-- CLERK_JWKS_URL unconditional in env template (required for JWT verification); CLERK_SECRET_KEY and CLERK_WEBHOOK_SIGNING_SECRET conditional (only needed for webhooks)
-
-**Phase 29 Plan 02 decisions:**
-- proxy.ts (not middleware.ts) for Next.js 16.1.6 middleware convention
-- Valid-format placeholder publishable key so npm run build succeeds without real Clerk keys — Clerk validates key format during static page generation
-- Force-add .env.example despite .gitignore .env* rule — template file with no secrets
-- UserButton uses Clerk defaults only — no custom menu items or tier badge
-
-**Phase 29 Plan 01 decisions:**
-- jsonwebtoken = "10" not "9" — axum-jwt-auth 0.6.3 depends on jsonwebtoken 10.x; using 9 would create incompatible types
-- RemoteJwksDecoder has no generic parameter — generics appear at JwtDecoder<T> impl level; use Decoder<ClerkClaims> type annotation on the Arc
-- Axum HeaderMap passes directly to svix::Webhook::verify() — both use http 1.x, no conversion loop needed
-- sqlx::query() non-macro for users INSERT — avoids compile-time DB connection requirement
-
-**Phase 30 Plan 01 decisions:**
-- Keep 'paid' in tier CHECK — existing paid_audits rows reference scans with tier='paid'; removing requires data migration first
-- Keep base64 crate — still used in worker_pool.rs for results token generation (URL_SAFE_NO_PAD.encode); not Stripe-specific
-- Keep svix crate — used in handle_clerk_webhook for Clerk signature verification; never Stripe-specific
-- Remove hex crate — only usage was Stripe HMAC hex encoding; safe to remove with webhook handler
-- tier match in run_scanners simplified to tuple assignment after paid arm removal
-
-**Phase 31 Plan 02 decisions:**
-- AuthGate receives pre-computed gated bool from server-rendered finding data — no client-side JWT check needed
-- generateMetadata also forwards session token — consistent auth posture with main page handler
-- Spacer div in AuthGate lock overlay maintains accordion height for visual continuity
-
-**Phase 33 Plan 02 decisions:**
-- Scan server action IS the client-side domain check — runs synchronously on button click; backend gate (33-01) provides security enforcement; no separate onClick handler needed
-- Tier history card badge deferred to Phase 34 — scan history dashboard UI doesn't exist yet; badge added when Phase 34 creates that UI
-- getQuotaStyle inline function in dashboard server component — colocation with usage, no client-side state needed
-
-**Phase 33 Plan 01 decisions:**
-- extract_optional_clerk_user and extract_domain_from_url made pub(crate) in results.rs — single normalization source, avoids www-stripping mismatch
-- spawn_scan_with_tier takes &'static str tier — tracing spans and metrics labels require &'static lifetime for tier value
-- Domain gate returns HTTP 403 — identity confirmed but domain ownership not; semantically correct
-- rate_limit::check_rate_limits removed from create_scan — old email-based signature replaced in 33-02 with Option<clerk_user_id> routing
-- first_of_next_month_utc placed in scans.rs — quota handler owns this; rate limit module will handle its own in 33-02
-
-**Phase 32 Plan 02 decisions:**
-- confirmedExpiresAt stored as separate string | null state — TypeScript rejects spreading VerifyConfirmResponse into VerifyStartResponse typed state; separate state eliminates type-unsafe spread
-- DomainBadge is a server component (no 'use client') — purely presentational, no clipboard or useState needed
-- Dashboard uses BACKEND_URL (server-only env) not NEXT_PUBLIC_BACKEND_URL — consistent with server component pattern
-
-**Phase 31 Plan 01 decisions:**
-- Gate high/critical findings for ALL scans regardless of tier — tier is irrelevant; gating is based on severity + caller identity only
-- None == None returns owner_verified: false — anonymous scans (clerk_user_id IS NULL) are always gated for anonymous callers
-- download_results_markdown also applies gating — consistent OWASP A01; curl to /download cannot bypass gating
-- Optional auth pattern: extract_optional_clerk_user() helper calls state.jwt_decoder.decode() directly; do NOT use Claims<T> extractor for optional auth (it rejects all anonymous requests with 401)
-- [Phase 32]: Claims struct pattern not tuple: axum-jwt-auth 0.6.3 Claims<T> uses struct destructuring Claims { claims, .. } not tuple Claims(claims)
-- [Phase 32]: r#gen raw identifier required for Rust 2024 edition — gen is a reserved keyword
-- [Phase 32]: TagInBody is soft warning — meta tag anywhere in HTML proves control, verification succeeds
-- [Phase 32]: owner_verified is now two-step: identity match AND is_domain_verified — expired domain re-gates results
-- [Phase 34]: ScanHistoryRow projection type lives in src/db/scans.rs not models/ — query result types belong with DB layer
-- [Phase 34]: Per-page hardcoded at 10 for scan history pagination
-- [Phase 34]: Active scans (pending/in_progress) returned separately with zero severity counts — no findings exist yet
-- [Phase 34]: formatResetDate produces 'Mon D' format (e.g. 'Mar 1') — matches locked quota sidebar decision
-- [Phase 34]: Full-row click via overlay Link in first td — server component compatible, no event handlers
-- [Phase 34]: Expired rows at opacity-60 with Expired badge in action column — no View button
-- [Phase 34]: New Scan disabled with opacity-50 cursor-not-allowed pointer-events-none at quota limit
-
-**Phase 35 Plan 01 decisions:**
-- Free tier expires_at = NOW() + 24 hours (not 3 days); authenticated tier = NOW() + 30 days
-- 24-hour grace period in DELETE: expires_at + INTERVAL '24 hours' < NOW() — total retention is expires_at + 24h
-- Only completed/failed status deleted — pending/in_progress scans are never touched
-- First cleanup tick deferred by 1 hour via interval_at — no DELETE fires on startup or deploy
-- MissedTickBehavior::Skip — if DB is slow and a tick is missed, skip to next scheduled hour
-- On DB error: log at ERROR, return early, no retry until next tick — tiers are independent deletes
-- Always log at INFO even when zero scans deleted — confirms task is running
-- spawn_cleanup_task called before task_tracker moves into ScanOrchestrator::new() — ownership order
-- No Prometheus counter for cleanup — structured logs only (locked decision)
-
 ### Pending Todos
 
 None.
 
 ### Blockers/Concerns
 
-- Phase 29: axum-jwt-auth 0.6.3 confirmed on crates.io (resolved — implemented successfully)
-- Phase 32: Shared-hosting TLD blocklist scope is a policy call — confirm list before implementation (github.io, vercel.app, netlify.app, pages.dev confirmed; others may need addition)
-- Phase 33: Rate limit window confirmed as 5/month Developer — ARCHITECTURE.md "10/day" is superseded
+None.
 
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 35-01-PLAN.md
-Resume file: (phase 35 complete)
+Stopped at: v1.6 milestone completed and archived
+Resume file: —

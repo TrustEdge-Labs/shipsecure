@@ -157,3 +157,13 @@
 
 ---
 
+
+## v1.6 Auth & Tiered Access (Shipped: 2026-02-19)
+
+**Phases completed:** 25 phases, 66 plans, 23 tasks
+
+**Key accomplishments:**
+- (none recorded)
+
+---
+

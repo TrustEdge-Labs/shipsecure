@@ -68,22 +68,20 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - ✓ Coverage enforcement at 80/80/75 thresholds via Vitest config (actual: 96.77/94.11/89.32) — v1.5
 - ✓ Branch protection on main requiring all CI checks to pass with no admin bypass — v1.5
 
+- ✓ Clerk authentication with email/password, Google, and GitHub OAuth — v1.6
+- ✓ Axum JWT verification via cached JWKS public keys (no per-request Clerk API calls) — v1.6
+- ✓ CVE-2025-29927 Nginx mitigation (x-middleware-subrequest header strip) — v1.6
+- ✓ Stripe removal — async-stripe/hmac/sha2/genpdf removed, paid_audits FK SET NULL — v1.6
+- ✓ Server-side results gating — high/critical findings stripped for anonymous, frontend lock overlay with signup CTA — v1.6
+- ✓ Domain ownership verification via meta tag with shared-hosting TLD blocklist and 30-day TTL — v1.6
+- ✓ Tiered scan configs — anonymous-light (20 JS/180s) vs authenticated-full (30 JS/300s) — v1.6
+- ✓ Rate limiting — 1/IP/24h anonymous, 5/user/month Developer with 429 + resets_at — v1.6
+- ✓ Scan history dashboard with severity counts, expiry countdown, quota status, verified domains sidebar — v1.6
+- ✓ Data retention — hourly cleanup task, 24h anonymous / 30d Developer expiry with 24h grace period — v1.6
+
 ### Active
 
-**Current Milestone: v1.6 Auth & Tiered Access**
-
-**Goal:** Add user authentication (Clerk), domain ownership verification, and a tiered access model that converts anonymous scanners into registered users through a "teaser" strategy — revealing critical findings only to authenticated users with verified domains.
-
-**Target features:**
-- Clerk auth integration (signup, signin, sessions, Next.js middleware)
-- Domain ownership verification (meta tag or file upload)
-- Tiered scan configuration (anonymous-light vs authenticated-full)
-- Severity-based results gating (full details for low/med, teaser for high/critical on anonymous scans)
-- Scan history dashboard for authenticated users
-- Per-tier scan rate limits (1 anonymous, 3-5/month Developer)
-- Data retention enforcement (24hr anonymous, 7-14 days Developer)
-- Remove $49 one-time Stripe audit (replaced by tier model)
-- User dashboard with verified domain, scan history, quota status
+(No active milestone — next milestone not yet defined)
 
 ### Out of Scope
 
@@ -114,7 +112,8 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **v1.3 shipped 2026-02-11:** Brand identity — design tokens, logo, header, icons, favicon, 62 files changed, 6 phases, 10 plans
 - **v1.4 shipped 2026-02-16:** Observability — structured logging, request tracing, health checks, Prometheus metrics, graceful shutdown, 47 files changed, 6 phases, 11 plans
 - **v1.5 shipped 2026-02-17:** Frontend testing — 106 unit tests, Playwright E2E, CI pipeline with branch protection, 72 files changed, 4 phases, 11 plans
-- **Current:** ~7,877 LOC Rust, 6 milestones shipped, 28 phases, 75 plans completed
+- **v1.6 shipped 2026-02-19:** Auth & Tiered Access — Clerk auth, domain verification, results gating, tiered scans, rate limiting, scan history dashboard, data retention, 95 files changed, 7 phases, 13 plans, 2 days
+- **Current:** 7 milestones shipped, 35 phases, 88 plans completed
 
 ## Constraints
 
@@ -173,11 +172,13 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Sequential CI jobs (unit → E2E) | Avoid wasting E2E resources if unit tests fail | ✓ Good — fast feedback on unit failures, E2E only runs on passing code |
 | Branch protection with enforce_admins | No bypass even for repo owner, strict quality gate | ✓ Good — first PR through CI caught a real bug (browser mismatch) |
 
-| Tiered access over open scanning | Domain verification prevents unauthorized scanning of others' sites; teaser strategy converts anonymous → registered | — Pending |
-| Clerk over Auth.js/Supabase Auth | Managed service, fastest path to production auth, pre-built Next.js components | — Pending |
-| Remove $49 one-time audit | Replace with tier model — deep scans become Developer/Pro feature, simplifies product | — Pending |
-| Teaser results gating | Show full low/med findings, gate high/critical behind signup — proves value while driving conversion | — Pending |
-| Meta tag + file upload for domain verification | Lower friction than DNS TXT for target audience (vibe-coders may not control DNS) | — Pending |
+| Tiered access over open scanning | Domain verification prevents unauthorized scanning of others' sites; teaser strategy converts anonymous → registered | ✓ Good — anonymous/authenticated tiers enforced server-side, rate limits prevent abuse |
+| Clerk over Auth.js/Supabase Auth | Managed service, fastest path to production auth, pre-built Next.js components | ✓ Good — 3 OAuth providers working, JWKS JWT verification clean, webhook sync reliable |
+| Remove $49 one-time audit | Replace with tier model — deep scans become Developer/Pro feature, simplifies product | ✓ Good — 5 crates removed, schema cleaned, simpler product |
+| Teaser results gating | Show full low/med findings, gate high/critical behind signup — proves value while driving conversion | ✓ Good — server-side gating, curl-proof, lock overlay CTA drives signup |
+| Meta tag verification only (no file upload) | Lower friction than DNS TXT, file upload deferred | ✓ Good — simple meta tag flow, shared-hosting blocklist prevents abuse |
+| jsonwebtoken + axum-jwt-auth for Rust JWT | Local JWKS-based verification, no per-request Clerk API calls | ✓ Good — cached JWKS keys, RS256 verification, zero latency overhead |
+| 24h grace period before scan deletion | Users see "Expired" badge in dashboard before data disappears | ✓ Good — interval_at deferred task, TaskTracker integration for graceful shutdown |
 
 ---
-*Last updated: 2026-02-17 after v1.6 milestone started*
+*Last updated: 2026-02-19 after v1.6 milestone*

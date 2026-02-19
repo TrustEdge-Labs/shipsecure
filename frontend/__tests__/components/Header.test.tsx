@@ -19,12 +19,12 @@ describe('Header', () => {
     expect(nav).toBeInTheDocument()
   })
 
-  test('renders Scan Now CTA link', () => {
+  test('renders Sign In link when signed out', () => {
     renderWithProviders(<Header />)
 
-    const cta = screen.getByRole('link', { name: /scan now/i })
+    const cta = screen.getByRole('link', { name: /sign in/i })
     expect(cta).toBeInTheDocument()
-    expect(cta).toHaveAttribute('href', '/#scan-form')
+    expect(cta).toHaveAttribute('href', '/sign-in')
   })
 
   test('renders logo as link to home', () => {

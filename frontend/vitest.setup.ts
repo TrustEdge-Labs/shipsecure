@@ -40,3 +40,14 @@ vi.mock('next/image', () => ({
     return React.createElement('img', { src, alt, ...props })
   },
 }))
+
+// Mock @clerk/nextjs so components using Clerk hooks/components render without ClerkProvider
+vi.mock('@clerk/nextjs', () => ({
+  useClerk: vi.fn(() => ({ openSignUp: vi.fn() })),
+  useUser: vi.fn(() => ({ isSignedIn: false, user: null })),
+  useAuth: vi.fn(() => ({ isSignedIn: false, userId: null })),
+  SignedIn: ({ children }: { children: React.ReactNode }) => null,
+  SignedOut: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
+  UserButton: () => null,
+  ClerkProvider: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
+}))

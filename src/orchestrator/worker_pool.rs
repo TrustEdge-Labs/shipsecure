@@ -264,7 +264,10 @@ impl ScanOrchestrator {
 
         // Generate results token
         let token = Self::generate_results_token();
-        let expires_at = chrono::Utc::now().naive_utc() + chrono::Duration::days(3);
+        let expires_at = chrono::Utc::now().naive_utc() + match tier {
+            "authenticated" => chrono::Duration::days(30),
+            _ => chrono::Duration::hours(24), // free tier: 24 hours
+        };
         scans_db::set_results_token(&pool, scan_id, &token, expires_at).await?;
 
         // Send email notification (don't fail scan if email fails)

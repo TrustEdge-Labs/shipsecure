@@ -377,6 +377,27 @@ pub async fn count_user_scans_history(pool: &PgPool, clerk_user_id: &str) -> Res
     Ok(count.0)
 }
 
+/// Delete expired completed/failed scans for a specific tier.
+///
+/// Returns the number of rows deleted.
+/// Only targets status IN ('completed', 'failed') — never deletes pending/in_progress.
+/// Applies 24-hour grace period: expires_at + INTERVAL '24 hours' < NOW().
+/// findings rows are CASCADE deleted by PostgreSQL automatically.
+/// paid_audits.scan_id is SET NULL by PostgreSQL automatically.
+pub async fn delete_expired_scans_by_tier(pool: &PgPool, tier: &str) -> Result<u64, sqlx::Error> {
+    let result = sqlx::query(
+        "DELETE FROM scans
+         WHERE tier = $1
+           AND status IN ('completed', 'failed')
+           AND expires_at + INTERVAL '24 hours' < NOW()"
+    )
+    .bind(tier)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected())
+}
+
 /// Non-paginated list of in-progress/pending scans for a user.
 ///
 /// Active scans have no findings yet; severity counts are hardcoded to zero.

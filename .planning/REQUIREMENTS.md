@@ -47,9 +47,9 @@ Requirements for Auth & Tiered Access milestone. Each maps to roadmap phases.
 
 ### Data Retention
 
-- [ ] **RETN-01**: Anonymous scan results expire after 24 hours
-- [ ] **RETN-02**: Developer tier scan results expire after 30 days
-- [ ] **RETN-03**: Background cleanup task deletes expired completed/failed scans hourly
+- [x] **RETN-01**: Anonymous scan results expire after 24 hours
+- [x] **RETN-02**: Developer tier scan results expire after 30 days
+- [x] **RETN-03**: Background cleanup task deletes expired completed/failed scans hourly
 
 ### Cleanup
 
@@ -137,9 +137,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TIER-06 | Phase 33 | Complete |
 | DASH-01 | Phase 34 | Complete |
 | DASH-02 | Phase 34 | Complete |
-| RETN-01 | Phase 35 | Pending |
-| RETN-02 | Phase 35 | Pending |
-| RETN-03 | Phase 35 | Pending |
+| RETN-01 | Phase 35 | Complete |
+| RETN-02 | Phase 35 | Complete |
+| RETN-03 | Phase 35 | Complete |
 | CLEN-01 | Phase 30 | Complete |
 | CLEN-02 | Phase 30 | Complete |
 | CLEN-03 | Phase 30 | Complete |

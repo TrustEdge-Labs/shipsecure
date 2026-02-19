@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.6 Auth & Tiered Access — Phase 34 (Scan History Dashboard) complete
+**Current focus:** v1.6 Auth & Tiered Access — Phase 35 (Data Retention) in progress
 
 ## Current Position
 
-Phase: 34 of 35 (Scan History Dashboard)
-Plan: 2 of 2 in current phase (34-02 frontend dashboard complete)
-Status: Phase 34 complete — two-column dashboard with ScanHistoryTable, active scans section, quota sidebar, verified domains sidebar
-Last activity: 2026-02-19 — Phase 34 plan 02 complete (ScanHistoryItem types, ScanHistoryTable server component, refactored dashboard page.tsx)
+Phase: 35 of 35 (Data Retention)
+Plan: 1 of 1 in current phase (35-01 data retention backend complete)
+Status: Phase 35 plan 01 complete — tier-conditional expires_at, hourly cleanup task with graceful shutdown
+Last activity: 2026-02-19 — Phase 35 plan 01 complete (cleanup.rs, worker_pool.rs tier fix, delete_expired_scans_by_tier)
 
-Progress: [█████████░░░░░░░░░░░] 57% (38/66 plans)
+Progress: [█████████░░░░░░░░░░░] 58% (39/66 plans)
 
 ## Performance Metrics
 
@@ -117,6 +117,17 @@ All decisions logged in PROJECT.md Key Decisions table.
 - [Phase 34]: Expired rows at opacity-60 with Expired badge in action column — no View button
 - [Phase 34]: New Scan disabled with opacity-50 cursor-not-allowed pointer-events-none at quota limit
 
+**Phase 35 Plan 01 decisions:**
+- Free tier expires_at = NOW() + 24 hours (not 3 days); authenticated tier = NOW() + 30 days
+- 24-hour grace period in DELETE: expires_at + INTERVAL '24 hours' < NOW() — total retention is expires_at + 24h
+- Only completed/failed status deleted — pending/in_progress scans are never touched
+- First cleanup tick deferred by 1 hour via interval_at — no DELETE fires on startup or deploy
+- MissedTickBehavior::Skip — if DB is slow and a tick is missed, skip to next scheduled hour
+- On DB error: log at ERROR, return early, no retry until next tick — tiers are independent deletes
+- Always log at INFO even when zero scans deleted — confirms task is running
+- spawn_cleanup_task called before task_tracker moves into ScanOrchestrator::new() — ownership order
+- No Prometheus counter for cleanup — structured logs only (locked decision)
+
 ### Pending Todos
 
 None.
@@ -130,5 +141,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 34-02-PLAN.md
-Resume file: .planning/phases/35-data-retention/35-01-PLAN.md
+Stopped at: Completed 35-01-PLAN.md
+Resume file: (phase 35 complete)

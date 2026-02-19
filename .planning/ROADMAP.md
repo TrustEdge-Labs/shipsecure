@@ -100,7 +100,7 @@ See: `.planning/milestones/v1.5-ROADMAP.md`
 - [x] **Phase 32: Domain Verification** — verified_domains table, verify-start/verify-confirm API endpoints, meta tag verification, shared-hosting TLD blocklist, 30-day TTL, domain wizard UI (completed 2026-02-18)
 - [x] **Phase 33: Tiered Scan Access and Rate Limiting** — Tiered scan configs (anonymous-light vs authenticated-full), per-IP anonymous rate limit, per-user monthly quota, 429 with resets_at, quota display (completed 2026-02-18)
 - [x] **Phase 34: Scan History Dashboard** — Paginated scan history endpoint, protected dashboard route, scan list with severity counts and expiry, quota status display (completed 2026-02-19)
-- [ ] **Phase 35: Data Retention** — Hourly Tokio cleanup task, 24-hour anonymous expiry, 30-day Developer expiry, in-progress scan protection
+- [x] **Phase 35: Data Retention** — Hourly Tokio cleanup task, 24-hour anonymous expiry, 30-day Developer expiry, in-progress scan protection (completed 2026-02-19)
 
 ## Phase Details
 
@@ -223,7 +223,7 @@ Plans:
 | 32. Domain Verification | 2/2 | Complete    | 2026-02-18 | - |
 | 33. Tiered Access & Rate Limiting | 2/2 | Complete    | 2026-02-18 | - |
 | 34. Scan History Dashboard | 2/2 | Complete    | 2026-02-19 | - |
-| 35. Data Retention | v1.6 | 0/1 | Not started | - |
+| 35. Data Retention | 1/1 | Complete   | 2026-02-19 | - |
 
 ---
 *Last updated: 2026-02-18*

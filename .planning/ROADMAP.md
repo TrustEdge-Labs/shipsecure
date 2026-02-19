@@ -200,10 +200,10 @@ Plans:
   1. An anonymous scan's results are inaccessible via its results token more than 24 hours after completion
   2. A Developer-tier scan's results remain accessible for 30 days after completion
   3. The cleanup task runs hourly and logs the count of deleted scans — in-progress scans are never deleted regardless of age
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 35-01: Retention cleanup task — src/cleanup.rs Tokio interval task integrated into main.rs task_tracker, hourly DELETE WHERE expires_at < NOW() AND status IN ('completed', 'failed'), tracing log with deleted row count, verified anonymous 24h and Developer 30-day expiry values set at scan creation
+- [ ] 35-01-PLAN.md — Retention cleanup: fix tier-based expires_at in worker_pool.rs (24h free, 30d authenticated), add delete_expired_scans_by_tier DB function, create src/cleanup.rs hourly Tokio interval task with TaskTracker integration and per-tier structured logs
 
 ## Progress
 

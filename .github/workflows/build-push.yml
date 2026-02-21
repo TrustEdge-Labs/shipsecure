@@ -59,8 +59,22 @@ jobs:
   deploy:
     needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
-    permissions: {}
+    permissions:
+      contents: read
     steps:
+      - uses: actions/checkout@v5
+
+      - name: Sync compose files to production
+        uses: appleboy/scp-action@v1
+        with:
+          host: shipsecure.ai
+          username: deploy
+          port: 2222
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml,docker-compose.prod.yml"
+          target: /opt/shipsecure
+          overwrite: true
+
       - name: Deploy to production
         uses: appleboy/ssh-action@v1
         with:
@@ -71,4 +85,4 @@ jobs:
           script: |
             cd /opt/shipsecure
             docker compose pull
-            docker compose up -d
+            docker compose up -d --force-recreate

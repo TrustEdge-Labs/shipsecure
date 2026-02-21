@@ -85,4 +85,4 @@ jobs:
           script: |
             cd /opt/shipsecure
             docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate --no-build

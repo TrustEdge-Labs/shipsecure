@@ -84,6 +84,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           script: |
             cd /opt/shipsecure
-            docker compose down --remove-orphans 2>/dev/null || true
+            docker stop shipsecure-backend-1 shipsecure-frontend-1 2>/dev/null || true
+            docker rm shipsecure-backend-1 shipsecure-frontend-1 2>/dev/null || true
             docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build

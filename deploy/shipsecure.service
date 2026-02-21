@@ -1,0 +1,22 @@
+[Unit]
+Description=ShipSecure Application
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/shipsecure
+EnvironmentFile=/opt/shipsecure/.env
+ExecStart=/bin/bash -c '/usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml pull && /usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build'
+ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+TimeoutStartSec=120
+TimeoutStopSec=95s
+Restart=on-failure
+RestartSec=15
+User=deploy
+Group=deploy
+
+[Install]
+WantedBy=multi-user.target

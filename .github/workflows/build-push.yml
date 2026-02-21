@@ -64,14 +64,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Sync compose files to production
+      - name: Sync deploy files to production
         uses: appleboy/scp-action@v1
         with:
           host: shipsecure.ai
           username: deploy
           port: 2222
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml,docker-compose.prod.yml"
+          source: "docker-compose.yml,docker-compose.prod.yml,deploy/shipsecure.service"
           target: /opt/shipsecure
           overwrite: true
 
@@ -83,8 +83,6 @@ jobs:
           port: 2222
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/shipsecure
-            docker stop shipsecure-backend-1 shipsecure-frontend-1 2>/dev/null || true
-            docker rm shipsecure-backend-1 shipsecure-frontend-1 2>/dev/null || true
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
+            sudo cp /opt/shipsecure/deploy/shipsecure.service /etc/systemd/system/shipsecure.service
+            sudo systemctl daemon-reload
+            sudo systemctl restart shipsecure

@@ -92,11 +92,11 @@ pub async fn create_scan(
         }
     }
 
-    // 6. Rate limit check — anonymous: 1/email+domain/day; authenticated: 5/user/month
+    // 6. Rate limit check — anonymous: 1/email+domain/day + 10/IP/day hard cap; authenticated: 5/user/month
+    let client_ip = addr.ip().to_string();
     let target_domain = crate::api::results::extract_domain_from_url(&validated_url)
         .unwrap_or_else(|| validated_url.clone());
-    rate_limit::check_rate_limits(&state.pool, clerk_user_id.as_deref(), &req.email, &target_domain).await?;
-    let client_ip = addr.ip().to_string();
+    rate_limit::check_rate_limits(&state.pool, clerk_user_id.as_deref(), &req.email, &target_domain, &client_ip).await?;
 
     // 7. Create scan in database with tier and clerk_user_id
     let scan = db::scans::create_scan(

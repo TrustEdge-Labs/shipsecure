@@ -4,6 +4,10 @@ use sqlx::PgPool;
 use crate::api::errors::ApiError;
 use crate::db::scans;
 
+/// Hard cap on anonymous scans from a single IP per day, regardless of email.
+/// Prevents abuse via rotating email addresses.
+const ANONYMOUS_IP_DAILY_HARD_CAP: i64 = 10;
+
 fn next_midnight_utc() -> chrono::DateTime<chrono::Utc> {
     let now = Utc::now();
     let tomorrow = now.date_naive().succ_opt().unwrap();
@@ -23,17 +27,36 @@ fn first_of_next_month_utc() -> chrono::DateTime<chrono::Utc> {
 
 /// Check rate limits based on caller identity.
 ///
-/// - Anonymous (clerk_user_id is None): 1 scan per email+domain per day
-/// - Authenticated Developer: 5 scans per calendar month
+/// Anonymous scans have two layers:
+/// 1. Fair-use: 1 scan per email+domain per day (so users can scan multiple apps)
+/// 2. Abuse prevention: hard cap of 10 scans per IP per day (stops email rotation attacks)
+///
+/// Authenticated: 5 scans per calendar month
 pub async fn check_rate_limits(
     pool: &PgPool,
     clerk_user_id: Option<&str>,
     email: &str,
     target_domain: &str,
+    ip: &str,
 ) -> Result<(), ApiError> {
     match clerk_user_id {
         None => {
-            // Anonymous: 1 scan per email+domain per day
+            // Layer 1: IP-based hard cap (abuse prevention)
+            let ip_count = scans::count_anonymous_scans_by_ip_today(pool, ip).await?;
+            if ip_count >= ANONYMOUS_IP_DAILY_HARD_CAP {
+                let resets_at = next_midnight_utc();
+                metrics::counter!(
+                    "rate_limit_total",
+                    "limiter" => "scan_ip_hard_cap",
+                    "action" => "blocked"
+                ).increment(1);
+                return Err(ApiError::RateLimitedWithReset {
+                    message: "Too many scans from this network today. Please try again tomorrow.".to_string(),
+                    resets_at,
+                });
+            }
+
+            // Layer 2: email+domain fair-use limit
             let count = scans::count_anonymous_scans_by_email_and_domain_today(pool, email, target_domain).await?;
             if count >= 1 {
                 let resets_at = next_midnight_utc();

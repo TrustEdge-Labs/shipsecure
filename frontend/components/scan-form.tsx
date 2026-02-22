@@ -129,7 +129,7 @@ export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
         <p>
           {isAuthenticated
             ? '5 scans per month included with your account.'
-            : '1 free scan per day per email. Sign in for 5 scans/month.'
+            : '1 free scan per app per day. Sign in for 5 scans/month.'
           }
         </p>
         <p>

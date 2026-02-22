@@ -23,26 +23,27 @@ fn first_of_next_month_utc() -> chrono::DateTime<chrono::Utc> {
 
 /// Check rate limits based on caller identity.
 ///
-/// - Anonymous (clerk_user_id is None): 1 scan per email per day
+/// - Anonymous (clerk_user_id is None): 1 scan per email+domain per day
 /// - Authenticated Developer: 5 scans per calendar month
 pub async fn check_rate_limits(
     pool: &PgPool,
     clerk_user_id: Option<&str>,
     email: &str,
+    target_domain: &str,
 ) -> Result<(), ApiError> {
     match clerk_user_id {
         None => {
-            // Anonymous: 1 scan per email per day
-            let count = scans::count_scans_by_email_today(pool, email).await?;
+            // Anonymous: 1 scan per email+domain per day
+            let count = scans::count_anonymous_scans_by_email_and_domain_today(pool, email, target_domain).await?;
             if count >= 1 {
                 let resets_at = next_midnight_utc();
                 metrics::counter!(
                     "rate_limit_total",
-                    "limiter" => "scan_email",
+                    "limiter" => "scan_email_domain",
                     "action" => "blocked"
                 ).increment(1);
                 return Err(ApiError::RateLimitedWithReset {
-                    message: "You've used your free scan for today (1 per email per day).".to_string(),
+                    message: format!("You've already scanned {} today. Try again tomorrow, or use a different email to scan again now.", target_domain),
                     resets_at,
                 });
             }

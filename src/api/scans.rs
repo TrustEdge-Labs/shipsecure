@@ -92,8 +92,10 @@ pub async fn create_scan(
         }
     }
 
-    // 6. Rate limit check — anonymous: 1/email/day; authenticated: 5/user/month
-    rate_limit::check_rate_limits(&state.pool, clerk_user_id.as_deref(), &req.email).await?;
+    // 6. Rate limit check — anonymous: 1/email+domain/day; authenticated: 5/user/month
+    let target_domain = crate::api::results::extract_domain_from_url(&validated_url)
+        .unwrap_or_else(|| validated_url.clone());
+    rate_limit::check_rate_limits(&state.pool, clerk_user_id.as_deref(), &req.email, &target_domain).await?;
     let client_ip = addr.ip().to_string();
 
     // 7. Create scan in database with tier and clerk_user_id

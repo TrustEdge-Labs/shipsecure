@@ -154,6 +154,34 @@ pub async fn count_scans_by_email_today(pool: &PgPool, email: &str) -> Result<i6
     Ok(count.0)
 }
 
+/// Count anonymous scans by email + target domain today (UTC).
+///
+/// Allows the same email to scan different domains once each per day.
+/// Domain is matched via LIKE on the target_url column (scheme://domain/...).
+#[allow(dead_code)]
+pub async fn count_anonymous_scans_by_email_and_domain_today(
+    pool: &PgPool,
+    email: &str,
+    domain: &str,
+) -> Result<i64, sqlx::Error> {
+    // Match URLs containing the domain after the scheme (e.g., https://example.com/...)
+    let pattern = format!("%://{domain}%");
+    let count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*)
+         FROM scans
+         WHERE email = $1
+           AND target_url LIKE $2
+           AND clerk_user_id IS NULL
+           AND created_at >= CURRENT_DATE"
+    )
+    .bind(email)
+    .bind(&pattern)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(count.0)
+}
+
 /// Count scans submitted by IP address today (UTC)
 #[allow(dead_code)]
 pub async fn count_scans_by_ip_today(pool: &PgPool, ip: &str) -> Result<i64, sqlx::Error> {

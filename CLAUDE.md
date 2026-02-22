@@ -50,6 +50,7 @@ Required in `/opt/shipsecure/.env`:
 | `CLERK_SECRET_KEY` | frontend | Clerk secret key for middleware |
 | `NEXT_PUBLIC_BACKEND_URL` | frontend | Backend URL for browser requests |
 | `RESEND_API_KEY` | backend | Email delivery (optional) |
+| `HEALTH_DB_LATENCY_THRESHOLD_MS` | backend | DB latency threshold for health check degradation (default: 200) |
 | `RUST_LOG` | backend | Log level filter (optional) |
 | `LOG_FORMAT` | backend | `json` for structured logging (optional) |
 | `SHUTDOWN_TIMEOUT` | backend | Graceful shutdown seconds (optional, default: 90) |

@@ -160,10 +160,40 @@
 
 ## v1.6 Auth & Tiered Access (Shipped: 2026-02-19)
 
-**Phases completed:** 25 phases, 66 plans, 23 tasks
+**Delivered:** Authentication, domain verification, tiered access model, results gating, rate limiting, scan history dashboard, and data retention — transforming anonymous-only scanning into a multi-tier product
+
+**Phases completed:** 29-35 (13 plans total)
 
 **Key accomplishments:**
-- (none recorded)
+- Clerk authentication with email/password, Google, and GitHub OAuth via pre-built Next.js components
+- Axum JWT verification via cached JWKS public keys (no per-request Clerk API calls, RS256)
+- CVE-2025-29927 Nginx mitigation (x-middleware-subrequest header strip)
+- Stripe removal — async-stripe/hmac/sha2/genpdf removed, paid_audits FK SET NULL, simpler product
+- Server-side results gating — high/critical findings stripped for anonymous, lock overlay with signup CTA
+- Domain ownership verification via meta tag with shared-hosting TLD blocklist and 30-day TTL
+- Tiered scan configs — anonymous-light (20 JS/180s) vs authenticated-full (30 JS/300s)
+- Rate limiting — 1/IP/24h anonymous, 5/user/month Developer with 429 + resets_at
+- Scan history dashboard with severity counts, expiry countdown, quota status, verified domains sidebar
+- Data retention — hourly cleanup task, 24h anonymous / 30d Developer expiry with 24h grace period
+
+**Stats:**
+- 155 files changed (+17,584 / -4,085 lines)
+- 7 phases, 13 plans
+- 2 days (Feb 18-19, 2026)
+
+**Git range:** `docs(29)` → `docs(phase-35)`
+
+**Post-ship deployment hardening (2026-02-21):**
+- 19 commits fixing CI/CD deploy pipeline, Docker Compose production config, and systemd integration
+- docker-compose.prod.yml made standalone (no dev compose merging — Docker merge behavior unreliable)
+- Deploy workflow rewritten: scp compose files + systemd restart (not direct docker compose in CI)
+- HOSTNAME=0.0.0.0 fix for Next.js container DNS binding
+- Explicit env vars in compose (no env_file inheritance)
+- Production setup script (`deploy/setup-production.sh`) for clean server reset
+- CLAUDE.md created with full deployment and infrastructure documentation
+- Codebase architecture mapped to `.planning/codebase/`
+
+**What's next:** Next milestone TBD.
 
 ---
 

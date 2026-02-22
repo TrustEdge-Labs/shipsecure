@@ -113,6 +113,7 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **v1.4 shipped 2026-02-16:** Observability — structured logging, request tracing, health checks, Prometheus metrics, graceful shutdown, 47 files changed, 6 phases, 11 plans
 - **v1.5 shipped 2026-02-17:** Frontend testing — 106 unit tests, Playwright E2E, CI pipeline with branch protection, 72 files changed, 4 phases, 11 plans
 - **v1.6 shipped 2026-02-19:** Auth & Tiered Access — Clerk auth, domain verification, results gating, tiered scans, rate limiting, scan history dashboard, data retention, 95 files changed, 7 phases, 13 plans, 2 days
+- **Post-v1.6 deployment hardening (2026-02-21):** 19 commits fixing CI/CD pipeline, Docker Compose standalone mode, systemd integration, env var management. Production deploy pipeline now reliable.
 - **Current:** 7 milestones shipped, 35 phases, 88 plans completed
 
 ## Constraints
@@ -173,6 +174,10 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Branch protection with enforce_admins | No bypass even for repo owner, strict quality gate | ✓ Good — first PR through CI caught a real bug (browser mismatch) |
 
 | Tiered access over open scanning | Domain verification prevents unauthorized scanning of others' sites; teaser strategy converts anonymous → registered | ✓ Good — anonymous/authenticated tiers enforced server-side, rate limits prevent abuse |
+| Standalone docker-compose.prod.yml (no dev merge) | Docker Compose merge behavior is unreliable — duplicate ports, build directives leaking, depends_on to disabled services | ✓ Good — ended 6-hour debugging loop, clean separation of dev and prod |
+| Systemd manages Docker on server (not CI) | Direct docker compose in CI fights with systemd; scp files + systemctl restart is reliable and idempotent | ✓ Good — deploy workflow simplified, crash recovery works automatically |
+| HOSTNAME=0.0.0.0 required for frontend container | Docker sets HOSTNAME to container ID which Next.js tries to resolve via DNS, causing getaddrinfo EAI_AGAIN crash | ✓ Good — one env var, permanent fix |
+| All env vars explicit in docker-compose.prod.yml | env_file inheritance from dev compose causes missing variables, silent failures in production | ✓ Good — every required var visible in one file |
 | Clerk over Auth.js/Supabase Auth | Managed service, fastest path to production auth, pre-built Next.js components | ✓ Good — 3 OAuth providers working, JWKS JWT verification clean, webhook sync reliable |
 | Remove $49 one-time audit | Replace with tier model — deep scans become Developer/Pro feature, simplifies product | ✓ Good — 5 crates removed, schema cleaned, simpler product |
 | Teaser results gating | Show full low/med findings, gate high/critical behind signup — proves value while driving conversion | ✓ Good — server-side gating, curl-proof, lock overlay CTA drives signup |
@@ -181,4 +186,4 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | 24h grace period before scan deletion | Users see "Expired" badge in dashboard before data disappears | ✓ Good — interval_at deferred task, TaskTracker integration for graceful shutdown |
 
 ---
-*Last updated: 2026-02-19 after v1.6 milestone*
+*Last updated: 2026-02-21 after v1.6 deployment hardening*

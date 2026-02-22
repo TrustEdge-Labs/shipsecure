@@ -92,9 +92,9 @@ pub async fn create_scan(
         }
     }
 
-    // 6. Rate limit check — anonymous: 1/IP/24h; authenticated Developer: 5/user/month
+    // 6. Rate limit check — anonymous: 1/email/day; authenticated: 5/user/month
+    rate_limit::check_rate_limits(&state.pool, clerk_user_id.as_deref(), &req.email).await?;
     let client_ip = addr.ip().to_string();
-    rate_limit::check_rate_limits(&state.pool, clerk_user_id.as_deref(), &client_ip).await?;
 
     // 7. Create scan in database with tier and clerk_user_id
     let scan = db::scans::create_scan(

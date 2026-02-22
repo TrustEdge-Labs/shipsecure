@@ -23,26 +23,26 @@ fn first_of_next_month_utc() -> chrono::DateTime<chrono::Utc> {
 
 /// Check rate limits based on caller identity.
 ///
-/// - Anonymous (clerk_user_id is None): 1 scan per IP per 24 hours
+/// - Anonymous (clerk_user_id is None): 1 scan per email per day
 /// - Authenticated Developer: 5 scans per calendar month
 pub async fn check_rate_limits(
     pool: &PgPool,
     clerk_user_id: Option<&str>,
-    ip: &str,
+    email: &str,
 ) -> Result<(), ApiError> {
     match clerk_user_id {
         None => {
-            // Anonymous: 1 scan per IP per 24h
-            let count = scans::count_anonymous_scans_by_ip_today(pool, ip).await?;
+            // Anonymous: 1 scan per email per day
+            let count = scans::count_scans_by_email_today(pool, email).await?;
             if count >= 1 {
                 let resets_at = next_midnight_utc();
                 metrics::counter!(
                     "rate_limit_total",
-                    "limiter" => "scan_ip",
+                    "limiter" => "scan_email",
                     "action" => "blocked"
                 ).increment(1);
                 return Err(ApiError::RateLimitedWithReset {
-                    message: "You've used your free scan for today (1 per day per IP address).".to_string(),
+                    message: "You've used your free scan for today (1 per email per day).".to_string(),
                     resets_at,
                 });
             }
@@ -50,7 +50,6 @@ pub async fn check_rate_limits(
         Some(user_id) => {
             // Authenticated Developer: 5 scans per calendar month
             let count = scans::count_scans_by_user_this_month(pool, user_id).await?;
-            // TODO: Developer-tier limit. When Pro tier is added, gate this on the user's tier.
             if count >= 5 {
                 let resets_at = first_of_next_month_utc();
                 metrics::counter!(

@@ -51,9 +51,15 @@ export function Header() {
             <SignedOut>
               <Link
                 href="/sign-in"
-                className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-text-inverse font-semibold rounded-lg transition text-sm sm:text-base"
+                className="text-sm font-medium text-text-secondary hover:text-text-primary transition"
               >
                 Sign In
+              </Link>
+              <Link
+                href="/sign-up"
+                className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-text-inverse font-semibold rounded-lg transition text-sm sm:text-base"
+              >
+                Sign Up
               </Link>
             </SignedOut>
           </div>

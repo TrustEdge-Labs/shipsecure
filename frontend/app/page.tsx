@@ -1,6 +1,8 @@
 import { ScanForm } from '@/components/scan-form'
 import type { Metadata } from 'next'
 import { Lock, Key, FileText, Search } from 'lucide-react'
+import { auth } from '@clerk/nextjs/server'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'ShipSecure - Security Scanning for Vibe-Coded Apps',
@@ -58,6 +60,7 @@ async function getScanCount(): Promise<number | null> {
 }
 
 export default async function Home() {
+  const { userId } = await auth()
   const scanCount = await getScanCount()
 
   const organizationSchema = {
@@ -113,6 +116,29 @@ export default async function Home() {
             No signup required. Results in ~60 seconds.
           </p>
         </div>
+
+        {/* Signed-in context */}
+        {userId && (
+          <div className="bg-info-bg border border-info-border rounded-xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-sm text-info-text">
+              Signed-in scans require domain verification. This gives you scan history, downloadable reports, and higher scan limits.
+            </p>
+            <div className="flex gap-3 shrink-0">
+              <Link
+                href="/verify-domain"
+                className="text-sm font-medium text-brand-primary hover:underline whitespace-nowrap"
+              >
+                Verify a domain
+              </Link>
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-brand-primary hover:underline whitespace-nowrap"
+              >
+                Go to Dashboard
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Scan Form Card */}
         <div id="scan-form" className="bg-surface-secondary rounded-2xl shadow-lg border border-border-subtle p-6 sm:p-8 mb-12">

@@ -36,7 +36,16 @@ export function ScanForm() {
     <form action={formAction} className="space-y-4">
       {state.errors?._form && (
         <div className="p-3 bg-danger-bg border border-danger-border rounded-lg text-danger-text text-sm">
-          {state.errors._form[0]}
+          {state.errors._form[0].startsWith('DOMAIN_VERIFICATION_REQUIRED:') ? (
+            <>
+              Please verify ownership of <strong>{state.errors._form[0].split(':')[1]}</strong> first.{' '}
+              <a href="/verify-domain" className="underline font-medium hover:text-danger-text/80">
+                Verify your domain to get started
+              </a>
+            </>
+          ) : (
+            state.errors._form[0]
+          )}
         </div>
       )}
 

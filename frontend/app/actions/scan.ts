@@ -17,7 +17,7 @@ const scanSchema = z.object({
     .string()
     .transform(val => val === 'on')
     .refine(val => val === true, {
-      message: 'You must confirm you have authorization to scan this website'
+      message: 'Please confirm you have authorization to scan this website'
     })
 })
 
@@ -68,7 +68,7 @@ export async function submitScan(
       )
       if (!isVerified) {
         return {
-          errors: { _form: ['You must verify ownership of this domain before scanning. Go to /verify-domain to get started.'] }
+          errors: { _form: [`DOMAIN_VERIFICATION_REQUIRED:${domain}`] }
         }
       }
     } catch {

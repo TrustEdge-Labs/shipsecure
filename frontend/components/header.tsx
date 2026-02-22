@@ -31,18 +31,32 @@ export function Header() {
             </div>
           </Link>
 
-          {/* Auth CTA */}
-          <SignedOut>
-            <Link
-              href="/sign-in"
-              className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-text-inverse font-semibold rounded-lg transition text-sm sm:text-base"
-            >
-              Sign In
-            </Link>
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+          {/* Navigation + Auth */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            <SignedIn>
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-text-secondary hover:text-text-primary transition"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/#scan-form"
+                className="hidden sm:inline-flex text-sm font-medium text-text-secondary hover:text-text-primary transition"
+              >
+                New Scan
+              </Link>
+              <UserButton />
+            </SignedIn>
+            <SignedOut>
+              <Link
+                href="/sign-in"
+                className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-text-inverse font-semibold rounded-lg transition text-sm sm:text-base"
+              >
+                Sign In
+              </Link>
+            </SignedOut>
+          </div>
         </div>
       </nav>
     </header>

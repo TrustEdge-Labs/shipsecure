@@ -142,7 +142,7 @@ export default async function Home() {
 
         {/* Scan Form Card */}
         <div id="scan-form" className="bg-surface-secondary rounded-2xl shadow-lg border border-border-subtle p-6 sm:p-8 mb-12">
-          <ScanForm />
+          <ScanForm isAuthenticated={!!userId} />
         </div>
 
         {/* What We Check */}

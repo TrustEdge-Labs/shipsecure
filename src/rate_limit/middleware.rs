@@ -42,7 +42,7 @@ pub async fn check_rate_limits(
                     "action" => "blocked"
                 ).increment(1);
                 return Err(ApiError::RateLimitedWithReset {
-                    message: "You've used your free scan today. Sign up for more scans.".to_string(),
+                    message: "You've used your free scan for today (1 per day per IP address).".to_string(),
                     resets_at,
                 });
             }
@@ -59,7 +59,7 @@ pub async fn check_rate_limits(
                     "action" => "blocked"
                 ).increment(1);
                 return Err(ApiError::RateLimitedWithReset {
-                    message: format!("{} of 5 scans used this month. Upgrade to Pro for unlimited scans.", count),
+                    message: format!("You've used all 5 scans for this month ({} of 5).", count),
                     resets_at,
                 });
             }

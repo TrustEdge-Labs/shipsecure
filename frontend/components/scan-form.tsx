@@ -4,7 +4,11 @@ import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { submitScan, type ScanFormState } from '@/app/actions/scan'
 
-export function ScanForm() {
+interface ScanFormProps {
+  isAuthenticated?: boolean
+}
+
+export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
   const [state, formAction, pending] = useActionState(submitScan, {} as ScanFormState)
   const router = useRouter()
 
@@ -42,6 +46,18 @@ export function ScanForm() {
               <a href="/verify-domain" className="underline font-medium hover:text-danger-text/80">
                 Verify your domain to get started
               </a>
+            </>
+          ) : state.errors._form[0].startsWith('RATE_LIMITED:') ? (
+            <>
+              {state.errors._form[0].replace('RATE_LIMITED:', '')}
+              {!isAuthenticated && (
+                <>
+                  {' '}
+                  <a href="/sign-in" className="underline font-medium hover:text-danger-text/80">
+                    Sign in for 5 scans/month
+                  </a>
+                </>
+              )}
             </>
           ) : (
             state.errors._form[0]
@@ -109,9 +125,17 @@ export function ScanForm() {
         {pending ? 'Starting scan...' : 'Scan Now — Free'}
       </button>
 
-      <p className="text-xs text-text-tertiary text-center">
-        By submitting, you agree to our <a href="/terms" className="underline">Terms of Service</a> and <a href="/privacy" className="underline">Privacy Policy</a>.
-      </p>
+      <div className="text-xs text-text-tertiary text-center space-y-1">
+        <p>
+          {isAuthenticated
+            ? '5 scans per month included with your account.'
+            : '1 free scan per day. Sign in for 5 scans/month.'
+          }
+        </p>
+        <p>
+          By submitting, you agree to our <a href="/terms" className="underline">Terms of Service</a> and <a href="/privacy" className="underline">Privacy Policy</a>.
+        </p>
+      </div>
     </form>
   )
 }

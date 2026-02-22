@@ -94,7 +94,7 @@ export async function submitScan(
 
       if (response.status === 429) {
         const resetsAt = errorBody.resets_at
-        let message = errorBody.detail || 'You have reached your scan limit. Please try again later.'
+        let message = errorBody.detail || "You've reached your scan limit for now."
         if (resetsAt) {
           const diff = new Date(resetsAt).getTime() - Date.now()
           if (diff > 0) {
@@ -105,7 +105,7 @@ export async function submitScan(
           }
         }
         return {
-          errors: { _form: [message] }
+          errors: { _form: [`RATE_LIMITED:${message}`] }
         }
       }
 

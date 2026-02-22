@@ -139,7 +139,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     return 'bg-info-bg border-info-border text-info-text'
   }
 
-  const downloadUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'}/api/v1/results/${token}/download`
+  const downloadUrl = `/api/v1/results/${token}/download`
 
   return (
     <div className="min-h-screen bg-surface-secondary py-8 px-4">

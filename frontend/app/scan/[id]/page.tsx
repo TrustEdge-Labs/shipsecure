@@ -28,11 +28,9 @@ export default function ScanProgressPage() {
   const [errorCount, setErrorCount] = useState(0)
 
   useEffect(() => {
-    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
-
     const fetchScan = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/v1/scans/${scanId}`, {
+        const res = await fetch(`/api/v1/scans/${scanId}`, {
           cache: 'no-store',
         })
 
@@ -61,6 +59,7 @@ export default function ScanProgressPage() {
       } catch (error) {
         console.error('Error fetching scan:', error)
         setErrorCount(prev => prev + 1)
+        setLoading(false)
       }
     }
 

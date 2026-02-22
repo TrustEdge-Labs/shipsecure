@@ -1,25 +1,28 @@
 services:
-  db:
-    # Disabled in production — using DigitalOcean Managed PostgreSQL
-    deploy:
-      replicas: 0
-
   backend:
     image: ghcr.io/trustedge-labs/shipsecure-backend:latest
     pull_policy: always
-    # Bind to localhost only (Nginx proxies from host)
     ports:
       - "127.0.0.1:3000:3000"
     environment:
       DATABASE_URL: ${DATABASE_URL}
+      PORT: ${PORT:-3000}
+      SHIPSECURE_BASE_URL: ${SHIPSECURE_BASE_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      MAX_CONCURRENT_SCANS: ${MAX_CONCURRENT_SCANS:-10}
       CLERK_JWKS_URL: ${CLERK_JWKS_URL}
-    # Remove template volume mount (use baked-in templates from Docker image)
-    volumes: []
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RUST_LOG: ${RUST_LOG:-info,shipsecure=info}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      SHUTDOWN_TIMEOUT: ${SHUTDOWN_TIMEOUT:-90}
+      HEALTH_DB_LATENCY_THRESHOLD_MS: ${HEALTH_DB_LATENCY_THRESHOLD_MS:-200}
     deploy:
       resources:
         limits:
           cpus: '2.0'
           memory: 2G
+    restart: unless-stopped
+    stop_grace_period: 95s
     logging:
       driver: "json-file"
       options:
@@ -29,7 +32,6 @@ services:
   frontend:
     image: ghcr.io/trustedge-labs/shipsecure-frontend:latest
     pull_policy: always
-    # Bind to localhost only (Nginx proxies from host)
     ports:
       - "127.0.0.1:3001:3001"
     environment:
@@ -37,11 +39,15 @@ services:
       BACKEND_URL: http://backend:3000
       NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
       CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+    depends_on:
+      backend:
+        condition: service_started
     deploy:
       resources:
         limits:
           cpus: '1.0'
           memory: 1G
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:

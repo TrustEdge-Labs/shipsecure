@@ -71,7 +71,7 @@ jobs:
           username: deploy
           port: 2222
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml,docker-compose.prod.yml,deploy/shipsecure.service"
+          source: "docker-compose.prod.yml,deploy/shipsecure.service"
           target: /opt/shipsecure
           overwrite: true
 

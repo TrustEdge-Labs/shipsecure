@@ -217,6 +217,18 @@ pub async fn verify_start(
         )));
     }
 
+    // Ensure user row exists (Clerk webhook may not have fired yet)
+    sqlx::query(
+        "INSERT INTO users (clerk_user_id, email) VALUES ($1, '') ON CONFLICT (clerk_user_id) DO NOTHING"
+    )
+    .bind(&clerk_user_id)
+    .execute(&state.pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to ensure user exists: {:?}", e);
+        ApiError::InternalError(format!("Database error: {}", e))
+    })?;
+
     // Check if already actively verified — return 200 with status, no new token
     if let Some(existing) = db::domains::get_verified_domain(&state.pool, &clerk_user_id, &domain).await? {
         if existing.status == "verified" {

@@ -119,7 +119,11 @@ See: `.planning/milestones/v1.6-ROADMAP.md`
   2. Tapping the logo navigates home with a comfortable hit area — no need to aim precisely at the icon
   3. The CFAA consent checkbox is visually prominent and activates with a single finger tap on mobile
   4. Screen readers announce each scan history row as a single link, not a link nested inside a link
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 36-01-PLAN.md — Header touch targets (logo p-2 -m-2, nav links min-h-[44px])
+- [ ] 36-02-PLAN.md — Checkbox a11y (w-5 h-5 + wrapper) and scan table duplicate link fix
 
 ### Phase 37: UX and Hydration Fixes
 **Goal**: The app renders without console errors and form copy sets correct user expectations

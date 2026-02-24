@@ -9,6 +9,7 @@
 - ✅ **v1.4 Observability** — Phases 19-24 (shipped 2026-02-16)
 - ✅ **v1.5 Frontend Testing** — Phases 25-28 (shipped 2026-02-17)
 - ✅ **v1.6 Auth & Tiered Access** — Phases 29-35 (shipped 2026-02-19)
+- 🚧 **v1.7 Frontend Polish** — Phases 36-38 (in progress)
 
 ## Phases
 
@@ -103,6 +104,43 @@ See: `.planning/milestones/v1.6-ROADMAP.md`
 
 </details>
 
+### 🚧 v1.7 Frontend Polish (In Progress)
+
+**Milestone Goal:** Elevate the existing UI to production quality — correct touch targets, screen reader accessibility, hydration stability, UX copy clarity, design token consistency, and analytics integrity. No new features; all changes are in the Next.js frontend.
+
+## Phase Details
+
+### Phase 36: Accessibility and Touch Targets
+**Goal**: Every interactive element meets WCAG touch target and screen reader standards
+**Depends on**: Phase 35
+**Requirements**: TOUCH-01, TOUCH-02, A11Y-01, A11Y-02
+**Success Criteria** (what must be TRUE):
+  1. Header nav links and buttons are tappable on mobile without mis-tapping adjacent elements (min 44px height)
+  2. Tapping the logo navigates home with a comfortable hit area — no need to aim precisely at the icon
+  3. The CFAA consent checkbox is visually prominent and activates with a single finger tap on mobile
+  4. Screen readers announce each scan history row as a single link, not a link nested inside a link
+**Plans**: TBD
+
+### Phase 37: UX and Hydration Fixes
+**Goal**: The app renders without console errors and form copy sets correct user expectations
+**Depends on**: Phase 36
+**Requirements**: HYDR-01, UX-01, UX-02
+**Success Criteria** (what must be TRUE):
+  1. No React hydration mismatch warnings appear in the browser console on any page
+  2. The scan form email field label or helper text makes clear that results will be emailed to that address
+  3. An active scan in the dashboard history updates its status automatically without requiring a manual page refresh
+**Plans**: TBD
+
+### Phase 38: Design Consistency and Analytics
+**Goal**: Visual layout is uniform across all pages and analytics tracking is correctly attributed
+**Depends on**: Phase 37
+**Requirements**: DESIGN-01, DESIGN-02, ANLYT-01
+**Success Criteria** (what must be TRUE):
+  1. Card and panel elements use the same border radius on every page (no inconsistent rounding)
+  2. All pages share the same max-width and horizontal padding via a single shared layout component
+  3. Plausible analytics dashboard shows traffic attributed to shipsecure.ai (data-domain attribute present on script tag)
+**Plans**: TBD
+
 ## Progress
 
 | Phase | Milestone | Plans | Status | Completed |
@@ -114,8 +152,11 @@ See: `.planning/milestones/v1.6-ROADMAP.md`
 | 19-24. Observability | v1.4 | 11/11 | Complete | 2026-02-16 |
 | 25-28. Testing | v1.5 | 11/11 | Complete | 2026-02-17 |
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
+| 36. Accessibility & Touch | v1.7 | 0/TBD | Not started | - |
+| 37. UX & Hydration | v1.7 | 0/TBD | Not started | - |
+| 38. Design & Analytics | v1.7 | 0/TBD | Not started | - |
 
-**Total: 7 milestones, 35 phases, 88 plans shipped**
+**Total: 7 milestones shipped, 35 phases, 88 plans completed. v1.7 in progress.**
 
 ---
-*Last updated: 2026-02-19 after v1.6 milestone*
+*Last updated: 2026-02-24 after v1.7 roadmap creation*

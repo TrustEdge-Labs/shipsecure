@@ -52,22 +52,22 @@ None — this is a focused polish milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TOUCH-01 | — | Pending |
-| TOUCH-02 | — | Pending |
-| A11Y-01 | — | Pending |
-| A11Y-02 | — | Pending |
-| HYDR-01 | — | Pending |
-| UX-01 | — | Pending |
-| UX-02 | — | Pending |
-| DESIGN-01 | — | Pending |
-| DESIGN-02 | — | Pending |
-| ANLYT-01 | — | Pending |
+| TOUCH-01 | Phase 36 | Pending |
+| TOUCH-02 | Phase 36 | Pending |
+| A11Y-01 | Phase 36 | Pending |
+| A11Y-02 | Phase 36 | Pending |
+| HYDR-01 | Phase 37 | Pending |
+| UX-01 | Phase 37 | Pending |
+| UX-02 | Phase 37 | Pending |
+| DESIGN-01 | Phase 38 | Pending |
+| DESIGN-02 | Phase 38 | Pending |
+| ANLYT-01 | Phase 38 | Pending |
 
 **Coverage:**
 - v1.7 requirements: 10 total
-- Mapped to phases: 0
-- Unmapped: 10 (awaiting roadmap)
+- Mapped to phases: 10
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-24*
-*Last updated: 2026-02-24 after initial definition*
+*Last updated: 2026-02-24 after roadmap creation — all 10 requirements mapped*

@@ -81,7 +81,16 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 ### Active
 
-(No active milestone — next milestone not yet defined)
+- Header nav links/buttons min-h-[44px] touch targets — v1.7
+- Logo link expanded hit area with padding — v1.7
+- Scan form checkbox larger and more visible — v1.7
+- Dashboard table row a11y with proper link pattern — v1.7
+- React hydration mismatch investigation and resolution — v1.7
+- Scan form email field copy clarification — v1.7
+- Dashboard polling for active scans — v1.7
+- Border-radius design token (--card-radius) standardization — v1.7
+- PageContainer shared max-width layout component — v1.7
+- Plausible data-domain attribute on script tag — v1.7
 
 ### Out of Scope
 

@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Planning next milestone
+**Current focus:** v1.7 Frontend Polish
 
 ## Current Position
 
-Phase: — (no active milestone)
+Phase: Not started (defining requirements)
 Plan: —
-Status: v1.6 Auth & Tiered Access shipped — 7 phases, 13 plans, 29 tasks
-Last activity: 2026-02-19 — v1.6 milestone archived
+Status: Defining requirements
+Last activity: 2026-02-24 — Milestone v1.7 started
 
 Progress: 7 milestones shipped, 35 phases, 88 plans completed
 

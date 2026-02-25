@@ -101,14 +101,16 @@ export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
 
       <div className="border-t border-border-default pt-4 mt-2">
         <div className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            id="authorization"
-            name="authorization"
-            required
-            className="mt-1 w-4 h-4 rounded border-border-default text-brand-primary focus:ring-focus-ring"
-          />
-          <label htmlFor="authorization" className="text-sm text-text-secondary">
+          <div className="p-1 -m-1 flex-shrink-0">
+            <input
+              type="checkbox"
+              id="authorization"
+              name="authorization"
+              required
+              className="w-5 h-5 rounded border-border-default text-brand-primary focus:ring-focus-ring cursor-pointer"
+            />
+          </div>
+          <label htmlFor="authorization" className="text-sm text-text-secondary cursor-pointer">
             I confirm I own this website or have explicit authorization from the owner to conduct security scanning. Unauthorized scanning may violate the <a href="/terms#acceptable-use" target="_blank" className="text-brand-primary underline">Computer Fraud and Abuse Act (CFAA)</a>.
           </label>
         </div>

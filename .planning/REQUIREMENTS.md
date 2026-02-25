@@ -29,7 +29,7 @@ Requirements for v1.7 Frontend Polish. Each maps to roadmap phases.
 ### Design Consistency
 
 - [x] **DESIGN-01**: --card-radius design token defined and applied consistently across all card/panel elements
-- [ ] **DESIGN-02**: PageContainer shared max-width layout component used on all pages
+- [x] **DESIGN-02**: PageContainer shared max-width layout component used on all pages
 
 ### Analytics
 
@@ -60,7 +60,7 @@ None — this is a focused polish milestone.
 | UX-01 | Phase 37 | Complete |
 | UX-02 | Phase 37 | Complete |
 | DESIGN-01 | Phase 38 | Complete |
-| DESIGN-02 | Phase 38 | Pending |
+| DESIGN-02 | Phase 38 | Complete |
 | ANLYT-01 | Phase 38 | Complete |
 
 **Coverage:**

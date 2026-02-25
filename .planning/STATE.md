@@ -40,6 +40,7 @@ Progress: [███████████████████████
 | Phase 37-ux-and-hydration-fixes P01 | 2 | 2 tasks | 2 files |
 | Phase 38-design-consistency-and-analytics P01 | 1 | 1 tasks | 1 files |
 | Phase 38-design-consistency-and-analytics P02 | 2 | 2 tasks | 6 files |
+| Phase 38-design-consistency-and-analytics P03 | 2 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -53,6 +54,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 - [Phase 37-ux-and-hydration-fixes]: Scan form email label updated to 'Email address' with dedicated helper text paragraph below input
 - [Phase 38-design-consistency-and-analytics]: data-domain attribute added to Plausible Script tag so Plausible correctly attributes shipsecure.ai pageviews
 - [Phase 38-design-consistency-and-analytics P02]: --card-radius set to 0.75rem (rounded-xl, 12px) — matches dashboard cards; scan pages updated from rounded-lg (8px) to match. Buttons keep rounded-lg, circles keep rounded-full.
+- [Phase 38-design-consistency-and-analytics]: PageContainer uses Array.filter(Boolean).join(' ') for class composition — no @/lib/utils dependency needed; PageContainer is server-component safe with no 'use client' directive
+- [Phase 38-design-consistency-and-analytics]: Per-page vertical padding passed via className prop on PageContainer rather than baked into the component defaults
 
 ### Pending Todos
 

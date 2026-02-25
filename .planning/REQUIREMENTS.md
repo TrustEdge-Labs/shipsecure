@@ -14,8 +14,8 @@ Requirements for v1.7 Frontend Polish. Each maps to roadmap phases.
 
 ### Accessibility
 
-- [ ] **A11Y-01**: Scan form checkbox is visually larger (w-5 h-5) with cursor-pointer and padding wrapper
-- [ ] **A11Y-02**: Dashboard table rows use proper link pattern that doesn't duplicate links for screen readers
+- [x] **A11Y-01**: Scan form checkbox is visually larger (w-5 h-5) with cursor-pointer and padding wrapper
+- [x] **A11Y-02**: Dashboard table rows use proper link pattern that doesn't duplicate links for screen readers
 
 ### Hydration
 
@@ -54,8 +54,8 @@ None — this is a focused polish milestone.
 |-------------|-------|--------|
 | TOUCH-01 | Phase 36 | Complete |
 | TOUCH-02 | Phase 36 | Complete |
-| A11Y-01 | Phase 36 | Pending |
-| A11Y-02 | Phase 36 | Pending |
+| A11Y-01 | Phase 36 | Complete |
+| A11Y-02 | Phase 36 | Complete |
 | HYDR-01 | Phase 37 | Pending |
 | UX-01 | Phase 37 | Pending |
 | UX-02 | Phase 37 | Pending |

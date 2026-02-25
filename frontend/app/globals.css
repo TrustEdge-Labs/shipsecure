@@ -215,6 +215,10 @@
    * Used for: sticky header height, main content padding-top offset.
    * DO NOT change without verifying all routes maintain spacing. */
   --header-height: 64px;
+
+  /* Card border radius — used for all card and panel surfaces.
+   * DO NOT change without updating all card elements across pages. */
+  --card-radius: 0.75rem; /* = 12px = Tailwind rounded-xl */
 }
 
 /* Dark mode semantic token overrides */

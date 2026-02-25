@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, XCircle, Loader2, AlertTriangle } from 'lucide-react'
 import { MetaTagSnippet } from '@/components/meta-tag-snippet'
+import { PageContainer } from '@/components/page-container'
 import { verifyStart, verifyConfirm, verifyCheck } from '@/lib/api'
 import type { VerifyStartResponse } from '@/lib/types'
 
@@ -128,8 +129,8 @@ export default function VerifyDomainPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-16 max-w-lg">
-      <div className="bg-surface-elevated border border-border-subtle rounded-xl p-8 shadow-sm">
+    <main><PageContainer maxWidth="max-w-lg" className="py-16">
+      <div className="bg-surface-elevated border border-border-subtle rounded-(card) p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-text-primary mb-6">
           Verify Domain Ownership
         </h1>
@@ -312,6 +313,6 @@ export default function VerifyDomainPage() {
           </div>
         )}
       </div>
-    </main>
+    </PageContainer></main>
   )
 }

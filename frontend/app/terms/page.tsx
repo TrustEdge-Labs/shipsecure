@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { PageContainer } from '@/components/page-container'
 
 export const metadata: Metadata = {
   title: 'Terms of Service - ShipSecure',
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function TermsOfService() {
   return (
-    <main className="container mx-auto px-4 py-16 pb-8 max-w-4xl bg-surface-primary text-text-primary">
+    <main><PageContainer maxWidth="max-w-4xl" className="py-16 pb-8">
         <div className="mb-8">
           <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-text-primary">
             Terms of Service
@@ -273,6 +274,6 @@ export default function TermsOfService() {
             ← Back to Home
           </a>
         </div>
-      </main>
+      </PageContainer></main>
   )
 }

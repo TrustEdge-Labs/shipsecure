@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react'
 import { DomainBadge } from '@/components/domain-badge'
 import { ScanHistoryTable } from '@/components/scan-history-table'
 import { ActiveScansPoller } from '@/components/active-scans-poller'
+import { PageContainer } from '@/components/page-container'
 import type { VerifiedDomain, QuotaResponse, ScanHistoryResponse } from '@/lib/types'
 
 interface DashboardPageProps {
@@ -68,7 +69,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const isEmpty = completedScans.length === 0 && activeScans.length === 0
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-6xl">
+    <main><PageContainer maxWidth="max-w-6xl" className="py-8">
       <h1 className="text-3xl font-bold text-text-primary mb-1">Dashboard</h1>
       <p className="text-text-secondary mb-8">Welcome, {firstName}</p>
 
@@ -80,7 +81,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           {activeScans.length > 0 && (
             <section className="mb-8">
               <h2 className="text-lg font-semibold text-text-primary mb-3">Active Scans</h2>
-              <div className="border border-brand-primary/20 rounded-xl bg-surface-elevated divide-y divide-border-subtle">
+              <div className="border border-brand-primary/20 rounded-(card) bg-surface-elevated divide-y divide-border-subtle">
                 {activeScans.map((scan) => (
                   <div key={scan.id} className="flex items-center gap-3 px-5 py-4">
                     <Loader2 className="w-4 h-4 text-brand-primary animate-spin shrink-0" aria-hidden="true" />
@@ -104,7 +105,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             <h2 className="text-lg font-semibold text-text-primary mb-3">Scan History</h2>
 
             {isEmpty ? (
-              <div className="border border-border-subtle rounded-xl p-8 bg-surface-secondary text-center">
+              <div className="border border-border-subtle rounded-(card) p-8 bg-surface-secondary text-center">
                 {domains.length === 0 ? (
                   <>
                     <p className="text-text-secondary mb-4">Verify a domain to start scanning.</p>
@@ -128,7 +129,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 )}
               </div>
             ) : (
-              <div className="border border-border-subtle rounded-xl p-5 bg-surface-elevated">
+              <div className="border border-border-subtle rounded-(card) p-5 bg-surface-elevated">
                 <ScanHistoryTable
                   scans={completedScans}
                   currentPage={page}
@@ -144,7 +145,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
           {/* Quota card */}
           {quota && (
-            <div className="border border-border-subtle rounded-xl p-5 bg-surface-elevated">
+            <div className="border border-border-subtle rounded-(card) p-5 bg-surface-elevated">
               <h2 className="text-sm font-semibold text-text-primary mb-3">Scan Quota</h2>
               <p className={`text-sm font-medium mb-4 px-2 py-1 rounded border inline-flex ${getQuotaStyle(quota.used, quota.limit)}`}>
                 {quota.used} of {quota.limit} scans used — resets {formatResetDate(quota.resets_at)}
@@ -171,7 +172,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           )}
 
           {/* Verified domains card */}
-          <div className="border border-border-subtle rounded-xl p-5 bg-surface-elevated">
+          <div className="border border-border-subtle rounded-(card) p-5 bg-surface-elevated">
             <h2 className="text-sm font-semibold text-text-primary mb-3">Verified Domains</h2>
 
             {domains.length === 0 ? (
@@ -225,6 +226,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       </div>
       <ActiveScansPoller hasActiveScans={activeScans.length > 0} />
-    </main>
+      </PageContainer></main>
   )
 }

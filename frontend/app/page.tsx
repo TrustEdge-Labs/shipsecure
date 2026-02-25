@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Lock, Key, FileText, Search } from 'lucide-react'
 import { auth } from '@clerk/nextjs/server'
 import Link from 'next/link'
+import { PageContainer } from '@/components/page-container'
 
 export const metadata: Metadata = {
   title: 'ShipSecure - Security Scanning for Vibe-Coded Apps',
@@ -104,7 +105,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
       />
       {/* Hero Section */}
-      <main className="container mx-auto px-4 py-16 sm:py-24 max-w-4xl bg-surface-primary text-text-primary">
+      <main><PageContainer maxWidth="max-w-4xl" className="py-16 sm:py-24">
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-gradient-start to-gradient-end bg-clip-text text-transparent">
             Security scanning for AI-generated web apps
@@ -119,7 +120,7 @@ export default async function Home() {
 
         {/* Signed-in context */}
         {userId && (
-          <div className="bg-info-bg border border-info-border rounded-xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="bg-info-bg border border-info-border rounded-(card) p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <p className="text-sm text-info-text">
               Signed-in scans require domain verification. This gives you scan history, downloadable reports, and higher scan limits.
             </p>
@@ -141,7 +142,7 @@ export default async function Home() {
         )}
 
         {/* Scan Form Card */}
-        <div id="scan-form" className="bg-surface-secondary rounded-2xl shadow-lg border border-border-subtle p-6 sm:p-8 mb-12">
+        <div id="scan-form" className="bg-surface-secondary rounded-(card) shadow-lg border border-border-subtle p-6 sm:p-8 mb-12">
           <ScanForm isAuthenticated={!!userId} />
         </div>
 
@@ -241,7 +242,7 @@ export default async function Home() {
             scans completed
           </div>
         )}
-      </main>
+      </PageContainer></main>
     </>
   )
 }

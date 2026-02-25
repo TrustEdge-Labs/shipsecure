@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 38 of 38 (Design Consistency and Analytics)
-Plan: 1 of 1 in current phase
+Plan: 2 of 2 in current phase
 Status: Complete
-Last activity: 2026-02-25 — Completed 38-01: Add data-domain to Plausible analytics script
+Last activity: 2026-02-25 — Completed 38-02: Card radius design token and consistent card styling
 
 Progress: [█████████████████████████] 100% (38/38 phases, 93 plans)
 
@@ -39,6 +39,7 @@ Progress: [███████████████████████
 | Phase 37-ux-and-hydration-fixes P02 | 8 | 2 tasks | 2 files |
 | Phase 37-ux-and-hydration-fixes P01 | 2 | 2 tasks | 2 files |
 | Phase 38-design-consistency-and-analytics P01 | 1 | 1 tasks | 1 files |
+| Phase 38-design-consistency-and-analytics P02 | 2 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -51,6 +52,7 @@ All decisions logged in PROJECT.md Key Decisions table.
 - [Phase 37-ux-and-hydration-fixes]: suppressHydrationWarning added to <body> in addition to <html> — canonical Next.js pattern to silence browser-extension-induced mismatch warnings
 - [Phase 37-ux-and-hydration-fixes]: Scan form email label updated to 'Email address' with dedicated helper text paragraph below input
 - [Phase 38-design-consistency-and-analytics]: data-domain attribute added to Plausible Script tag so Plausible correctly attributes shipsecure.ai pageviews
+- [Phase 38-design-consistency-and-analytics P02]: --card-radius set to 0.75rem (rounded-xl, 12px) — matches dashboard cards; scan pages updated from rounded-lg (8px) to match. Buttons keep rounded-lg, circles keep rounded-full.
 
 ### Pending Todos
 
@@ -63,5 +65,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 38-01-PLAN.md — Plausible analytics data-domain fix
+Stopped at: Completed 38-02-PLAN.md — Card radius design token and consistent card styling
 Resume file: —

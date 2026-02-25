@@ -156,7 +156,7 @@ Plans:
 | 19-24. Observability | v1.4 | 11/11 | Complete | 2026-02-16 |
 | 25-28. Testing | v1.5 | 11/11 | Complete | 2026-02-17 |
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
-| 36. Accessibility & Touch | 2/2 | Complete   | 2026-02-25 | - |
+| 36. Accessibility & Touch | 2/2 | Complete    | 2026-02-25 | - |
 | 37. UX & Hydration | v1.7 | 0/TBD | Not started | - |
 | 38. Design & Analytics | v1.7 | 0/TBD | Not started | - |
 

@@ -133,7 +133,11 @@ Plans:
   1. No React hydration mismatch warnings appear in the browser console on any page
   2. The scan form email field label or helper text makes clear that results will be emailed to that address
   3. An active scan in the dashboard history updates its status automatically without requiring a manual page refresh
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 37-01-PLAN.md — Hydration fix (suppressHydrationWarning on body) and email field helper text
+- [ ] 37-02-PLAN.md — Dashboard active-scan polling via ActiveScansPoller client component
 
 ### Phase 38: Design Consistency and Analytics
 **Goal**: Visual layout is uniform across all pages and analytics tracking is correctly attributed

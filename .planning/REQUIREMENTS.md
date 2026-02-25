@@ -33,7 +33,7 @@ Requirements for v1.7 Frontend Polish. Each maps to roadmap phases.
 
 ### Analytics
 
-- [ ] **ANLYT-01**: Plausible script tag includes data-domain="shipsecure.ai" attribute
+- [x] **ANLYT-01**: Plausible script tag includes data-domain="shipsecure.ai" attribute
 
 ## Future Requirements
 
@@ -61,7 +61,7 @@ None — this is a focused polish milestone.
 | UX-02 | Phase 37 | Complete |
 | DESIGN-01 | Phase 38 | Pending |
 | DESIGN-02 | Phase 38 | Pending |
-| ANLYT-01 | Phase 38 | Pending |
+| ANLYT-01 | Phase 38 | Complete |
 
 **Coverage:**
 - v1.7 requirements: 10 total

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.7 Frontend Polish — Phase 37: UX and Hydration Fixes
+**Current focus:** v1.7 Frontend Polish — Phase 38: Design Consistency and Analytics
 
 ## Current Position
 
-Phase: 37 of 38 (UX and Hydration Fixes)
-Plan: 2 of 2 in current phase
+Phase: 38 of 38 (Design Consistency and Analytics)
+Plan: 1 of 1 in current phase
 Status: Complete
-Last activity: 2026-02-25 — Completed 37-02: ActiveScansPoller client island for dashboard auto-refresh
+Last activity: 2026-02-25 — Completed 38-01: Add data-domain to Plausible analytics script
 
-Progress: [██████████████████████░░░] 92% (37/38 phases, 92 plans)
+Progress: [█████████████████████████] 100% (38/38 phases, 93 plans)
 
 ## Performance Metrics
 
@@ -38,6 +38,7 @@ Progress: [██████████████████████░
 | Phase 36-accessibility-and-touch-targets P02 | 1 | 2 tasks | 2 files |
 | Phase 37-ux-and-hydration-fixes P02 | 8 | 2 tasks | 2 files |
 | Phase 37-ux-and-hydration-fixes P01 | 2 | 2 tasks | 2 files |
+| Phase 38-design-consistency-and-analytics P01 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -49,6 +50,7 @@ All decisions logged in PROJECT.md Key Decisions table.
 - [Phase 37-ux-and-hydration-fixes]: 7-second poll interval in ActiveScansPoller — within 5-10s range, balances responsiveness vs network calls; hasActiveScans prop pattern keeps server component in control of polling activation
 - [Phase 37-ux-and-hydration-fixes]: suppressHydrationWarning added to <body> in addition to <html> — canonical Next.js pattern to silence browser-extension-induced mismatch warnings
 - [Phase 37-ux-and-hydration-fixes]: Scan form email label updated to 'Email address' with dedicated helper text paragraph below input
+- [Phase 38-design-consistency-and-analytics]: data-domain attribute added to Plausible Script tag so Plausible correctly attributes shipsecure.ai pageviews
 
 ### Pending Todos
 
@@ -61,5 +63,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 37-02-PLAN.md — ActiveScansPoller client island for dashboard auto-refresh
+Stopped at: Completed 38-01-PLAN.md — Plausible analytics data-domain fix
 Resume file: —

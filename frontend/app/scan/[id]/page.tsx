@@ -75,7 +75,7 @@ export default function ScanProgressPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
-        <div className="bg-surface-elevated rounded-lg shadow-md p-8 max-w-md w-full">
+        <div className="bg-surface-elevated rounded-(card) shadow-md p-8 max-w-md w-full">
           <div className="flex items-center justify-center mb-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
           </div>
@@ -88,7 +88,7 @@ export default function ScanProgressPage() {
   if (!scan) {
     return (
       <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
-        <div className="bg-surface-elevated rounded-lg shadow-md p-8 max-w-md w-full">
+        <div className="bg-surface-elevated rounded-(card) shadow-md p-8 max-w-md w-full">
           <h1 className="text-xl font-semibold text-danger-primary mb-4">Scan Not Found</h1>
           <p className="text-text-secondary mb-2">
             This scan doesn't exist or has expired. Scan results are available for 30 days after completion.
@@ -110,7 +110,7 @@ export default function ScanProgressPage() {
   if (scan.status === 'failed') {
     return (
       <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
-        <div className="bg-surface-elevated rounded-lg shadow-md p-8 max-w-md w-full">
+        <div className="bg-surface-elevated rounded-(card) shadow-md p-8 max-w-md w-full">
           <h1 className="text-xl font-semibold text-danger-primary mb-4">Scan Failed</h1>
           <p className="text-text-secondary mb-2">
             Unfortunately, the scan for <span className="font-mono text-sm break-all">{scan.target_url}</span> failed.
@@ -139,7 +139,7 @@ export default function ScanProgressPage() {
 
   return (
     <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
-      <div className="bg-surface-elevated rounded-lg shadow-md p-8 max-w-md w-full">
+      <div className="bg-surface-elevated rounded-(card) shadow-md p-8 max-w-md w-full">
         <div className="text-center mb-6">
           {isScanning && (
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mb-4"></div>

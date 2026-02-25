@@ -17,7 +17,7 @@ export default function ResultsError({
   return (
     <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="bg-surface-elevated rounded-lg shadow-md p-8">
+        <div className="bg-surface-elevated rounded-(card) shadow-md p-8">
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-danger-bg mb-4">
               <svg className="w-6 h-6 text-danger-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">

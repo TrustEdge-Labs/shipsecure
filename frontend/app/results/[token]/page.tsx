@@ -95,7 +95,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   if (data.status !== 'completed') {
     return (
       <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
-        <div className="bg-surface-elevated rounded-lg shadow-md p-8 max-w-md w-full text-center">
+        <div className="bg-surface-elevated rounded-(card) shadow-md p-8 max-w-md w-full text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mb-4"></div>
           <h1 className="text-xl font-semibold text-text-primary mb-2">
             Scan Still In Progress
@@ -145,7 +145,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     <div className="min-h-screen bg-surface-secondary py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="bg-surface-elevated rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-surface-elevated rounded-(card) shadow-md p-6 mb-6">
           <h1 className="text-3xl font-bold text-text-primary mb-4">
             Security Scan Results
           </h1>
@@ -197,7 +197,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         </div>
 
         {/* Findings Dashboard */}
-        <div className="bg-surface-elevated rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-surface-elevated rounded-(card) shadow-md p-6 mb-6">
           <h2 className="text-xl font-bold text-text-primary mb-4">
             Security Findings
           </h2>

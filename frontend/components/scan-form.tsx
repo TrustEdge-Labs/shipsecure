@@ -84,7 +84,7 @@ export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-1">
-          Email (for results notification)
+          Email address
         </label>
         <input
           id="email"
@@ -97,6 +97,7 @@ export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
         {state.errors?.email && (
           <p className="mt-1 text-sm text-danger-primary">{state.errors.email[0]}</p>
         )}
+        <p className="mt-1 text-xs text-text-tertiary">We&apos;ll email your scan results to this address.</p>
       </div>
 
       <div className="border-t border-border-default pt-4 mt-2">

@@ -35,6 +35,7 @@ export default function RootLayout({
           <Script
             src="https://plausible.io/js/pa-tyZW93JgybTFzRD4-tmty.js"
             strategy="afterInteractive"
+            data-domain="shipsecure.ai"
           />
           <Script
             id="plausible-init"

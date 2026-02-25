@@ -9,8 +9,8 @@ Requirements for v1.7 Frontend Polish. Each maps to roadmap phases.
 
 ### Touch Targets
 
-- [ ] **TOUCH-01**: Header nav links and buttons have minimum 44px touch target height
-- [ ] **TOUCH-02**: Logo link has expanded hit area via padding (p-2 -m-2 pattern)
+- [x] **TOUCH-01**: Header nav links and buttons have minimum 44px touch target height
+- [x] **TOUCH-02**: Logo link has expanded hit area via padding (p-2 -m-2 pattern)
 
 ### Accessibility
 
@@ -52,8 +52,8 @@ None — this is a focused polish milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TOUCH-01 | Phase 36 | Pending |
-| TOUCH-02 | Phase 36 | Pending |
+| TOUCH-01 | Phase 36 | Complete |
+| TOUCH-02 | Phase 36 | Complete |
 | A11Y-01 | Phase 36 | Pending |
 | A11Y-02 | Phase 36 | Pending |
 | HYDR-01 | Phase 37 | Pending |

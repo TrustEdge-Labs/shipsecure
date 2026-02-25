@@ -8,7 +8,7 @@ export function Header() {
       <nav aria-label="Main navigation">
         <div className="container mx-auto px-4 h-[var(--header-height)] flex items-center justify-between">
           {/* Logo - responsive: wordmark on desktop, icon on mobile */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center p-2 -m-2">
             <div className="hidden sm:block">
               <Image
                 src="/logo.png"
@@ -36,13 +36,13 @@ export function Header() {
             <SignedIn>
               <Link
                 href="/dashboard"
-                className="text-sm font-medium text-text-secondary hover:text-text-primary transition"
+                className="inline-flex items-center min-h-[44px] text-sm font-medium text-text-secondary hover:text-text-primary transition"
               >
                 Dashboard
               </Link>
               <Link
                 href="/#scan-form"
-                className="hidden sm:inline-flex text-sm font-medium text-text-secondary hover:text-text-primary transition"
+                className="hidden sm:inline-flex items-center min-h-[44px] text-sm font-medium text-text-secondary hover:text-text-primary transition"
               >
                 New Scan
               </Link>
@@ -51,13 +51,13 @@ export function Header() {
             <SignedOut>
               <Link
                 href="/sign-in"
-                className="text-sm font-medium text-text-secondary hover:text-text-primary transition"
+                className="inline-flex items-center min-h-[44px] text-sm font-medium text-text-secondary hover:text-text-primary transition"
               >
                 Sign In
               </Link>
               <Link
                 href="/sign-up"
-                className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-text-inverse font-semibold rounded-lg transition text-sm sm:text-base"
+                className="inline-flex items-center min-h-[44px] px-4 bg-brand-primary hover:bg-brand-primary-hover text-text-inverse font-semibold rounded-lg transition text-sm sm:text-base"
               >
                 Sign Up
               </Link>

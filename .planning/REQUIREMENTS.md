@@ -19,12 +19,12 @@ Requirements for v1.7 Frontend Polish. Each maps to roadmap phases.
 
 ### Hydration
 
-- [ ] **HYDR-01**: React hydration mismatch investigated and resolved (Clerk appearance prop or suppressHydrationWarning)
+- [x] **HYDR-01**: React hydration mismatch investigated and resolved (Clerk appearance prop or suppressHydrationWarning)
 
 ### UX
 
-- [ ] **UX-01**: Scan form email field has explanatory copy setting expectation ("We'll email your results")
-- [ ] **UX-02**: Dashboard polls for active scan updates at 5-10 second intervals via router.refresh() or client-side polling
+- [x] **UX-01**: Scan form email field has explanatory copy setting expectation ("We'll email your results")
+- [x] **UX-02**: Dashboard polls for active scan updates at 5-10 second intervals via router.refresh() or client-side polling
 
 ### Design Consistency
 
@@ -56,9 +56,9 @@ None — this is a focused polish milestone.
 | TOUCH-02 | Phase 36 | Complete |
 | A11Y-01 | Phase 36 | Complete |
 | A11Y-02 | Phase 36 | Complete |
-| HYDR-01 | Phase 37 | Pending |
-| UX-01 | Phase 37 | Pending |
-| UX-02 | Phase 37 | Pending |
+| HYDR-01 | Phase 37 | Complete |
+| UX-01 | Phase 37 | Complete |
+| UX-02 | Phase 37 | Complete |
 | DESIGN-01 | Phase 38 | Pending |
 | DESIGN-02 | Phase 38 | Pending |
 | ANLYT-01 | Phase 38 | Pending |

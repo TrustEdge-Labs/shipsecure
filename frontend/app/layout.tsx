@@ -44,7 +44,7 @@ export default function RootLayout({
             }}
           />
         </head>
-        <body className={`${inter.variable} font-sans antialiased`}>
+        <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
           <div className="flex flex-col min-h-screen">
             <Header />
             <div className="flex-1">

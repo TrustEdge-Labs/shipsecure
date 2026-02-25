@@ -147,7 +147,12 @@ Plans:
   1. Card and panel elements use the same border radius on every page (no inconsistent rounding)
   2. All pages share the same max-width and horizontal padding via a single shared layout component
   3. Plausible analytics dashboard shows traffic attributed to shipsecure.ai (data-domain attribute present on script tag)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 38-01-PLAN.md — Add data-domain="shipsecure.ai" to Plausible script tag in layout.tsx
+- [ ] 38-02-PLAN.md — Define --card-radius token in globals.css, apply to scan/results/error card elements
+- [ ] 38-03-PLAN.md — Create PageContainer component, migrate all content pages, apply card-radius to home/dashboard cards
 
 ## Progress
 

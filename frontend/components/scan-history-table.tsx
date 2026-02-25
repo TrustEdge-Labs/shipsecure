@@ -163,8 +163,8 @@ export function ScanHistoryTable({ scans, currentPage, totalPages }: ScanHistory
               )
 
               if (isClickable) {
-                // Clickable row: use relative positioning with an overlay link for full-row click
-                // Plus explicit View button in action column
+                // Clickable row: use relative positioning with an overlay link for full-row click.
+                // Action cell is empty (aria-hidden) to avoid duplicate links for screen readers.
                 return (
                   <tr
                     key={scan.id}
@@ -189,14 +189,7 @@ export function ScanHistoryTable({ scans, currentPage, totalPages }: ScanHistory
                     <td className="py-3 pr-4">
                       <TierBadge tier={scan.tier} />
                     </td>
-                    <td className="py-3 relative z-10">
-                      <Link
-                        href={`/results/${scan.results_token}`}
-                        className="text-xs font-medium text-brand-primary hover:underline"
-                      >
-                        View
-                      </Link>
-                    </td>
+                    <td className="py-3" aria-hidden="true" />
                   </tr>
                 )
               }

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { DomainBadge } from '@/components/domain-badge'
 import { ScanHistoryTable } from '@/components/scan-history-table'
+import { ActiveScansPoller } from '@/components/active-scans-poller'
 import type { VerifiedDomain, QuotaResponse, ScanHistoryResponse } from '@/lib/types'
 
 interface DashboardPageProps {
@@ -223,6 +224,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
         </div>
       </div>
+      <ActiveScansPoller hasActiveScans={activeScans.length > 0} />
     </main>
   )
 }

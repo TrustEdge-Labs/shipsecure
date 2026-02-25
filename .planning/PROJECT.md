@@ -79,18 +79,19 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - ✓ Scan history dashboard with severity counts, expiry countdown, quota status, verified domains sidebar — v1.6
 - ✓ Data retention — hourly cleanup task, 24h anonymous / 30d Developer expiry with 24h grace period — v1.6
 
+- ✓ WCAG 2.5.5 touch targets (44px min) on header nav links and logo — v1.7
+- ✓ CFAA checkbox enlarged (w-5 h-5) with tap-area padding wrapper — v1.7
+- ✓ Dashboard table row a11y — single link per row, no duplicate announcements — v1.7
+- ✓ React hydration fix — suppressHydrationWarning on html + body — v1.7
+- ✓ Scan form email helper text ("We'll email your scan results") — v1.7
+- ✓ Dashboard active-scan polling via router.refresh() every 7s — v1.7
+- ✓ --card-radius design token (0.75rem) applied to all card/panel elements — v1.7
+- ✓ PageContainer shared layout component with configurable max-width — v1.7
+- ✓ Plausible data-domain="shipsecure.ai" on analytics script tag — v1.7
+
 ### Active
 
-- Header nav links/buttons min-h-[44px] touch targets — v1.7
-- Logo link expanded hit area with padding — v1.7
-- Scan form checkbox larger and more visible — v1.7
-- Dashboard table row a11y with proper link pattern — v1.7
-- React hydration mismatch investigation and resolution — v1.7
-- Scan form email field copy clarification — v1.7
-- Dashboard polling for active scans — v1.7
-- Border-radius design token (--card-radius) standardization — v1.7
-- PageContainer shared max-width layout component — v1.7
-- Plausible data-domain attribute on script tag — v1.7
+(No active milestone — next milestone not yet defined)
 
 ### Out of Scope
 
@@ -123,7 +124,8 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **v1.5 shipped 2026-02-17:** Frontend testing — 106 unit tests, Playwright E2E, CI pipeline with branch protection, 72 files changed, 4 phases, 11 plans
 - **v1.6 shipped 2026-02-19:** Auth & Tiered Access — Clerk auth, domain verification, results gating, tiered scans, rate limiting, scan history dashboard, data retention, 95 files changed, 7 phases, 13 plans, 2 days
 - **Post-v1.6 deployment hardening (2026-02-21):** 19 commits fixing CI/CD pipeline, Docker Compose standalone mode, systemd integration, env var management. Production deploy pipeline now reliable.
-- **Current:** 7 milestones shipped, 35 phases, 88 plans completed
+- **v1.7 shipped 2026-02-25:** Frontend polish — touch targets, a11y, hydration fix, email copy, dashboard polling, design tokens, PageContainer, Plausible fix, 33 files changed, 3 phases, 7 plans
+- **Current:** 8 milestones shipped, 38 phases, 95 plans completed
 
 ## Constraints
 
@@ -195,4 +197,4 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | 24h grace period before scan deletion | Users see "Expired" badge in dashboard before data disappears | ✓ Good — interval_at deferred task, TaskTracker integration for graceful shutdown |
 
 ---
-*Last updated: 2026-02-21 after v1.6 deployment hardening*
+*Last updated: 2026-02-25 after v1.7 milestone*

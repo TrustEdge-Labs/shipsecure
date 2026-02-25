@@ -197,3 +197,13 @@
 
 ---
 
+
+## v1.7 Frontend Polish (Shipped: 2026-02-25)
+
+**Phases completed:** 3 phases, 7 plans, 0 tasks
+
+**Key accomplishments:**
+- (none recorded)
+
+---
+

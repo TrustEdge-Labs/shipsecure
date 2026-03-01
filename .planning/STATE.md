@@ -2,26 +2,26 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-25)
+See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Planning next milestone
+**Current focus:** v1.8 CI & Quality Hardening
 
 ## Current Position
 
-Phase: — (no active milestone)
+Phase: Not started (defining requirements)
 Plan: —
-Status: v1.7 Frontend Polish shipped — 3 phases, 7 plans
-Last activity: 2026-02-25 — v1.7 milestone archived
+Status: Defining requirements
+Last activity: 2026-03-01 — Milestone v1.8 started
 
 Progress: 8 milestones shipped, 38 phases, 95 plans completed
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 90
+- Total plans completed: 95
 - Average duration: ~30 min
-- Total execution time: ~44 hours
+- Total execution time: ~47 hours
 
 **By Milestone:**
 
@@ -34,28 +34,13 @@ Progress: 8 milestones shipped, 38 phases, 95 plans completed
 | v1.4 Observability | 19-24 | 11 | 1 |
 | v1.5 Testing | 25-28 | 11 | 2 |
 | v1.6 Auth & Tiered Access | 29-35 | 13 | 2 |
-| Phase 36-accessibility-and-touch-targets P01 | 1 | 1 tasks | 1 files |
-| Phase 36-accessibility-and-touch-targets P02 | 1 | 2 tasks | 2 files |
-| Phase 37-ux-and-hydration-fixes P02 | 8 | 2 tasks | 2 files |
-| Phase 37-ux-and-hydration-fixes P01 | 2 | 2 tasks | 2 files |
-| Phase 38-design-consistency-and-analytics P01 | 1 | 1 tasks | 1 files |
-| Phase 38-design-consistency-and-analytics P02 | 2 | 2 tasks | 6 files |
-| Phase 38-design-consistency-and-analytics P03 | 2 | 2 tasks | 6 files |
+| v1.7 Frontend Polish | 36-38 | 7 | 1 |
 
 ## Accumulated Context
 
 ### Decisions
 
 All decisions logged in PROJECT.md Key Decisions table.
-- [Phase 36-accessibility-and-touch-targets]: Used min-h-[44px] with inline-flex items-center on header nav links for WCAG 2.5.5 touch target compliance without layout changes
-- [Phase 36-accessibility-and-touch-targets P02]: Use empty aria-hidden td to preserve table column alignment while eliminating duplicate overlay+View links for screen readers; use p-1 -m-1 wrapper to expand checkbox tap target without layout shift
-- [Phase 37-ux-and-hydration-fixes]: 7-second poll interval in ActiveScansPoller — within 5-10s range, balances responsiveness vs network calls; hasActiveScans prop pattern keeps server component in control of polling activation
-- [Phase 37-ux-and-hydration-fixes]: suppressHydrationWarning added to <body> in addition to <html> — canonical Next.js pattern to silence browser-extension-induced mismatch warnings
-- [Phase 37-ux-and-hydration-fixes]: Scan form email label updated to 'Email address' with dedicated helper text paragraph below input
-- [Phase 38-design-consistency-and-analytics]: data-domain attribute added to Plausible Script tag so Plausible correctly attributes shipsecure.ai pageviews
-- [Phase 38-design-consistency-and-analytics P02]: --card-radius set to 0.75rem (rounded-xl, 12px) — matches dashboard cards; scan pages updated from rounded-lg (8px) to match. Buttons keep rounded-lg, circles keep rounded-full.
-- [Phase 38-design-consistency-and-analytics]: PageContainer uses Array.filter(Boolean).join(' ') for class composition — no @/lib/utils dependency needed; PageContainer is server-component safe with no 'use client' directive
-- [Phase 38-design-consistency-and-analytics]: Per-page vertical padding passed via className prop on PageContainer rather than baked into the component defaults
 
 ### Pending Todos
 
@@ -67,6 +52,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Completed 38-02-PLAN.md — Card radius design token and consistent card styling
+Last session: 2026-03-01
+Stopped at: Milestone v1.8 started — defining requirements
 Resume file: —

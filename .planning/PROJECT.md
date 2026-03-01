@@ -91,7 +91,16 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 ### Active
 
-(No active milestone — next milestone not yet defined)
+## Current Milestone: v1.8 CI & Quality Hardening
+
+**Goal:** Close CI gaps and test coverage holes so the product is bulletproof before sharing with real users.
+
+**Target features:**
+- Backend CI pipeline (cargo test, clippy, fmt) in GitHub Actions
+- Docker healthchecks in docker-compose.prod.yml
+- Frontend test coverage for excluded v1.6 components
+- README accuracy fix (Next.js version)
+- Backend test coverage reporting in CI
 
 ### Out of Scope
 

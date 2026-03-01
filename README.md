@@ -184,6 +184,182 @@ infrastructure/  # Ansible playbooks, templates, and deployment automation
 - **Observability** — Structured JSON logging, request correlation IDs, Prometheus metrics, health checks (liveness + readiness)
 - **Graceful shutdown** — SIGTERM drains in-flight scans with configurable timeout via TaskTracker/CancellationToken
 
+## Extending ShipSecure
+
+### Custom Nuclei Templates
+
+The easiest way to add new detections is by writing [Nuclei templates](https://docs.projectdiscovery.io/templates/introduction). Drop a YAML file into `templates/nuclei/` and it will be picked up on the next scan.
+
+Set `SHIPSECURE_TEMPLATES_DIR` to use a custom directory:
+
+```bash
+SHIPSECURE_TEMPLATES_DIR=/path/to/my/templates cargo run
+```
+
+**Example: Detect a leaked Stripe secret key in page source**
+
+```yaml
+# templates/nuclei/stripe-secret-leak.yaml
+id: stripe-secret-key-leak
+
+info:
+  name: Stripe Secret Key in Client Bundle
+  author: your-name
+  severity: critical
+  description: |
+    Detects Stripe secret keys (sk_live_/sk_test_) exposed in client-side
+    JavaScript. These keys allow full API access to the Stripe account.
+  tags: vibe-code,stripe,secrets
+  classification:
+    cwe-id: CWE-798
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: regex
+        regex:
+          - 'sk_(live|test)_[A-Za-z0-9]{20,}'
+        part: body
+
+    extractors:
+      - type: regex
+        regex:
+          - 'sk_(live|test)_[A-Za-z0-9]{6}'
+        part: body
+```
+
+**Example: Detect exposed GraphQL introspection**
+
+```yaml
+# templates/nuclei/graphql-introspection.yaml
+id: graphql-introspection-enabled
+
+info:
+  name: GraphQL Introspection Enabled
+  author: your-name
+  severity: medium
+  description: |
+    GraphQL introspection is enabled in production, exposing the entire
+    API schema including types, queries, and mutations to any client.
+  tags: vibe-code,graphql,api
+  classification:
+    cwe-id: CWE-200
+
+http:
+  - method: POST
+    path:
+      - "{{BaseURL}}/graphql"
+      - "{{BaseURL}}/api/graphql"
+
+    headers:
+      Content-Type: application/json
+
+    body: '{"query":"{__schema{types{name}}}"}'
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: word
+        words:
+          - '"__schema"'
+          - '"types"'
+        condition: and
+        part: body
+```
+
+Templates are selected based on detected framework and platform. The vibecode scanner (`src/scanners/vibecode.rs`) loads templates from:
+
+```
+templates/nuclei/
+  supabase-rls.yaml          # Always loaded
+  firebase-rules.yaml        # Always loaded
+  env-in-build-output.yaml   # Always loaded
+  nextjs-env-leak.yaml       # Loaded when Next.js detected
+  unprotected-api-routes.yaml # Loaded when Next.js detected
+  vercel-env-leak.yaml       # Loaded when Vercel detected
+  netlify-function-exposure.yaml # Loaded when Netlify detected
+  paid/                      # Loaded for authenticated tier only
+```
+
+### Custom Scanners
+
+Scanners are Rust async functions in `src/scanners/` that return `Vec<Finding>`. Each scanner runs as an independent async task with its own timeout.
+
+**1. Create the scanner module:**
+
+```rust
+// src/scanners/my_scanner.rs
+use crate::models::finding::{Finding, Severity};
+use crate::scanners::container::ScannerError;
+use chrono::Utc;
+use uuid::Uuid;
+
+pub async fn scan(target_url: &str) -> Result<Vec<Finding>, ScannerError> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .redirect(reqwest::redirect::Policy::limited(3))
+        .build()
+        .map_err(|e| ScannerError::ExecutionError(e.to_string()))?;
+
+    let response = client.get(target_url).send().await
+        .map_err(|e| ScannerError::ExecutionError(e.to_string()))?;
+
+    let body = response.text().await
+        .map_err(|e| ScannerError::ExecutionError(e.to_string()))?;
+
+    let mut findings = Vec::new();
+
+    // Your detection logic here
+    if body.contains("DEBUG=true") {
+        findings.push(Finding {
+            id: Uuid::new_v4(),
+            scan_id: Uuid::nil(), // Set by orchestrator
+            scanner_name: "my_scanner".to_string(),
+            title: "Debug Mode Enabled in Production".to_string(),
+            description: "The application is running with debug mode enabled, \
+                which may expose stack traces, internal paths, and sensitive \
+                configuration to attackers.".to_string(),
+            severity: Severity::High,
+            remediation: "Set DEBUG=false or remove the DEBUG environment \
+                variable in your production deployment.".to_string(),
+            raw_evidence: None,
+            vibe_code: false,
+            created_at: Utc::now().naive_utc(),
+        });
+    }
+
+    Ok(findings)
+}
+```
+
+**2. Register it in `src/scanners/mod.rs`:**
+
+```rust
+pub mod my_scanner; // Add this line
+```
+
+**3. Wire it into the orchestrator** (`src/orchestrator/worker_pool.rs`):
+
+Add a `tokio::spawn` block alongside the existing scanners in `run_scanners()`. The orchestrator runs all scanners concurrently and collects their findings. Each scanner gets:
+
+- Its own timeout (configured per tier)
+- A tracing span for structured logging
+- A database stage update call on completion
+- Metrics counter for success/failure tracking
+
+See `src/orchestrator/worker_pool.rs` for the full pattern used by the existing 5 scanners.
+
 ## Testing
 
 ### Frontend
@@ -206,6 +382,14 @@ Coverage thresholds enforced at 80% lines / 80% functions / 75% branches.
 ### CI/CD
 
 GitHub Actions runs unit tests and E2E tests on every push and PR. Branch protection on `main` requires all checks to pass.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on reporting bugs, requesting features, and submitting code.
+
+## Security
+
+To report a vulnerability, see [SECURITY.md](SECURITY.md). Do not open public issues for security bugs.
 
 ## License
 

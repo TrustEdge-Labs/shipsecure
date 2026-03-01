@@ -1,0 +1,66 @@
+# Requirements: ShipSecure
+
+**Defined:** 2026-03-01
+**Core Value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
+
+## v1.8 Requirements
+
+Requirements for CI & Quality Hardening milestone.
+
+### CI Pipeline
+
+- [ ] **CI-01**: Backend tests (cargo test) run on every push and PR to main
+- [ ] **CI-02**: Cargo clippy runs with zero warnings on every push and PR
+- [ ] **CI-03**: Cargo fmt --check enforces formatting on every push and PR
+- [ ] **CI-04**: Backend test coverage is reported in CI (cargo llvm-cov or tarpaulin)
+
+### Infrastructure
+
+- [ ] **INFRA-01**: Docker healthcheck on backend container validates /health endpoint
+- [ ] **INFRA-02**: Docker healthcheck on frontend container validates HTTP response
+
+### Test Coverage
+
+- [ ] **TEST-01**: Unit tests for domain-badge component
+- [ ] **TEST-02**: Unit tests for meta-tag-snippet component
+- [ ] **TEST-03**: Unit tests for scan-history-table component
+
+### Documentation
+
+- [ ] **DOC-01**: README reflects correct Next.js version (16, not 15)
+
+## Future Requirements
+
+None — this is a hardening milestone.
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Skill scanning | Separate v2.0 milestone after user feedback |
+| New scanners or detections | Hardening only, no new features |
+| Backend coverage thresholds | Report first, set thresholds after baseline established |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| CI-01 | TBD | Pending |
+| CI-02 | TBD | Pending |
+| CI-03 | TBD | Pending |
+| CI-04 | TBD | Pending |
+| INFRA-01 | TBD | Pending |
+| INFRA-02 | TBD | Pending |
+| TEST-01 | TBD | Pending |
+| TEST-02 | TBD | Pending |
+| TEST-03 | TBD | Pending |
+| DOC-01 | TBD | Pending |
+
+**Coverage:**
+- v1.8 requirements: 10 total
+- Mapped to phases: 0
+- Unmapped: 10
+
+---
+*Requirements defined: 2026-03-01*
+*Last updated: 2026-03-01 after initial definition*

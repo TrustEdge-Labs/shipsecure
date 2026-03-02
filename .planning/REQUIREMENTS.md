@@ -16,8 +16,8 @@ Requirements for CI & Quality Hardening milestone.
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Docker healthcheck on backend container validates /health endpoint
-- [ ] **INFRA-02**: Docker healthcheck on frontend container validates HTTP response
+- [x] **INFRA-01**: Docker healthcheck on backend container validates /health endpoint
+- [x] **INFRA-02**: Docker healthcheck on frontend container validates HTTP response
 
 ### Test Coverage
 
@@ -27,7 +27,7 @@ Requirements for CI & Quality Hardening milestone.
 
 ### Documentation
 
-- [ ] **DOC-01**: README reflects correct Next.js version (16, not 15)
+- [x] **DOC-01**: README reflects correct Next.js version (16, not 15)
 
 ## Future Requirements
 
@@ -49,9 +49,9 @@ None — this is a hardening milestone.
 | CI-02 | Phase 39 | Complete |
 | CI-03 | Phase 39 | Complete |
 | CI-04 | Phase 39 | Complete |
-| INFRA-01 | Phase 40 | Pending |
-| INFRA-02 | Phase 40 | Pending |
-| DOC-01 | Phase 40 | Pending |
+| INFRA-01 | Phase 40 | Complete |
+| INFRA-02 | Phase 40 | Complete |
+| DOC-01 | Phase 40 | Complete |
 | TEST-01 | Phase 41 | Pending |
 | TEST-02 | Phase 41 | Pending |
 | TEST-03 | Phase 41 | Pending |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: CI & Quality Hardening
 status: unknown
-last_updated: "2026-03-02T00:30:11.611Z"
+last_updated: "2026-03-02T01:39:22.497Z"
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  total_phases: 2
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
@@ -18,25 +18,25 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.8 CI & Quality Hardening — Phase 39: Backend CI Pipeline
+**Current focus:** v1.8 CI & Quality Hardening — Phase 40: Docker Healthchecks & Docs
 
 ## Current Position
 
-Phase: 39 (Backend CI Pipeline)
+Phase: 40 (Docker Healthchecks & Docs)
 Plan: 01 complete
-Status: Phase 39 Plan 01 complete — backend CI pipeline added
-Last activity: 2026-03-02 — backend-ci and backend-coverage jobs added to ci.yml
+Status: Phase 40 Plan 01 complete — Docker healthchecks and README corrections
+Last activity: 2026-03-02 — healthcheck directives added to both containers, README corrected (Next.js 16, proxy.ts)
 
-Progress: 8 milestones shipped, 38 phases, 96 plans completed
+Progress: 8 milestones shipped, 40 phases, 97 plans completed
 
 ```
-v1.8 Progress: [          ] 0/3 phases complete (Phase 39 in progress)
+v1.8 Progress: [######    ] 2/3 phases complete (Phase 40 complete, Phase 41 next)
 ```
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 96
+- Total plans completed: 97
 - Average duration: ~30 min
 - Total execution time: ~47 hours
 
@@ -65,6 +65,9 @@ All decisions logged in PROJECT.md Key Decisions table.
 - cargo fmt --check runs first (fastest gate) before clippy and test
 - backend-coverage is report-only with no --fail-under threshold per CI-04 scope
 - main.rs excluded from coverage via --ignore-filename-regex (binary entrypoint only)
+- [Phase 40-01]: Backend healthcheck uses 60s start_period (conservative) for DB connection pool initialization
+- [Phase 40-01]: Frontend healthcheck uses 30s start_period (lighter) — Next.js starts faster than Rust backend
+- [Phase 40-01]: depends_on upgraded to service_healthy to guarantee backend DB connectivity before frontend starts
 
 ### Pending Todos
 
@@ -77,5 +80,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 39-01-PLAN.md — backend CI pipeline (backend-ci + backend-coverage jobs)
+Stopped at: Completed 40-01-PLAN.md — Docker healthchecks (both containers) and README corrections
 Resume file: —

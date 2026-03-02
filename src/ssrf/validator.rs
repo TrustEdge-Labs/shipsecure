@@ -51,7 +51,13 @@ pub async fn validate_scan_target(url: &str) -> Result<String, SsrfError> {
     }
 
     // For hostnames, resolve DNS and check all resolved IPs
-    let addr = format!("{}:{}", host, parsed.port().unwrap_or(if scheme == "https" { 443 } else { 80 }));
+    let addr = format!(
+        "{}:{}",
+        host,
+        parsed
+            .port()
+            .unwrap_or(if scheme == "https" { 443 } else { 80 })
+    );
     let addrs = lookup_host(&addr)
         .await
         .map_err(|_| SsrfError::DnsResolutionFailed)?;

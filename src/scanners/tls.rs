@@ -84,13 +84,12 @@ struct Certificate {
 /// Scan a URL for TLS/SSL configuration issues via SSL Labs API
 pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
     // Extract hostname from URL
-    let parsed_url = Url::parse(url).map_err(|e| {
-        ScannerError::Other(format!("Invalid URL: {}", e))
-    })?;
+    let parsed_url =
+        Url::parse(url).map_err(|e| ScannerError::Other(format!("Invalid URL: {}", e)))?;
 
-    let hostname = parsed_url.host_str().ok_or_else(|| {
-        ScannerError::Other("No hostname found in URL".to_string())
-    })?;
+    let hostname = parsed_url
+        .host_str()
+        .ok_or_else(|| ScannerError::Other("No hostname found in URL".to_string()))?;
 
     // Create HTTP client
     let client = Client::builder()
@@ -115,7 +114,8 @@ pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
                 "rate_limit_total",
                 "limiter" => "ssl_labs",
                 "action" => "blocked"
-            ).increment(1);
+            )
+            .increment(1);
             return Ok(vec![create_informational_finding(
                 "TLS analysis unavailable due to SSL Labs API rate limiting. Please try again later.",
             )]);
@@ -127,10 +127,7 @@ pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
     }
 
     // Poll for completion
-    let poll_url = format!(
-        "https://api.ssllabs.com/api/v4/analyze?host={}",
-        hostname
-    );
+    let poll_url = format!("https://api.ssllabs.com/api/v4/analyze?host={}", hostname);
 
     const MAX_POLLS: u32 = 30; // 5 minutes at 10s intervals
     const POLL_INTERVAL_SECS: u64 = 10;
@@ -153,15 +150,16 @@ pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
 
         // Check rate limits
         let current_rate_limit = extract_rate_limits(&poll_response);
-        if let (Some(current), Some(max)) = (current_rate_limit.current, current_rate_limit.max) {
-            if current >= max {
-                metrics::counter!(
-                    "rate_limit_total",
-                    "limiter" => "ssl_labs",
-                    "action" => "blocked"
-                ).increment(1);
-                tokio::time::sleep(Duration::from_secs(30)).await;
-            }
+        if let (Some(current), Some(max)) = (current_rate_limit.current, current_rate_limit.max)
+            && current >= max
+        {
+            metrics::counter!(
+                "rate_limit_total",
+                "limiter" => "ssl_labs",
+                "action" => "blocked"
+            )
+            .increment(1);
+            tokio::time::sleep(Duration::from_secs(30)).await;
         }
 
         // Handle HTTP errors
@@ -171,7 +169,8 @@ pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
                 "rate_limit_total",
                 "limiter" => "ssl_labs",
                 "action" => "blocked"
-            ).increment(1);
+            )
+            .increment(1);
             tokio::time::sleep(Duration::from_secs(60)).await;
             continue;
         }
@@ -180,7 +179,8 @@ pub async fn scan_tls(url: &str) -> Result<Vec<Finding>, ScannerError> {
                 "rate_limit_total",
                 "limiter" => "ssl_labs",
                 "action" => "blocked"
-            ).increment(1);
+            )
+            .increment(1);
             tokio::time::sleep(Duration::from_secs(30)).await;
             continue;
         }
@@ -352,7 +352,8 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
                         created_at: now,
                     });
                 } else if protocol.name.eq_ignore_ascii_case("TLS")
-                    && (protocol.version == "1.0" || protocol.version == "1.1") {
+                    && (protocol.version == "1.0" || protocol.version == "1.1")
+                {
                     findings.push(Finding {
                         id: Uuid::new_v4(),
                         scan_id: Uuid::nil(),
@@ -372,45 +373,45 @@ fn generate_findings_from_response(response: &SslLabsResponse, hostname: &str) -
             }
 
             // Check certificate expiry
-            if let Some(cert) = &details.cert {
-                if let Some(not_after_ms) = cert.not_after {
-                    let not_after_secs = not_after_ms / 1000;
-                    let now_secs = Utc::now().timestamp();
-                    let days_until_expiry = (not_after_secs - now_secs) / 86400;
+            if let Some(cert) = &details.cert
+                && let Some(not_after_ms) = cert.not_after
+            {
+                let not_after_secs = not_after_ms / 1000;
+                let now_secs = Utc::now().timestamp();
+                let days_until_expiry = (not_after_secs - now_secs) / 86400;
 
-                    if days_until_expiry < 0 {
-                        findings.push(Finding {
-                            id: Uuid::new_v4(),
-                            scan_id: Uuid::nil(),
-                            scanner_name: "tls".to_string(),
-                            title: "Expired TLS Certificate".to_string(),
-                            description: format!(
-                                "The TLS certificate for {} has expired. Browsers will show security warnings and users will not be able to access your site securely.",
-                                hostname
-                            ),
-                            severity: Severity::Critical,
-                            remediation: "Renew your TLS certificate immediately. If using Let's Encrypt, run: certbot renew. If using a commercial CA, purchase and install a new certificate.".to_string(),
-                            raw_evidence: Some(format!("Certificate expired {} days ago", -days_until_expiry)),
-                            vibe_code: false,
-                            created_at: now,
-                        });
-                    } else if days_until_expiry < 30 {
-                        findings.push(Finding {
-                            id: Uuid::new_v4(),
-                            scan_id: Uuid::nil(),
-                            scanner_name: "tls".to_string(),
-                            title: "TLS Certificate Expiring Soon".to_string(),
-                            description: format!(
-                                "The TLS certificate for {} will expire in {} days. Renew it soon to avoid service disruption.",
-                                hostname, days_until_expiry
-                            ),
-                            severity: Severity::High,
-                            remediation: "Renew your TLS certificate before it expires. If using Let's Encrypt, run: certbot renew. Set up automatic renewal to prevent future expirations.".to_string(),
-                            raw_evidence: Some(format!("Certificate expires in {} days", days_until_expiry)),
-                            vibe_code: false,
-                            created_at: now,
-                        });
-                    }
+                if days_until_expiry < 0 {
+                    findings.push(Finding {
+                        id: Uuid::new_v4(),
+                        scan_id: Uuid::nil(),
+                        scanner_name: "tls".to_string(),
+                        title: "Expired TLS Certificate".to_string(),
+                        description: format!(
+                            "The TLS certificate for {} has expired. Browsers will show security warnings and users will not be able to access your site securely.",
+                            hostname
+                        ),
+                        severity: Severity::Critical,
+                        remediation: "Renew your TLS certificate immediately. If using Let's Encrypt, run: certbot renew. If using a commercial CA, purchase and install a new certificate.".to_string(),
+                        raw_evidence: Some(format!("Certificate expired {} days ago", -days_until_expiry)),
+                        vibe_code: false,
+                        created_at: now,
+                    });
+                } else if days_until_expiry < 30 {
+                    findings.push(Finding {
+                        id: Uuid::new_v4(),
+                        scan_id: Uuid::nil(),
+                        scanner_name: "tls".to_string(),
+                        title: "TLS Certificate Expiring Soon".to_string(),
+                        description: format!(
+                            "The TLS certificate for {} will expire in {} days. Renew it soon to avoid service disruption.",
+                            hostname, days_until_expiry
+                        ),
+                        severity: Severity::High,
+                        remediation: "Renew your TLS certificate before it expires. If using Let's Encrypt, run: certbot renew. Set up automatic renewal to prevent future expirations.".to_string(),
+                        raw_evidence: Some(format!("Certificate expires in {} days", days_until_expiry)),
+                        vibe_code: false,
+                        created_at: now,
+                    });
                 }
             }
 
@@ -465,7 +466,8 @@ fn create_informational_finding(message: &str) -> Finding {
         title: "TLS Analysis Information".to_string(),
         description: message.to_string(),
         severity: Severity::Low,
-        remediation: "No action required. This is an informational message about the TLS scan.".to_string(),
+        remediation: "No action required. This is an informational message about the TLS scan."
+            .to_string(),
         raw_evidence: None,
         vibe_code: false,
         created_at: Utc::now().naive_utc(),

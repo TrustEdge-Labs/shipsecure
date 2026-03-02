@@ -36,22 +36,20 @@ struct ProblemDetails {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         // RateLimitedWithReset needs a custom JSON body with resets_at — handle before standard ProblemDetails
-        match self {
-            ApiError::RateLimitedWithReset { message, resets_at } => {
-                let body = serde_json::json!({
-                    "type": "https://shipsecure.ai/errors/rate-limited",
-                    "title": "Rate Limit Exceeded",
-                    "status": 429,
-                    "detail": message,
-                    "resets_at": resets_at.to_rfc3339(),
-                });
-                return (
-                    StatusCode::TOO_MANY_REQUESTS,
-                    [(axum::http::header::CONTENT_TYPE, "application/problem+json")],
-                    body.to_string(),
-                ).into_response();
-            }
-            _ => {}
+        if let ApiError::RateLimitedWithReset { message, resets_at } = self {
+            let body = serde_json::json!({
+                "type": "https://shipsecure.ai/errors/rate-limited",
+                "title": "Rate Limit Exceeded",
+                "status": 429,
+                "detail": message,
+                "resets_at": resets_at.to_rfc3339(),
+            });
+            return (
+                StatusCode::TOO_MANY_REQUESTS,
+                [(axum::http::header::CONTENT_TYPE, "application/problem+json")],
+                body.to_string(),
+            )
+                .into_response();
         }
 
         let (problem_type, title, status, detail) = match self {
@@ -117,10 +115,7 @@ impl IntoResponse for ApiError {
 
         (
             status,
-            [(
-                axum::http::header::CONTENT_TYPE,
-                "application/problem+json",
-            )],
+            [(axum::http::header::CONTENT_TYPE, "application/problem+json")],
             body,
         )
             .into_response()
@@ -146,9 +141,7 @@ mod tests {
     use axum::http::header::CONTENT_TYPE;
     use http_body_util::BodyExt;
 
-    async fn extract_response_parts(
-        response: Response,
-    ) -> (StatusCode, String, String) {
+    async fn extract_response_parts(response: Response) -> (StatusCode, String, String) {
         let status = response.status();
         let content_type = response
             .headers()
@@ -157,12 +150,7 @@ mod tests {
             .unwrap_or("")
             .to_string();
 
-        let body_bytes = response
-            .into_body()
-            .collect()
-            .await
-            .unwrap()
-            .to_bytes();
+        let body_bytes = response.into_body().collect().await.unwrap().to_bytes();
         let body = String::from_utf8(body_bytes.to_vec()).unwrap();
 
         (status, content_type, body)
@@ -194,7 +182,10 @@ mod tests {
         assert_eq!(content_type, "application/problem+json");
 
         let problem: ProblemDetails = serde_json::from_str(&body).unwrap();
-        assert_eq!(problem.problem_type, "https://shipsecure.ai/errors/ssrf-blocked");
+        assert_eq!(
+            problem.problem_type,
+            "https://shipsecure.ai/errors/ssrf-blocked"
+        );
         assert_eq!(problem.title, "Target URL Not Allowed");
         assert_eq!(problem.status, 400);
     }
@@ -209,7 +200,10 @@ mod tests {
         assert_eq!(content_type, "application/problem+json");
 
         let problem: ProblemDetails = serde_json::from_str(&body).unwrap();
-        assert_eq!(problem.problem_type, "https://shipsecure.ai/errors/rate-limited");
+        assert_eq!(
+            problem.problem_type,
+            "https://shipsecure.ai/errors/rate-limited"
+        );
         assert_eq!(problem.title, "Rate Limit Exceeded");
         assert_eq!(problem.status, 429);
     }

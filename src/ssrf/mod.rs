@@ -1,2 +1,2 @@
 pub mod validator;
-pub use validator::{validate_scan_target, SsrfError};
+pub use validator::{SsrfError, validate_scan_target};

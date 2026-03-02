@@ -49,7 +49,8 @@ pub async fn detect_stack(target_url: &str) -> Result<DetectionResult, ScannerEr
     let html = response.text().await?;
 
     // Detect framework and platform
-    let (framework, framework_confidence, mut framework_signals) = detect_framework(&headers, &html);
+    let (framework, framework_confidence, mut framework_signals) =
+        detect_framework(&headers, &html);
     let (platform, platform_confidence, platform_signals) = detect_platform(&headers);
 
     // Combine all signals
@@ -84,10 +85,7 @@ fn detect_framework(headers: &HeaderMap, html: &str) -> (Option<Framework>, u8, 
         (Framework::Nuxt, nuxt_score.0, nuxt_score.1),
     ];
 
-    let (framework, score, signals) = scores
-        .iter()
-        .max_by_key(|(_, score, _)| *score)
-        .unwrap();
+    let (framework, score, signals) = scores.iter().max_by_key(|(_, score, _)| *score).unwrap();
 
     if *score >= HIGH_CONFIDENCE_THRESHOLD {
         (Some(framework.clone()), *score, signals.clone())
@@ -102,51 +100,48 @@ fn score_nextjs(document: &Html, headers: &HeaderMap, _html: &str) -> (u8, Vec<S
     let mut signals = Vec::new();
 
     // STRONG signal: __NEXT_DATA__ script with valid JSON containing buildId (40 points)
-    if let Ok(selector) = Selector::parse("script#__NEXT_DATA__") {
-        if let Some(element) = document.select(&selector).next() {
-            let content = element.text().collect::<String>();
-            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) {
-                if json.get("buildId").is_some() {
-                    score += 40;
-                    signals.push("Next.js: __NEXT_DATA__ script with buildId".to_string());
-                }
-            }
+    if let Ok(selector) = Selector::parse("script#__NEXT_DATA__")
+        && let Some(element) = document.select(&selector).next()
+    {
+        let content = element.text().collect::<String>();
+        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&content)
+            && json.get("buildId").is_some()
+        {
+            score += 40;
+            signals.push("Next.js: __NEXT_DATA__ script with buildId".to_string());
         }
     }
 
     // MEDIUM signal: /_next/static assets (30 points)
     if let Ok(selector) = Selector::parse("script[src]") {
         for element in document.select(&selector) {
-            if let Some(src) = element.value().attr("src") {
-                if src.contains("/_next/static") {
-                    score += 30;
-                    signals.push("Next.js: /_next/static assets detected".to_string());
-                    break;
-                }
+            if let Some(src) = element.value().attr("src")
+                && src.contains("/_next/static")
+            {
+                score += 30;
+                signals.push("Next.js: /_next/static assets detected".to_string());
+                break;
             }
         }
     }
 
     // LOW signal: x-powered-by header with Next.js (20 points, often stripped)
-    if let Some(powered_by) = headers.get("x-powered-by") {
-        if let Ok(value) = powered_by.to_str() {
-            if value.contains("Next.js") {
-                score += 20;
-                signals.push("Next.js: x-powered-by header".to_string());
-            }
-        }
+    if let Some(powered_by) = headers.get("x-powered-by")
+        && let Ok(value) = powered_by.to_str()
+        && value.contains("Next.js")
+    {
+        score += 20;
+        signals.push("Next.js: x-powered-by header".to_string());
     }
 
     // LOW signal: meta generator tag (10 points)
-    if let Ok(selector) = Selector::parse("meta[name='generator']") {
-        if let Some(element) = document.select(&selector).next() {
-            if let Some(content) = element.value().attr("content") {
-                if content.contains("Next.js") {
-                    score += 10;
-                    signals.push("Next.js: meta generator tag".to_string());
-                }
-            }
-        }
+    if let Ok(selector) = Selector::parse("meta[name='generator']")
+        && let Some(element) = document.select(&selector).next()
+        && let Some(content) = element.value().attr("content")
+        && content.contains("Next.js")
+    {
+        score += 10;
+        signals.push("Next.js: meta generator tag".to_string());
     }
 
     (score, signals)
@@ -166,22 +161,22 @@ fn score_vite_react(document: &Html, html: &str, nextjs_score: u8) -> (u8, Vec<S
     // MEDIUM signal: Vite-specific module patterns (30 points)
     if let Ok(selector) = Selector::parse("script[type='module'][src]") {
         for element in document.select(&selector) {
-            if let Some(src) = element.value().attr("src") {
-                if src.contains("/.vite/") || (src.contains("/assets/") && src.contains("-")) {
-                    score += 30;
-                    signals.push("Vite/React: Vite module pattern detected".to_string());
-                    break;
-                }
+            if let Some(src) = element.value().attr("src")
+                && (src.contains("/.vite/") || (src.contains("/assets/") && src.contains("-")))
+            {
+                score += 30;
+                signals.push("Vite/React: Vite module pattern detected".to_string());
+                break;
             }
         }
     }
 
     // MEDIUM signal: React mount points (20 points)
-    if let Ok(selector) = Selector::parse("div#root, div#app") {
-        if document.select(&selector).next().is_some() {
-            score += 20;
-            signals.push("Vite/React: React mount point (div#root or div#app)".to_string());
-        }
+    if let Ok(selector) = Selector::parse("div#root, div#app")
+        && document.select(&selector).next().is_some()
+    {
+        score += 20;
+        signals.push("Vite/React: React mount point (div#root or div#app)".to_string());
     }
 
     // MEDIUM signal: import.meta in scripts (20 points)
@@ -207,12 +202,12 @@ fn score_sveltekit(document: &Html, _headers: &HeaderMap, html: &str) -> (u8, Ve
     // STRONG signal: __sveltekit or _app patterns (40 points)
     if let Ok(selector) = Selector::parse("script[src]") {
         for element in document.select(&selector) {
-            if let Some(src) = element.value().attr("src") {
-                if src.contains("/__sveltekit/") || src.contains("/_app/") {
-                    score += 40;
-                    signals.push("SvelteKit: __sveltekit or _app assets".to_string());
-                    break;
-                }
+            if let Some(src) = element.value().attr("src")
+                && (src.contains("/__sveltekit/") || src.contains("/_app/"))
+            {
+                score += 40;
+                signals.push("SvelteKit: __sveltekit or _app assets".to_string());
+                break;
             }
         }
     }
@@ -224,15 +219,13 @@ fn score_sveltekit(document: &Html, _headers: &HeaderMap, html: &str) -> (u8, Ve
     }
 
     // LOW signal: meta generator tag (10 points)
-    if let Ok(selector) = Selector::parse("meta[name='generator']") {
-        if let Some(element) = document.select(&selector).next() {
-            if let Some(content) = element.value().attr("content") {
-                if content.contains("SvelteKit") {
-                    score += 10;
-                    signals.push("SvelteKit: meta generator tag".to_string());
-                }
-            }
-        }
+    if let Ok(selector) = Selector::parse("meta[name='generator']")
+        && let Some(element) = document.select(&selector).next()
+        && let Some(content) = element.value().attr("content")
+        && content.contains("SvelteKit")
+    {
+        score += 10;
+        signals.push("SvelteKit: meta generator tag".to_string());
     }
 
     (score, signals)
@@ -244,34 +237,33 @@ fn score_nuxt(document: &Html, headers: &HeaderMap, _html: &str) -> (u8, Vec<Str
     let mut signals = Vec::new();
 
     // STRONG signal: __NUXT__ or __NUXT_DATA__ (40 points)
-    if let Ok(selector) = Selector::parse("script#__NUXT__, script#__NUXT_DATA__") {
-        if document.select(&selector).next().is_some() {
-            score += 40;
-            signals.push("Nuxt: __NUXT__ or __NUXT_DATA__ script".to_string());
-        }
+    if let Ok(selector) = Selector::parse("script#__NUXT__, script#__NUXT_DATA__")
+        && document.select(&selector).next().is_some()
+    {
+        score += 40;
+        signals.push("Nuxt: __NUXT__ or __NUXT_DATA__ script".to_string());
     }
 
     // MEDIUM signal: /_nuxt/ assets (30 points)
     if let Ok(selector) = Selector::parse("script[src]") {
         for element in document.select(&selector) {
-            if let Some(src) = element.value().attr("src") {
-                if src.contains("/_nuxt/") {
-                    score += 30;
-                    signals.push("Nuxt: /_nuxt/ assets detected".to_string());
-                    break;
-                }
+            if let Some(src) = element.value().attr("src")
+                && src.contains("/_nuxt/")
+            {
+                score += 30;
+                signals.push("Nuxt: /_nuxt/ assets detected".to_string());
+                break;
             }
         }
     }
 
     // LOW signal: x-powered-by header with Nuxt (20 points)
-    if let Some(powered_by) = headers.get("x-powered-by") {
-        if let Ok(value) = powered_by.to_str() {
-            if value.contains("Nuxt") {
-                score += 20;
-                signals.push("Nuxt: x-powered-by header".to_string());
-            }
-        }
+    if let Some(powered_by) = headers.get("x-powered-by")
+        && let Ok(value) = powered_by.to_str()
+        && value.contains("Nuxt")
+    {
+        score += 20;
+        signals.push("Nuxt: x-powered-by header".to_string());
     }
 
     (score, signals)
@@ -298,17 +290,17 @@ fn detect_platform(headers: &HeaderMap) -> (Option<Platform>, u8, Vec<String>) {
     }
 
     // Fallback: server header contains platform name (80 confidence)
-    if let Some(server) = headers.get("server") {
-        if let Ok(value) = server.to_str() {
-            let lower = value.to_lowercase();
-            if lower.contains("vercel") {
-                signals.push("Platform: server header contains Vercel".to_string());
-                return (Some(Platform::Vercel), 80, signals);
-            }
-            if lower.contains("netlify") {
-                signals.push("Platform: server header contains Netlify".to_string());
-                return (Some(Platform::Netlify), 80, signals);
-            }
+    if let Some(server) = headers.get("server")
+        && let Ok(value) = server.to_str()
+    {
+        let lower = value.to_lowercase();
+        if lower.contains("vercel") {
+            signals.push("Platform: server header contains Vercel".to_string());
+            return (Some(Platform::Vercel), 80, signals);
+        }
+        if lower.contains("netlify") {
+            signals.push("Platform: server header contains Netlify".to_string());
+            return (Some(Platform::Netlify), 80, signals);
         }
     }
 
@@ -336,7 +328,11 @@ mod tests {
         let (framework, confidence, signals) = detect_framework(&headers, html);
 
         assert_eq!(framework, Some(Framework::NextJs));
-        assert!(confidence >= HIGH_CONFIDENCE_THRESHOLD, "confidence should be >= 60, got {}", confidence);
+        assert!(
+            confidence >= HIGH_CONFIDENCE_THRESHOLD,
+            "confidence should be >= 60, got {}",
+            confidence
+        );
         assert!(signals.iter().any(|s| s.contains("__NEXT_DATA__")));
     }
 

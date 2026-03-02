@@ -1,8 +1,8 @@
-use axum::extract::{Path, State};
-use axum::http::header::{self, AUTHORIZATION};
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
 use axum::Json;
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::http::header::{self, AUTHORIZATION};
+use axum::response::{IntoResponse, Response};
 use chrono::Utc;
 use serde_json::json;
 
@@ -51,13 +51,13 @@ pub async fn get_results_by_token(
     // 2. Query scan by token (checks expiry automatically)
     let scan = db::scans::get_scan_by_token(&state.pool, &token)
         .await?
-        .ok_or_else(|| {
-            ApiError::Custom {
-                status: StatusCode::NOT_FOUND,
-                error_type: "https://shipsecure.ai/errors/results-not-found".to_string(),
-                title: "Results Not Found".to_string(),
-                detail: "Results not found or link has expired. Free scan results are available for 3 days.".to_string(),
-            }
+        .ok_or_else(|| ApiError::Custom {
+            status: StatusCode::NOT_FOUND,
+            error_type: "https://shipsecure.ai/errors/results-not-found".to_string(),
+            title: "Results Not Found".to_string(),
+            detail:
+                "Results not found or link has expired. Free scan results are available for 3 days."
+                    .to_string(),
         })?;
 
     // 3. Compute owner_verified — identity match AND active domain verification required.
@@ -68,11 +68,9 @@ pub async fn get_results_by_token(
             // Identity matches — also check active domain verification
             let domain = extract_domain_from_url(&scan.target_url);
             match domain {
-                Some(ref d) => {
-                    db::domains::is_domain_verified(&state.pool, caller, d)
-                        .await
-                        .unwrap_or(false)
-                }
+                Some(ref d) => db::domains::is_domain_verified(&state.pool, caller, d)
+                    .await
+                    .unwrap_or(false),
                 None => false,
             }
         }
@@ -114,8 +112,8 @@ pub async fn get_results_by_token(
     let findings_json: Vec<serde_json::Value> = findings
         .iter()
         .map(|f| {
-            let is_gated = !owner_verified
-                && matches!(f.severity, Severity::High | Severity::Critical);
+            let is_gated =
+                !owner_verified && matches!(f.severity, Severity::High | Severity::Critical);
             if is_gated {
                 json!({
                     "id": f.id,
@@ -180,13 +178,13 @@ pub async fn download_results_markdown(
     // 2. Query scan by token (checks expiry automatically)
     let scan = db::scans::get_scan_by_token(&state.pool, &token)
         .await?
-        .ok_or_else(|| {
-            ApiError::Custom {
-                status: StatusCode::NOT_FOUND,
-                error_type: "https://shipsecure.ai/errors/results-not-found".to_string(),
-                title: "Results Not Found".to_string(),
-                detail: "Results not found or link has expired. Free scan results are available for 3 days.".to_string(),
-            }
+        .ok_or_else(|| ApiError::Custom {
+            status: StatusCode::NOT_FOUND,
+            error_type: "https://shipsecure.ai/errors/results-not-found".to_string(),
+            title: "Results Not Found".to_string(),
+            detail:
+                "Results not found or link has expired. Free scan results are available for 3 days."
+                    .to_string(),
         })?;
 
     // 3. Compute owner_verified — identity match AND active domain verification required.
@@ -197,11 +195,9 @@ pub async fn download_results_markdown(
             // Identity matches — also check active domain verification
             let domain = extract_domain_from_url(&scan.target_url);
             match domain {
-                Some(ref d) => {
-                    db::domains::is_domain_verified(&state.pool, caller, d)
-                        .await
-                        .unwrap_or(false)
-                }
+                Some(ref d) => db::domains::is_domain_verified(&state.pool, caller, d)
+                    .await
+                    .unwrap_or(false),
                 None => false,
             }
         }
@@ -270,47 +266,47 @@ pub async fn download_results_markdown(
     );
 
     // Helper closure to add a section of findings, applying gating for non-owners
-    let add_findings_section = |md: &mut String, severity: &str, findings_list: Vec<&models::Finding>| {
-        if !findings_list.is_empty() {
-            md.push_str(&format!("### {}\n\n", severity));
-            for (i, finding) in findings_list.iter().enumerate() {
-                let severity_label = if finding.vibe_code {
-                    format!("[Vibe-Code] {}", severity)
-                } else {
-                    severity.to_string()
-                };
+    let add_findings_section =
+        |md: &mut String, severity: &str, findings_list: Vec<&models::Finding>| {
+            if !findings_list.is_empty() {
+                md.push_str(&format!("### {}\n\n", severity));
+                for (i, finding) in findings_list.iter().enumerate() {
+                    let severity_label = if finding.vibe_code {
+                        format!("[Vibe-Code] {}", severity)
+                    } else {
+                        severity.to_string()
+                    };
 
-                // Gate high and critical findings for non-owners in the markdown download
-                let is_gated = !owner_verified
-                    && matches!(severity, "Critical" | "High");
+                    // Gate high and critical findings for non-owners in the markdown download
+                    let is_gated = !owner_verified && matches!(severity, "Critical" | "High");
 
-                let (description, remediation) = if is_gated {
-                    (
-                        "[Sign up free to view full details — shipsecure.ai]".to_string(),
-                        "[Sign up free to view remediation — shipsecure.ai]".to_string(),
-                    )
-                } else {
-                    (finding.description.clone(), finding.remediation.clone())
-                };
+                    let (description, remediation) = if is_gated {
+                        (
+                            "[Sign up free to view full details — shipsecure.ai]".to_string(),
+                            "[Sign up free to view remediation — shipsecure.ai]".to_string(),
+                        )
+                    } else {
+                        (finding.description.clone(), finding.remediation.clone())
+                    };
 
-                md.push_str(&format!(
-                    "#### {}. {}\n\n\
+                    md.push_str(&format!(
+                        "#### {}. {}\n\n\
                      **Severity:** {}\n\
                      **Scanner:** {}\n\n\
                      {}\n\n\
                      **How to fix:**\n\n\
                      {}\n\n\
                      ---\n\n",
-                    i + 1,
-                    finding.title,
-                    severity_label,
-                    finding.scanner_name,
-                    description,
-                    remediation
-                ));
+                        i + 1,
+                        finding.title,
+                        severity_label,
+                        finding.scanner_name,
+                        description,
+                        remediation
+                    ));
+                }
             }
-        }
-    };
+        };
 
     // Add findings by severity
     add_findings_section(&mut markdown, "Critical", critical_findings);

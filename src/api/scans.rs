@@ -1,6 +1,6 @@
-use axum::extract::{ConnectInfo, Path, State, Extension};
-use axum::http::StatusCode;
 use axum::Json;
+use axum::extract::{ConnectInfo, Extension, Path, State};
+use axum::http::StatusCode;
 use axum_jwt_auth::{Claims, Decoder};
 use metrics_exporter_prometheus::PrometheusHandle;
 use serde_json::json;
@@ -15,7 +15,7 @@ use crate::api::errors::ApiError;
 use crate::api::health::HealthCache;
 use crate::models::{CreateScanRequest, Severity};
 use crate::orchestrator::ScanOrchestrator;
-use crate::{db, rate_limit, ssrf, RequestId};
+use crate::{RequestId, db, rate_limit, ssrf};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -77,8 +77,10 @@ pub async fn create_scan(
 
     // 5. Domain verification gate for authenticated users
     if let Some(ref user_id) = clerk_user_id {
-        let domain = crate::api::results::extract_domain_from_url(&validated_url)
-            .ok_or_else(|| ApiError::ValidationError("Could not parse domain from URL".to_string()))?;
+        let domain =
+            crate::api::results::extract_domain_from_url(&validated_url).ok_or_else(|| {
+                ApiError::ValidationError("Could not parse domain from URL".to_string())
+            })?;
         let verified = db::domains::is_domain_verified(&state.pool, user_id, &domain)
             .await
             .unwrap_or(false);
@@ -96,7 +98,14 @@ pub async fn create_scan(
     let client_ip = addr.ip().to_string();
     let target_domain = crate::api::results::extract_domain_from_url(&validated_url)
         .unwrap_or_else(|| validated_url.clone());
-    rate_limit::check_rate_limits(&state.pool, clerk_user_id.as_deref(), &req.email, &target_domain, &client_ip).await?;
+    rate_limit::check_rate_limits(
+        &state.pool,
+        clerk_user_id.as_deref(),
+        &req.email,
+        &target_domain,
+        &client_ip,
+    )
+    .await?;
 
     // 7. Create scan in database with tier and clerk_user_id
     let scan = db::scans::create_scan(
@@ -112,8 +121,14 @@ pub async fn create_scan(
 
     // 8. Spawn scan execution (fire-and-forget) — route to tier-appropriate method
     match tier {
-        "authenticated" => state.orchestrator.spawn_authenticated_scan(scan.id, scan.target_url.clone(), Some(request_id.0)),
-        _ => state.orchestrator.spawn_scan(scan.id, scan.target_url.clone(), Some(request_id.0)),
+        "authenticated" => state.orchestrator.spawn_authenticated_scan(
+            scan.id,
+            scan.target_url.clone(),
+            Some(request_id.0),
+        ),
+        _ => state
+            .orchestrator
+            .spawn_scan(scan.id, scan.target_url.clone(), Some(request_id.0)),
     };
 
     // 9. Return 201 Created

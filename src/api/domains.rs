@@ -1,9 +1,9 @@
+use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::Json;
 use axum_jwt_auth::Claims;
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use chrono::{Duration, Utc};
 use rand::Rng;
 use scraper::{Html, Selector};
@@ -150,9 +150,8 @@ async fn fetch_and_check_meta_tag(
 
     // Diagnostic: check if the tag is in <body> rather than <head>
     // (verification still succeeds — proving HTML control is sufficient)
-    let head_selector =
-        Selector::parse("head meta[name='shipsecure-verification']")
-            .expect("Static selector is always valid");
+    let head_selector = Selector::parse("head meta[name='shipsecure-verification']")
+        .expect("Static selector is always valid");
     let in_head: Vec<_> = document.select(&head_selector).collect();
 
     let tag_in_head = in_head.iter().any(|el| {
@@ -230,22 +229,21 @@ pub async fn verify_start(
     })?;
 
     // Check if already actively verified — return 200 with status, no new token
-    if let Some(existing) = db::domains::get_verified_domain(&state.pool, &clerk_user_id, &domain).await? {
-        if existing.status == "verified" {
-            if let Some(expires_at) = existing.expires_at {
-                if expires_at > Utc::now() {
-                    let expires_in_days = (expires_at - Utc::now()).num_days();
-                    return Ok((
-                        StatusCode::OK,
-                        Json(serde_json::json!({
-                            "already_verified": true,
-                            "domain": domain,
-                            "expires_in_days": expires_in_days,
-                        })),
-                    ));
-                }
-            }
-        }
+    if let Some(existing) =
+        db::domains::get_verified_domain(&state.pool, &clerk_user_id, &domain).await?
+        && existing.status == "verified"
+        && let Some(expires_at) = existing.expires_at
+        && expires_at > Utc::now()
+    {
+        let expires_in_days = (expires_at - Utc::now()).num_days();
+        return Ok((
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "already_verified": true,
+                "domain": domain,
+                "expires_in_days": expires_in_days,
+            })),
+        ));
     }
 
     // Generate token and meta tag

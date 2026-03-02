@@ -1,9 +1,9 @@
-pub mod scan;
-pub mod finding;
 pub mod detection;
 pub mod domain;
+pub mod finding;
+pub mod scan;
 
-pub use scan::{Scan, ScanStatus, CreateScanRequest};
-pub use finding::{Finding, Severity};
-pub use detection::{Framework, Platform, DetectionResult};
+pub use detection::{DetectionResult, Framework, Platform};
 pub use domain::VerifiedDomain;
+pub use finding::{Finding, Severity};
+pub use scan::{CreateScanRequest, Scan, ScanStatus};

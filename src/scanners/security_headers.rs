@@ -56,84 +56,100 @@ pub async fn scan_security_headers(url: &str) -> Result<Vec<Finding>, ScannerErr
     check_header(
         &mut findings,
         headers,
-        "content-security-policy",
-        "Missing Content-Security-Policy",
-        "The Content-Security-Policy (CSP) header helps prevent cross-site scripting (XSS), clickjacking, and other code injection attacks by specifying approved sources of content.",
-        "Add a Content-Security-Policy header with directives that match your application's needs. Example: Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
-        Severity::High,
+        HeaderCheck {
+            header_name: "content-security-policy",
+            title: "Missing Content-Security-Policy",
+            description: "The Content-Security-Policy (CSP) header helps prevent cross-site scripting (XSS), clickjacking, and other code injection attacks by specifying approved sources of content.",
+            remediation: "Add a Content-Security-Policy header with directives that match your application's needs. Example: Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+            severity: Severity::High,
+        },
         &raw_evidence,
     );
 
     check_header(
         &mut findings,
         headers,
-        "strict-transport-security",
-        "Missing Strict-Transport-Security",
-        "The Strict-Transport-Security (HSTS) header forces browsers to use HTTPS connections, protecting against man-in-the-middle attacks and cookie hijacking.",
-        "Add a Strict-Transport-Security header to enforce HTTPS. Example: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload",
-        Severity::High,
+        HeaderCheck {
+            header_name: "strict-transport-security",
+            title: "Missing Strict-Transport-Security",
+            description: "The Strict-Transport-Security (HSTS) header forces browsers to use HTTPS connections, protecting against man-in-the-middle attacks and cookie hijacking.",
+            remediation: "Add a Strict-Transport-Security header to enforce HTTPS. Example: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload",
+            severity: Severity::High,
+        },
         &raw_evidence,
     );
 
     check_header(
         &mut findings,
         headers,
-        "x-frame-options",
-        "Missing X-Frame-Options",
-        "The X-Frame-Options header prevents clickjacking attacks by controlling whether your site can be embedded in frames or iframes.",
-        "Add an X-Frame-Options header to prevent clickjacking. Example: X-Frame-Options: DENY or X-Frame-Options: SAMEORIGIN",
-        Severity::Medium,
+        HeaderCheck {
+            header_name: "x-frame-options",
+            title: "Missing X-Frame-Options",
+            description: "The X-Frame-Options header prevents clickjacking attacks by controlling whether your site can be embedded in frames or iframes.",
+            remediation: "Add an X-Frame-Options header to prevent clickjacking. Example: X-Frame-Options: DENY or X-Frame-Options: SAMEORIGIN",
+            severity: Severity::Medium,
+        },
         &raw_evidence,
     );
 
     check_header(
         &mut findings,
         headers,
-        "x-content-type-options",
-        "Missing X-Content-Type-Options",
-        "The X-Content-Type-Options header prevents MIME-sniffing attacks by instructing browsers to follow declared content types.",
-        "Add the X-Content-Type-Options header. Example: X-Content-Type-Options: nosniff",
-        Severity::Medium,
+        HeaderCheck {
+            header_name: "x-content-type-options",
+            title: "Missing X-Content-Type-Options",
+            description: "The X-Content-Type-Options header prevents MIME-sniffing attacks by instructing browsers to follow declared content types.",
+            remediation: "Add the X-Content-Type-Options header. Example: X-Content-Type-Options: nosniff",
+            severity: Severity::Medium,
+        },
         &raw_evidence,
     );
 
     check_header(
         &mut findings,
         headers,
-        "referrer-policy",
-        "Missing Referrer-Policy",
-        "The Referrer-Policy header controls how much referrer information is included with requests, protecting user privacy and preventing information leakage.",
-        "Add a Referrer-Policy header to control referrer information. Example: Referrer-Policy: strict-origin-when-cross-origin or Referrer-Policy: no-referrer",
-        Severity::Low,
+        HeaderCheck {
+            header_name: "referrer-policy",
+            title: "Missing Referrer-Policy",
+            description: "The Referrer-Policy header controls how much referrer information is included with requests, protecting user privacy and preventing information leakage.",
+            remediation: "Add a Referrer-Policy header to control referrer information. Example: Referrer-Policy: strict-origin-when-cross-origin or Referrer-Policy: no-referrer",
+            severity: Severity::Low,
+        },
         &raw_evidence,
     );
 
     check_header(
         &mut findings,
         headers,
-        "permissions-policy",
-        "Missing Permissions-Policy",
-        "The Permissions-Policy header allows you to control which browser features and APIs can be used, reducing the attack surface.",
-        "Add a Permissions-Policy header to restrict browser features. Example: Permissions-Policy: geolocation=(), camera=(), microphone=()",
-        Severity::Low,
+        HeaderCheck {
+            header_name: "permissions-policy",
+            title: "Missing Permissions-Policy",
+            description: "The Permissions-Policy header allows you to control which browser features and APIs can be used, reducing the attack surface.",
+            remediation: "Add a Permissions-Policy header to restrict browser features. Example: Permissions-Policy: geolocation=(), camera=(), microphone=()",
+            severity: Severity::Low,
+        },
         &raw_evidence,
     );
 
     Ok(findings)
 }
 
+struct HeaderCheck<'a> {
+    header_name: &'a str,
+    title: &'a str,
+    description: &'a str,
+    remediation: &'a str,
+    severity: Severity,
+}
+
 fn check_header(
     findings: &mut Vec<Finding>,
     headers: &HeaderMap,
-    header_name: &str,
-    title: &str,
-    description: &str,
-    remediation: &str,
-    severity: Severity,
+    check: HeaderCheck<'_>,
     raw_evidence: &str,
 ) {
     // Parse header name (this should always succeed for valid header names)
-    let header_key = match HeaderName::try_from(header_name) {
+    let header_key = match HeaderName::try_from(check.header_name) {
         Ok(key) => key,
         Err(_) => return, // Skip invalid header names
     };
@@ -144,10 +160,10 @@ fn check_header(
             id: Uuid::new_v4(),
             scan_id: Uuid::nil(), // Placeholder, will be set by caller
             scanner_name: "security_headers".to_string(),
-            title: title.to_string(),
-            description: description.to_string(),
-            severity,
-            remediation: remediation.to_string(),
+            title: check.title.to_string(),
+            description: check.description.to_string(),
+            severity: check.severity,
+            remediation: check.remediation.to_string(),
             raw_evidence: Some(raw_evidence.to_string()),
             vibe_code: false,
             created_at: Utc::now().naive_utc(),
@@ -185,11 +201,13 @@ mod tests {
         check_header(
             &mut findings,
             &headers,
-            "x-frame-options",
-            "Missing X-Frame-Options",
-            "Description",
-            "Remediation",
-            Severity::Medium,
+            HeaderCheck {
+                header_name: "x-frame-options",
+                title: "Missing X-Frame-Options",
+                description: "Description",
+                remediation: "Remediation",
+                severity: Severity::Medium,
+            },
             &evidence,
         );
         assert_eq!(findings.len(), 0);
@@ -198,11 +216,13 @@ mod tests {
         check_header(
             &mut findings,
             &headers,
-            "content-security-policy",
-            "Missing Content-Security-Policy",
-            "Description",
-            "Remediation",
-            Severity::High,
+            HeaderCheck {
+                header_name: "content-security-policy",
+                title: "Missing Content-Security-Policy",
+                description: "Description",
+                remediation: "Remediation",
+                severity: Severity::High,
+            },
             &evidence,
         );
         assert_eq!(findings.len(), 1);

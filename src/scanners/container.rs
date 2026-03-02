@@ -43,7 +43,11 @@ pub fn resolve_nuclei_binary() -> Option<PathBuf> {
     }
 
     // Check common installation paths
-    for path_str in ["/usr/local/bin/nuclei", "/usr/bin/nuclei", "/opt/nuclei/bin/nuclei"] {
+    for path_str in [
+        "/usr/local/bin/nuclei",
+        "/usr/bin/nuclei",
+        "/opt/nuclei/bin/nuclei",
+    ] {
         let p = PathBuf::from(path_str);
         if p.exists() {
             return Some(p);
@@ -71,7 +75,11 @@ pub fn resolve_testssl_binary() -> Option<PathBuf> {
     }
 
     // Check common installation paths
-    for path_str in ["/usr/local/bin/testssl.sh", "/usr/bin/testssl.sh", "/opt/testssl/testssl.sh"] {
+    for path_str in [
+        "/usr/local/bin/testssl.sh",
+        "/usr/bin/testssl.sh",
+        "/opt/testssl/testssl.sh",
+    ] {
         let p = PathBuf::from(path_str);
         if p.exists() {
             return Some(p);
@@ -98,12 +106,16 @@ pub async fn run_nuclei(target: &str) -> Result<Vec<Finding>, ScannerError> {
     let temp_path = temp_file.path();
 
     let args = vec![
-        "-u", target,
+        "-u",
+        target,
         "-jsonl",
         "-silent",
-        "-severity", "medium,high,critical",
-        "-tags", "exposure,misconfig,cve",
-        "-o", temp_path.to_str().unwrap(),
+        "-severity",
+        "medium,high,critical",
+        "-tags",
+        "exposure,misconfig,cve",
+        "-o",
+        temp_path.to_str().unwrap(),
     ];
 
     let child = Command::new(&nuclei_binary)
@@ -118,11 +130,18 @@ pub async fn run_nuclei(target: &str) -> Result<Vec<Finding>, ScannerError> {
         Ok(Ok(output)) => {
             if !output.status.success() {
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                tracing::warn!("Nuclei exited with code {}: {}", output.status.code().unwrap_or(-1), stderr);
+                tracing::warn!(
+                    "Nuclei exited with code {}: {}",
+                    output.status.code().unwrap_or(-1),
+                    stderr
+                );
             }
         }
         Ok(Err(e)) => {
-            return Err(ScannerError::ExecutionError(format!("Failed to wait for Nuclei: {}", e)));
+            return Err(ScannerError::ExecutionError(format!(
+                "Failed to wait for Nuclei: {}",
+                e
+            )));
         }
         Err(_) => {
             tracing::warn!("Nuclei execution timed out after 120s");
@@ -153,7 +172,8 @@ pub async fn run_testssl(target: &str) -> Result<Vec<Finding>, ScannerError> {
     let temp_path = temp_file.path();
 
     let args = vec![
-        "--jsonfile-pretty", temp_path.to_str().unwrap(),
+        "--jsonfile-pretty",
+        temp_path.to_str().unwrap(),
         "--quiet",
         target,
     ];
@@ -170,11 +190,18 @@ pub async fn run_testssl(target: &str) -> Result<Vec<Finding>, ScannerError> {
         Ok(Ok(output)) => {
             if !output.status.success() {
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                tracing::warn!("testssl.sh exited with code {}: {}", output.status.code().unwrap_or(-1), stderr);
+                tracing::warn!(
+                    "testssl.sh exited with code {}: {}",
+                    output.status.code().unwrap_or(-1),
+                    stderr
+                );
             }
         }
         Ok(Err(e)) => {
-            return Err(ScannerError::ExecutionError(format!("Failed to wait for testssl.sh: {}", e)));
+            return Err(ScannerError::ExecutionError(format!(
+                "Failed to wait for testssl.sh: {}",
+                e
+            )));
         }
         Err(_) => {
             tracing::warn!("testssl.sh execution timed out after 180s");
@@ -219,15 +246,18 @@ fn parse_nuclei_finding(json: &serde_json::Value, target: &str) -> Option<Findin
     let info = json.get("info")?;
     let template_id = json.get("template-id")?.as_str()?;
     let name = info.get("name")?.as_str()?;
-    let description = info.get("description")
+    let description = info
+        .get("description")
         .and_then(|d| d.as_str())
         .unwrap_or("");
 
-    let severity = info.get("severity")
+    let severity = info
+        .get("severity")
         .and_then(|s| s.as_str())
         .unwrap_or("medium");
 
-    let matched_at = json.get("matched-at")
+    let matched_at = json
+        .get("matched-at")
         .and_then(|m| m.as_str())
         .unwrap_or(target);
 
@@ -240,9 +270,9 @@ fn parse_nuclei_finding(json: &serde_json::Value, target: &str) -> Option<Findin
         _ => Severity::Medium,
     };
 
-    let remediation = info.get("remediation")
-        .and_then(|r| r.as_str())
-        .unwrap_or("Review the finding and apply security patches or configuration changes as needed.");
+    let remediation = info.get("remediation").and_then(|r| r.as_str()).unwrap_or(
+        "Review the finding and apply security patches or configuration changes as needed.",
+    );
 
     Some(Finding {
         id: Uuid::new_v4(),
@@ -331,8 +361,7 @@ fn parse_testssl_finding(json: &serde_json::Value, target: &str) -> Option<Findi
         title,
         description: format!("Target: {}\n{}", target, description),
         remediation: get_testssl_remediation(id),
-        raw_evidence: Some(serde_json::to_string_pretty(json)
-            .unwrap_or_else(|_| "{}".to_string())),
+        raw_evidence: Some(serde_json::to_string_pretty(json).unwrap_or_else(|_| "{}".to_string())),
         vibe_code: false,
         created_at: Utc::now().naive_utc(),
     })

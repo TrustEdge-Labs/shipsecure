@@ -58,16 +58,15 @@ struct ProbeResult {
 /// * `extended` - If true, includes additional probe paths for paid tier
 pub async fn scan_exposed_files(url: &str, extended: bool) -> Result<Vec<Finding>, ScannerError> {
     // Parse and normalize base URL
-    let parsed_url = Url::parse(url).map_err(|e| {
-        ScannerError::Other(format!("Invalid URL: {}", e))
-    })?;
+    let parsed_url =
+        Url::parse(url).map_err(|e| ScannerError::Other(format!("Invalid URL: {}", e)))?;
 
     let base_url = format!(
         "{}://{}{}",
         parsed_url.scheme(),
-        parsed_url.host_str().ok_or_else(|| {
-            ScannerError::Other("No hostname found in URL".to_string())
-        })?,
+        parsed_url
+            .host_str()
+            .ok_or_else(|| { ScannerError::Other("No hostname found in URL".to_string()) })?,
         if let Some(port) = parsed_url.port() {
             format!(":{}", port)
         } else {
@@ -300,9 +299,7 @@ pub async fn scan_exposed_files(url: &str, extended: bool) -> Result<Vec<Finding
         let url = format!("{}{}", base_url, target.path);
         let target = target.clone();
 
-        let task = tokio::spawn(async move {
-            probe_path(&client, &url, target).await
-        });
+        let task = tokio::spawn(async move { probe_path(&client, &url, target).await });
 
         probe_tasks.push(task);
     }
@@ -310,9 +307,8 @@ pub async fn scan_exposed_files(url: &str, extended: bool) -> Result<Vec<Finding
     // Check for missing security.txt
     let client_clone = client.clone();
     let security_txt_url = format!("{}/.well-known/security.txt", base_url);
-    let security_txt_task = tokio::spawn(async move {
-        check_security_txt(&client_clone, &security_txt_url).await
-    });
+    let security_txt_task =
+        tokio::spawn(async move { check_security_txt(&client_clone, &security_txt_url).await });
     probe_tasks.push(security_txt_task);
 
     // Collect all results
@@ -337,7 +333,7 @@ pub async fn scan_exposed_files(url: &str, extended: bool) -> Result<Vec<Finding
     // If no probes succeeded, host might be unreachable
     if successful_probes == 0 {
         return Err(ScannerError::Other(
-            "Failed to connect to host - all probes failed".to_string()
+            "Failed to connect to host - all probes failed".to_string(),
         ));
     }
 
@@ -347,11 +343,7 @@ pub async fn scan_exposed_files(url: &str, extended: bool) -> Result<Vec<Finding
     Ok(findings)
 }
 
-async fn probe_path(
-    client: &Client,
-    url: &str,
-    target: ProbeTarget,
-) -> Option<Finding> {
+async fn probe_path(client: &Client, url: &str, target: ProbeTarget) -> Option<Finding> {
     // Try HEAD request first
     let result = match client.head(url).send().await {
         Ok(resp) if resp.status().as_u16() == 405 => {
@@ -379,7 +371,7 @@ async fn probe_path(
     let body = if status_code == 200 {
         match response.text().await {
             Ok(text) if text.len() <= 10_000 => Some(text), // Limit body size
-            Ok(_) => Some(String::new()), // Body too large, skip
+            Ok(_) => Some(String::new()),                   // Body too large, skip
             Err(_) => None,
         }
     } else {
@@ -519,12 +511,11 @@ fn is_source_map(result: &ProbeResult) -> bool {
     }
 
     // Check Content-Type
-    if let Some(ct) = &result.content_type {
-        if ct.contains("application/json") {
-            if let Some(body) = &result.body {
-                return body.contains("\"version\":3") || body.contains("\"mappings\"");
-            }
-        }
+    if let Some(ct) = &result.content_type
+        && ct.contains("application/json")
+        && let Some(body) = &result.body
+    {
+        return body.contains("\"version\":3") || body.contains("\"mappings\"");
     }
 
     // Also check body starts with source map signature

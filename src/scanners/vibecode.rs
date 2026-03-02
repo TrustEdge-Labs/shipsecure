@@ -1,7 +1,7 @@
 use crate::models::finding::{Finding, Severity};
 use crate::scanners::container::ScannerError;
 use chrono::Utc;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 use tokio::process::Command;
 use uuid::Uuid;
@@ -37,10 +37,7 @@ pub async fn scan_vibecode(
     // Get templates directory
     let templates_dir = get_templates_dir();
     if !templates_dir.exists() {
-        tracing::error!(
-            "Templates directory not found: {}",
-            templates_dir.display()
-        );
+        tracing::error!("Templates directory not found: {}", templates_dir.display());
         return Err(ScannerError::ExecutionError(
             "Templates directory not found".to_string(),
         ));
@@ -63,10 +60,7 @@ pub async fn scan_vibecode(
     let temp_path = temp_file.path();
 
     // Build args for native Nuclei binary
-    let mut args = vec![
-        "-u".to_string(),
-        target_url.to_string(),
-    ];
+    let mut args = vec!["-u".to_string(), target_url.to_string()];
 
     // Add template paths
     if !template_paths.is_empty() {
@@ -98,11 +92,18 @@ pub async fn scan_vibecode(
         Ok(Ok(output)) => {
             if !output.status.success() {
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                tracing::warn!("Nuclei exited with code {}: {}", output.status.code().unwrap_or(-1), stderr);
+                tracing::warn!(
+                    "Nuclei exited with code {}: {}",
+                    output.status.code().unwrap_or(-1),
+                    stderr
+                );
             }
         }
         Ok(Err(e)) => {
-            return Err(ScannerError::ExecutionError(format!("Failed to wait for Nuclei: {}", e)));
+            return Err(ScannerError::ExecutionError(format!(
+                "Failed to wait for Nuclei: {}",
+                e
+            )));
         }
         Err(_) => {
             tracing::warn!("Vibe-code scan timed out after 120s");
@@ -132,40 +133,105 @@ fn get_templates_dir() -> PathBuf {
 }
 
 /// Select which templates to run based on detected framework and platform
-fn select_templates(templates_dir: &PathBuf, framework: Option<&str>, platform: Option<&str>, tier: &str) -> Vec<String> {
+fn select_templates(
+    templates_dir: &Path,
+    framework: Option<&str>,
+    platform: Option<&str>,
+    tier: &str,
+) -> Vec<String> {
     let mut templates = Vec::new();
 
     // Universal checks (always run)
-    templates.push(templates_dir.join("supabase-rls.yaml").to_string_lossy().to_string());
-    templates.push(templates_dir.join("firebase-rules.yaml").to_string_lossy().to_string());
-    templates.push(templates_dir.join("env-in-build-output.yaml").to_string_lossy().to_string());
+    templates.push(
+        templates_dir
+            .join("supabase-rls.yaml")
+            .to_string_lossy()
+            .to_string(),
+    );
+    templates.push(
+        templates_dir
+            .join("firebase-rules.yaml")
+            .to_string_lossy()
+            .to_string(),
+    );
+    templates.push(
+        templates_dir
+            .join("env-in-build-output.yaml")
+            .to_string_lossy()
+            .to_string(),
+    );
 
     // Framework-specific checks
     match framework {
         Some("nextjs") | Some("next") => {
-            templates.push(templates_dir.join("nextjs-env-leak.yaml").to_string_lossy().to_string());
-            templates.push(templates_dir.join("unprotected-api-routes.yaml").to_string_lossy().to_string());
+            templates.push(
+                templates_dir
+                    .join("nextjs-env-leak.yaml")
+                    .to_string_lossy()
+                    .to_string(),
+            );
+            templates.push(
+                templates_dir
+                    .join("unprotected-api-routes.yaml")
+                    .to_string_lossy()
+                    .to_string(),
+            );
         }
         None => {
             // Unknown framework - run everything to be safe
-            templates.push(templates_dir.join("nextjs-env-leak.yaml").to_string_lossy().to_string());
-            templates.push(templates_dir.join("unprotected-api-routes.yaml").to_string_lossy().to_string());
-            templates.push(templates_dir.join("netlify-function-exposure.yaml").to_string_lossy().to_string());
-            templates.push(templates_dir.join("vercel-env-leak.yaml").to_string_lossy().to_string());
+            templates.push(
+                templates_dir
+                    .join("nextjs-env-leak.yaml")
+                    .to_string_lossy()
+                    .to_string(),
+            );
+            templates.push(
+                templates_dir
+                    .join("unprotected-api-routes.yaml")
+                    .to_string_lossy()
+                    .to_string(),
+            );
+            templates.push(
+                templates_dir
+                    .join("netlify-function-exposure.yaml")
+                    .to_string_lossy()
+                    .to_string(),
+            );
+            templates.push(
+                templates_dir
+                    .join("vercel-env-leak.yaml")
+                    .to_string_lossy()
+                    .to_string(),
+            );
         }
         _ => {
             // Known framework but not Next.js - still run API route checks
-            templates.push(templates_dir.join("unprotected-api-routes.yaml").to_string_lossy().to_string());
+            templates.push(
+                templates_dir
+                    .join("unprotected-api-routes.yaml")
+                    .to_string_lossy()
+                    .to_string(),
+            );
         }
     }
 
     // Platform-specific checks
     match platform {
         Some("vercel") => {
-            templates.push(templates_dir.join("vercel-env-leak.yaml").to_string_lossy().to_string());
+            templates.push(
+                templates_dir
+                    .join("vercel-env-leak.yaml")
+                    .to_string_lossy()
+                    .to_string(),
+            );
         }
         Some("netlify") => {
-            templates.push(templates_dir.join("netlify-function-exposure.yaml").to_string_lossy().to_string());
+            templates.push(
+                templates_dir
+                    .join("netlify-function-exposure.yaml")
+                    .to_string_lossy()
+                    .to_string(),
+            );
         }
         None => {
             // Unknown platform already handled above in framework=None case
@@ -175,11 +241,36 @@ fn select_templates(templates_dir: &PathBuf, framework: Option<&str>, platform: 
 
     // Add paid-tier templates for deeper scanning
     if tier == "paid" {
-        templates.push(templates_dir.join("paid/advanced-env-leak.yaml").to_string_lossy().to_string());
-        templates.push(templates_dir.join("paid/api-auth-bypass.yaml").to_string_lossy().to_string());
-        templates.push(templates_dir.join("paid/debug-endpoints.yaml").to_string_lossy().to_string());
-        templates.push(templates_dir.join("paid/database-exposure.yaml").to_string_lossy().to_string());
-        templates.push(templates_dir.join("paid/admin-panel-detection.yaml").to_string_lossy().to_string());
+        templates.push(
+            templates_dir
+                .join("paid/advanced-env-leak.yaml")
+                .to_string_lossy()
+                .to_string(),
+        );
+        templates.push(
+            templates_dir
+                .join("paid/api-auth-bypass.yaml")
+                .to_string_lossy()
+                .to_string(),
+        );
+        templates.push(
+            templates_dir
+                .join("paid/debug-endpoints.yaml")
+                .to_string_lossy()
+                .to_string(),
+        );
+        templates.push(
+            templates_dir
+                .join("paid/database-exposure.yaml")
+                .to_string_lossy()
+                .to_string(),
+        );
+        templates.push(
+            templates_dir
+                .join("paid/admin-panel-detection.yaml")
+                .to_string_lossy()
+                .to_string(),
+        );
     }
 
     // Remove duplicates
@@ -237,7 +328,10 @@ fn parse_nuclei_finding(json: &serde_json::Value, target: &str) -> Option<Findin
         .and_then(|d| d.as_str())
         .unwrap_or("");
 
-    let severity = info.get("severity").and_then(|s| s.as_str()).unwrap_or("medium");
+    let severity = info
+        .get("severity")
+        .and_then(|s| s.as_str())
+        .unwrap_or("medium");
 
     let matched_at = json
         .get("matched-at")
@@ -253,10 +347,9 @@ fn parse_nuclei_finding(json: &serde_json::Value, target: &str) -> Option<Findin
         _ => Severity::Medium,
     };
 
-    let remediation = info
-        .get("remediation")
-        .and_then(|r| r.as_str())
-        .unwrap_or("Review the finding and apply security patches or configuration changes as needed.");
+    let remediation = info.get("remediation").and_then(|r| r.as_str()).unwrap_or(
+        "Review the finding and apply security patches or configuration changes as needed.",
+    );
 
     Some(Finding {
         id: Uuid::new_v4(),
@@ -284,10 +377,7 @@ fn parse_nuclei_finding(json: &serde_json::Value, target: &str) -> Option<Findin
 /// Filter out false positives - safe publishable environment variables
 fn should_filter_finding(finding: &Finding) -> bool {
     // Whitelist safe NEXT_PUBLIC_ variables that are meant to be public
-    let safe_patterns = [
-        "NEXT_PUBLIC_SUPABASE_URL",
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    ];
+    let safe_patterns = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"];
 
     let content = format!(
         "{} {} {}",

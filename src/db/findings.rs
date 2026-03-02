@@ -24,7 +24,7 @@ pub async fn insert_findings(
         .bind(&finding.severity)
         .bind(&finding.remediation)
         .bind(&finding.raw_evidence)
-        .bind(&finding.vibe_code)
+        .bind(finding.vibe_code)
         .execute(&mut *tx)
         .await?;
     }

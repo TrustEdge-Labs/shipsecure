@@ -45,9 +45,9 @@ pub async fn handle_clerk_webhook(
     // 5. Route by event type
     match event_type.as_str() {
         "user.created" => {
-            let clerk_user_id = event["data"]["id"]
-                .as_str()
-                .ok_or_else(|| ApiError::ValidationError("Missing user id in webhook".to_string()))?;
+            let clerk_user_id = event["data"]["id"].as_str().ok_or_else(|| {
+                ApiError::ValidationError("Missing user id in webhook".to_string())
+            })?;
 
             let email = event["data"]["email_addresses"][0]["email_address"]
                 .as_str()

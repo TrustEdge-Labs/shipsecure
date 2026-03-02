@@ -32,10 +32,7 @@ pub fn deduplicate_findings(findings: Vec<Finding>) -> Vec<Finding> {
 
                 // Combine scanner names in raw_evidence
                 if finding.scanner_name != existing.scanner_name {
-                    let combined_scanners = format!(
-                        "Also found by: {}",
-                        finding.scanner_name
-                    );
+                    let combined_scanners = format!("Also found by: {}", finding.scanner_name);
 
                     if let Some(ref mut evidence) = existing.raw_evidence {
                         if !evidence.contains(&finding.scanner_name) {
@@ -146,7 +143,13 @@ mod tests {
         assert_eq!(deduped[0].severity, Severity::High);
 
         // Should note the other scanner
-        assert!(deduped[0].raw_evidence.as_ref().unwrap().contains("scanner2"));
+        assert!(
+            deduped[0]
+                .raw_evidence
+                .as_ref()
+                .unwrap()
+                .contains("scanner2")
+        );
     }
 
     #[test]

@@ -29,12 +29,19 @@ struct SecretPattern {
     name: &'static str,
     regex: Regex,
     severity: Severity,
+    #[allow(dead_code)] // Reserved for future use in finding detail output
     confidence: &'static str,
     advice: &'static str,
 }
 
 impl SecretPattern {
-    fn new(name: &'static str, pattern: &str, severity: Severity, confidence: &'static str, advice: &'static str) -> Self {
+    fn new(
+        name: &'static str,
+        pattern: &str,
+        severity: Severity,
+        confidence: &'static str,
+        advice: &'static str,
+    ) -> Self {
         Self {
             name,
             regex: Regex::new(pattern).unwrap(),
@@ -134,7 +141,7 @@ lazy_static::lazy_static! {
         Regex::new(r"xxx+").unwrap(),
         Regex::new(r"000+").unwrap(),
         Regex::new(r"123+").unwrap(),
-        Regex::new(r"^(.)\1+$").ok().unwrap_or_else(|| Regex::new(r"^(a{2,}|b{2,}|c{2,}|d{2,}|e{2,}|f{2,}|0{2,}|1{2,}|x{2,}|X{2,})$").unwrap()), // All same character (backrefs unsupported, match common placeholders)
+        Regex::new(r"^(a{2,}|b{2,}|c{2,}|d{2,}|e{2,}|f{2,}|0{2,}|1{2,}|x{2,}|X{2,})$").unwrap(), // All same character (backrefs unsupported in Rust regex, match common placeholders)
     ];
 }
 
@@ -153,17 +160,16 @@ pub async fn scan_js_secrets(url: &str, max_files: usize) -> Result<Vec<Finding>
     let js_urls: Vec<String> = js_urls.into_iter().take(max_files).collect();
 
     // Fetch and scan each JS file concurrently
-    let scan_tasks: Vec<_> = js_urls.iter()
+    let scan_tasks: Vec<_> = js_urls
+        .iter()
         .map(|js_url| scan_single_js_file(js_url.clone()))
         .collect();
 
     let results = futures::future::join_all(scan_tasks).await;
 
-    for result in results {
-        if let Ok(mut file_findings) = result {
-            findings.append(&mut file_findings);
-        }
+    for mut file_findings in results.into_iter().flatten() {
         // Silently skip failed fetches (404s, timeouts, etc.)
+        findings.append(&mut file_findings);
     }
 
     Ok(findings)
@@ -173,8 +179,8 @@ pub async fn scan_js_secrets(url: &str, max_files: usize) -> Result<Vec<Finding>
 async fn discover_js_urls(url: &str) -> Result<HashSet<String>, ScannerError> {
     let mut js_urls = HashSet::new();
 
-    let base_url = Url::parse(url)
-        .map_err(|e| ScannerError::ParseError(format!("Invalid URL: {}", e)))?;
+    let base_url =
+        Url::parse(url).map_err(|e| ScannerError::ParseError(format!("Invalid URL: {}", e)))?;
 
     // Fetch the HTML page
     let client = reqwest::Client::builder()
@@ -183,12 +189,14 @@ async fn discover_js_urls(url: &str) -> Result<HashSet<String>, ScannerError> {
         .build()
         .map_err(|e| ScannerError::HttpError(e.to_string()))?;
 
-    let response = client.get(url)
+    let response = client
+        .get(url)
         .send()
         .await
         .map_err(|e| ScannerError::HttpError(e.to_string()))?;
 
-    let html = response.text()
+    let html = response
+        .text()
         .await
         .map_err(|e| ScannerError::HttpError(e.to_string()))?;
 
@@ -231,7 +239,8 @@ async fn scan_single_js_file(js_url: String) -> Result<Vec<Finding>, ScannerErro
         .build()
         .map_err(|e| ScannerError::HttpError(e.to_string()))?;
 
-    let response = client.get(&js_url)
+    let response = client
+        .get(&js_url)
         .send()
         .await
         .map_err(|e| ScannerError::HttpError(e.to_string()))?;
@@ -242,7 +251,8 @@ async fn scan_single_js_file(js_url: String) -> Result<Vec<Finding>, ScannerErro
     }
 
     // Limit to first 2MB
-    let bytes = response.bytes()
+    let bytes = response
+        .bytes()
         .await
         .map_err(|e| ScannerError::HttpError(e.to_string()))?;
 
@@ -364,6 +374,9 @@ mod tests {
         assert!(is_false_positive("test_key_12345", "context"));
         assert!(is_false_positive("example_api_key", "context"));
         assert!(is_false_positive("YOUR_KEY_HERE", "context"));
-        assert!(!is_false_positive("AKIAIOSFODNN7EXAMPLE", "production code"));
+        assert!(!is_false_positive(
+            "AKIAIOSFODNN7REALKEY1",
+            "production code"
+        ));
     }
 }

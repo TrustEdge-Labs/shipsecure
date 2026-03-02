@@ -1,8 +1,8 @@
+use axum::Router;
 use axum::http::Method;
 use axum::middleware;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
-use axum::Router;
 use axum_jwt_auth::RemoteJwksDecoder;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
@@ -14,17 +14,17 @@ use tokio_util::task::TaskTracker;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use tracing::Span;
-use tracing_subscriber::EnvFilter;
 use tracing_panic::panic_hook;
+use tracing_subscriber::EnvFilter;
 
 // Import from lib
+use shipsecure::RequestId;
 use shipsecure::api::auth::ClerkClaims;
+use shipsecure::api::metrics as api_metrics;
 use shipsecure::api::scans::{self, AppState};
 use shipsecure::api::{domains, health, results, stats, users, webhooks};
 use shipsecure::metrics;
-use shipsecure::api::metrics as api_metrics;
 use shipsecure::orchestrator::ScanOrchestrator;
-use shipsecure::RequestId;
 
 fn validate_required_env_vars(vars: &[&str]) -> Result<(), String> {
     let mut missing = Vec::new();
@@ -83,8 +83,12 @@ fn init_logging() -> (String, String) {
     }
 
     (
-        if log_format == "json" { "json".to_string() } else { "text".to_string() },
-        filter_description
+        if log_format == "json" {
+            "json".to_string()
+        } else {
+            "text".to_string()
+        },
+        filter_description,
     )
 }
 
@@ -104,15 +108,16 @@ async fn reject_scans_during_shutdown(
 ) -> axum::response::Response {
     // Only reject scan creation endpoints during shutdown
     // Per user decision: scan creation returns 503, other endpoints keep working
-    let is_scan_creation = request.method() == Method::POST
-        && request.uri().path() == "/api/v1/scans";
+    let is_scan_creation =
+        request.method() == Method::POST && request.uri().path() == "/api/v1/scans";
 
     if is_scan_creation && state.shutdown_token.is_cancelled() {
         let error_body = serde_json::json!({"error": "Service shutting down"});
         return (
             axum::http::StatusCode::SERVICE_UNAVAILABLE,
             axum::Json(error_body),
-        ).into_response();
+        )
+            .into_response();
     }
 
     next.run(request).await
@@ -167,7 +172,8 @@ async fn main() {
         "FRONTEND_URL",
         "MAX_CONCURRENT_SCANS",
         "CLERK_JWKS_URL",
-    ]).expect("Configuration error");
+    ])
+    .expect("Configuration error");
 
     // Init logging with format switching
     let (log_format, filter_description) = init_logging();
@@ -179,8 +185,7 @@ async fn main() {
     let metrics_handle = metrics::install_metrics_recorder();
 
     // Database pool
-    let database_url =
-        std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
         .max_connections(10)
         .connect(&database_url)
@@ -223,22 +228,22 @@ async fn main() {
 
     // Spawn retention cleanup task (hourly DELETE of expired scans)
     // Must be spawned before task_tracker moves into ScanOrchestrator::new()
-    shipsecure::cleanup::spawn_cleanup_task(
-        pool.clone(),
-        &task_tracker,
-        shutdown_token.clone(),
-    );
+    shipsecure::cleanup::spawn_cleanup_task(pool.clone(), &task_tracker, shutdown_token.clone());
 
     // Create orchestrator with configurable concurrency
-    let orchestrator = Arc::new(ScanOrchestrator::new(pool.clone(), max_concurrent, task_tracker, shutdown_token.clone()));
+    let orchestrator = Arc::new(ScanOrchestrator::new(
+        pool.clone(),
+        max_concurrent,
+        task_tracker,
+        shutdown_token.clone(),
+    ));
 
     // Create health cache
     let health_cache = health::HealthCache::new();
 
     // Initialize JWKS decoder for Clerk JWT verification
     // Fetches public keys from Clerk's JWKS endpoint and caches them with background refresh.
-    let jwks_url = std::env::var("CLERK_JWKS_URL")
-        .expect("CLERK_JWKS_URL must be set");
+    let jwks_url = std::env::var("CLERK_JWKS_URL").expect("CLERK_JWKS_URL must be set");
     let mut validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
     // Clerk session tokens do not include an aud claim by default
     validation.validate_aud = false;
@@ -273,12 +278,16 @@ async fn main() {
     let cors = CorsLayer::new()
         .allow_origin(frontend_url)
         .allow_methods([Method::GET, Method::POST])
-        .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION]);
+        .allow_headers([
+            axum::http::header::CONTENT_TYPE,
+            axum::http::header::AUTHORIZATION,
+        ]);
 
     // TraceLayer middleware for request tracing
     let trace_layer = TraceLayer::new_for_http()
         .make_span_with(|request: &axum::http::Request<axum::body::Body>| {
-            let request_id = request.extensions()
+            let request_id = request
+                .extensions()
                 .get::<RequestId>()
                 .map(|r| r.0)
                 .unwrap_or_else(uuid::Uuid::new_v4);
@@ -291,17 +300,19 @@ async fn main() {
                 latency_ms = tracing::field::Empty,
             )
         })
-        .on_response(|response: &axum::http::Response<_>, latency: Duration, span: &Span| {
-            let status = response.status();
-            let latency_ms = latency.as_millis() as u64;
-            span.record("status_code", status.as_u16());
-            span.record("latency_ms", latency_ms);
-            if status.is_client_error() || status.is_server_error() {
-                tracing::info!("http_response");
-            } else {
-                tracing::debug!("http_response");
-            }
-        });
+        .on_response(
+            |response: &axum::http::Response<_>, latency: Duration, span: &Span| {
+                let status = response.status();
+                let latency_ms = latency.as_millis() as u64;
+                span.record("status_code", status.as_u16());
+                span.record("latency_ms", latency_ms);
+                if status.is_client_error() || status.is_server_error() {
+                    tracing::info!("http_response");
+                } else {
+                    tracing::debug!("http_response");
+                }
+            },
+        );
 
     // Health check router — separate from traced routes
     let health_router = Router::new()
@@ -319,25 +330,39 @@ async fn main() {
         // API routes — these get traced
         .route("/api/v1/scans", post(scans::create_scan))
         .route("/api/v1/scans/{id}", get(scans::get_scan))
-        .route("/api/v1/results/{token}", get(results::get_results_by_token))
+        .route(
+            "/api/v1/results/{token}",
+            get(results::get_results_by_token),
+        )
         .route(
             "/api/v1/results/{token}/download",
             get(results::download_results_markdown),
         )
         .route("/api/v1/quota", get(scans::get_quota))
         .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
-        .route("/api/v1/webhooks/clerk", post(webhooks::handle_clerk_webhook))
+        .route(
+            "/api/v1/webhooks/clerk",
+            post(webhooks::handle_clerk_webhook),
+        )
         // Domain verification routes
         .route("/api/v1/domains/verify-start", post(domains::verify_start))
-        .route("/api/v1/domains/verify-confirm", post(domains::verify_confirm))
+        .route(
+            "/api/v1/domains/verify-confirm",
+            post(domains::verify_confirm),
+        )
         .route("/api/v1/domains/verify-check", post(domains::verify_check))
         .route("/api/v1/domains", get(domains::list_domains))
         .route("/api/v1/users/me/scans", get(users::get_user_scans))
-        .layer(axum::middleware::from_fn(metrics::middleware::track_http_metrics))
+        .layer(axum::middleware::from_fn(
+            metrics::middleware::track_http_metrics,
+        ))
         .layer(cors)
         .layer(trace_layer)
         .layer(middleware::from_fn(inject_request_id))
-        .layer(axum::middleware::from_fn_with_state(state.clone(), reject_scans_during_shutdown))
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            reject_scans_during_shutdown,
+        ))
         .with_state(state)
         // Health checks and metrics — merged AFTER layers, bypass tracing
         .merge(health_router)
@@ -347,9 +372,7 @@ async fn main() {
     // Bind and serve
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
-    let listener = TcpListener::bind(addr)
-        .await
-        .expect("Failed to bind");
+    let listener = TcpListener::bind(addr).await.expect("Failed to bind");
 
     // Log startup with shutdown config
     tracing::info!(
@@ -381,7 +404,9 @@ async fn main() {
     tokio::pin!(drain_future);
 
     loop {
-        let remaining = shutdown_timeout.checked_sub(start.elapsed()).unwrap_or(Duration::ZERO);
+        let remaining = shutdown_timeout
+            .checked_sub(start.elapsed())
+            .unwrap_or(Duration::ZERO);
         if remaining.is_zero() {
             // Timeout expired
             let (active, _max) = orchestrator.get_capacity();

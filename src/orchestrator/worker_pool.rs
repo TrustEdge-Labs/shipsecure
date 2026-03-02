@@ -1,17 +1,19 @@
+use base64::Engine;
 use sqlx::PgPool;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Semaphore;
 use tokio_util::sync::CancellationToken;
 use tokio_util::task::TaskTracker;
-use tracing::{info_span, Instrument};
+use tracing::{Instrument, info_span};
 use uuid::Uuid;
-use base64::Engine;
 
 use crate::db::{findings as findings_db, scans as scans_db};
 use crate::models::finding::Finding;
 use crate::models::scan::ScanStatus;
-use crate::scanners::{security_headers, tls, exposed_files, js_secrets, detector, vibecode, remediation};
+use crate::scanners::{
+    detector, exposed_files, js_secrets, remediation, security_headers, tls, vibecode,
+};
 
 #[derive(Debug)]
 pub enum OrchestratorError {
@@ -38,6 +40,7 @@ impl From<sqlx::Error> for OrchestratorError {
 
 #[derive(Debug)]
 struct ScannerResult {
+    #[allow(dead_code)] // Used via Debug derive for logging
     scanner_name: String,
     findings: Option<Vec<Finding>>,
     error: Option<String>,
@@ -60,7 +63,12 @@ impl ScanOrchestrator {
     /// * `max_concurrent` - Maximum number of concurrent scans (default: 5)
     /// * `task_tracker` - TaskTracker for coordinating graceful shutdown
     /// * `shutdown_token` - CancellationToken for signaling shutdown
-    pub fn new(pool: PgPool, max_concurrent: usize, task_tracker: TaskTracker, shutdown_token: CancellationToken) -> Self {
+    pub fn new(
+        pool: PgPool,
+        max_concurrent: usize,
+        task_tracker: TaskTracker,
+        shutdown_token: CancellationToken,
+    ) -> Self {
         Self {
             pool,
             semaphore: Arc::new(Semaphore::new(max_concurrent)),
@@ -83,7 +91,13 @@ impl ScanOrchestrator {
     ///
     /// The scan will acquire a semaphore permit, run scanners, and update the database.
     /// Errors are logged but not propagated.
-    fn spawn_scan_with_tier(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>, tier: &'static str) {
+    fn spawn_scan_with_tier(
+        &self,
+        scan_id: Uuid,
+        target_url: String,
+        request_id: Option<Uuid>,
+        tier: &'static str,
+    ) {
         let pool = self.pool.clone();
         let semaphore = self.semaphore.clone();
         let timeout = self.max_scanner_timeout;
@@ -96,55 +110,60 @@ impl ScanOrchestrator {
             request_id = request_id.map(|id| id.to_string()).as_deref().unwrap_or(""),
         );
 
-        self.task_tracker.spawn(async move {
-            // Check shutdown before queuing
-            if shutdown_token.is_cancelled() {
-                tracing::info!("Shutdown in progress, skipping queued scan");
-                return;
-            }
-
-            // Track queue depth (waiting for permit)
-            metrics::gauge!("scan_queue_depth").increment(1.0);
-            let _permit = semaphore.acquire().await.expect("Semaphore closed");
-            metrics::gauge!("scan_queue_depth").decrement(1.0);
-
-            // Check shutdown after acquiring permit
-            if shutdown_token.is_cancelled() {
-                tracing::info!("Shutdown in progress, aborting scan before execution");
-                return;
-            }
-
-            // Track active scans (executing)
-            metrics::gauge!("active_scans").increment(1.0);
-            tracing::info!("scan_started");
-            let start = Instant::now();
-
-            let result = Self::execute_scan_internal(pool, scan_id, target_url, timeout, tier).await;
-            let is_success = result.is_ok();
-            let duration_secs = start.elapsed().as_secs_f64();
-
-            // Record scan duration metric
-            metrics::histogram!(
-                "scan_duration_seconds",
-                "tier" => tier,
-                "status" => if is_success { "success" } else { "failure" }
-            ).record(duration_secs);
-
-            // Existing logging
-            match result {
-                Ok(()) => {
-                    let duration_ms = start.elapsed().as_millis() as u64;
-                    tracing::info!(duration_ms, "scan_completed");
+        self.task_tracker.spawn(
+            async move {
+                // Check shutdown before queuing
+                if shutdown_token.is_cancelled() {
+                    tracing::info!("Shutdown in progress, skipping queued scan");
+                    return;
                 }
-                Err(e) => {
-                    let duration_ms = start.elapsed().as_millis() as u64;
-                    tracing::error!(duration_ms, error = %e, "scan_failed");
-                }
-            }
 
-            // Decrement active scans
-            metrics::gauge!("active_scans").decrement(1.0);
-        }.instrument(span));
+                // Track queue depth (waiting for permit)
+                metrics::gauge!("scan_queue_depth").increment(1.0);
+                let _permit = semaphore.acquire().await.expect("Semaphore closed");
+                metrics::gauge!("scan_queue_depth").decrement(1.0);
+
+                // Check shutdown after acquiring permit
+                if shutdown_token.is_cancelled() {
+                    tracing::info!("Shutdown in progress, aborting scan before execution");
+                    return;
+                }
+
+                // Track active scans (executing)
+                metrics::gauge!("active_scans").increment(1.0);
+                tracing::info!("scan_started");
+                let start = Instant::now();
+
+                let result =
+                    Self::execute_scan_internal(pool, scan_id, target_url, timeout, tier).await;
+                let is_success = result.is_ok();
+                let duration_secs = start.elapsed().as_secs_f64();
+
+                // Record scan duration metric
+                metrics::histogram!(
+                    "scan_duration_seconds",
+                    "tier" => tier,
+                    "status" => if is_success { "success" } else { "failure" }
+                )
+                .record(duration_secs);
+
+                // Existing logging
+                match result {
+                    Ok(()) => {
+                        let duration_ms = start.elapsed().as_millis() as u64;
+                        tracing::info!(duration_ms, "scan_completed");
+                    }
+                    Err(e) => {
+                        let duration_ms = start.elapsed().as_millis() as u64;
+                        tracing::error!(duration_ms, error = %e, "scan_failed");
+                    }
+                }
+
+                // Decrement active scans
+                metrics::gauge!("active_scans").decrement(1.0);
+            }
+            .instrument(span),
+        );
     }
 
     /// Spawn a FREE tier scan task in the background (fire-and-forget).
@@ -161,7 +180,12 @@ impl ScanOrchestrator {
     /// The scan will acquire a semaphore permit, run scanners with enhanced config
     /// (30 JS files, 300s vibecode timeout, extended exposed files), and update the database.
     /// Errors are logged but not propagated.
-    pub fn spawn_authenticated_scan(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>) {
+    pub fn spawn_authenticated_scan(
+        &self,
+        scan_id: Uuid,
+        target_url: String,
+        request_id: Option<Uuid>,
+    ) {
         self.spawn_scan_with_tier(scan_id, target_url, request_id, "authenticated");
     }
 
@@ -170,9 +194,20 @@ impl ScanOrchestrator {
     /// This acquires a semaphore permit and runs the scan to completion.
     /// This executes a FREE tier scan.
     #[allow(dead_code)]
-    pub async fn execute_scan(&self, scan_id: Uuid, target_url: String) -> Result<(), OrchestratorError> {
+    pub async fn execute_scan(
+        &self,
+        scan_id: Uuid,
+        target_url: String,
+    ) -> Result<(), OrchestratorError> {
         let _permit = self.semaphore.acquire().await.expect("Semaphore closed");
-        Self::execute_scan_internal(self.pool.clone(), scan_id, target_url, self.max_scanner_timeout, "free").await
+        Self::execute_scan_internal(
+            self.pool.clone(),
+            scan_id,
+            target_url,
+            self.max_scanner_timeout,
+            "free",
+        )
+        .await
     }
 
     async fn execute_scan_internal(
@@ -190,31 +225,50 @@ impl ScanOrchestrator {
             Ok(result) => {
                 // Store detection results in database
                 if let Some(ref fw) = result.framework {
-                    scans_db::update_detected_framework(&pool, scan_id, fw.to_db()).await.ok();
+                    scans_db::update_detected_framework(&pool, scan_id, fw.to_db())
+                        .await
+                        .ok();
                 }
                 if let Some(ref pl) = result.platform {
-                    scans_db::update_detected_platform(&pool, scan_id, pl.to_db()).await.ok();
+                    scans_db::update_detected_platform(&pool, scan_id, pl.to_db())
+                        .await
+                        .ok();
                 }
-                scans_db::update_scan_stage(&pool, scan_id, "detection", true).await.ok();
+                scans_db::update_scan_stage(&pool, scan_id, "detection", true)
+                    .await
+                    .ok();
                 Some(result)
             }
             Err(e) => {
                 tracing::warn!("Framework detection failed for scan {}: {}", scan_id, e);
-                scans_db::update_scan_stage(&pool, scan_id, "detection", true).await.ok();
+                scans_db::update_scan_stage(&pool, scan_id, "detection", true)
+                    .await
+                    .ok();
                 None // Detection failure does NOT fail the scan
             }
         };
 
         // Extract framework/platform strings for downstream use
-        let framework_str = detection.as_ref()
+        let framework_str = detection
+            .as_ref()
             .and_then(|d| d.framework.as_ref())
             .map(|f| f.to_db().to_string());
-        let platform_str = detection.as_ref()
+        let platform_str = detection
+            .as_ref()
             .and_then(|d| d.platform.as_ref())
             .map(|p| p.to_db().to_string());
 
         // Run scanners with timeout and retry
-        let scanner_results = Self::run_scanners(&pool, scan_id, &target_url, timeout, framework_str, platform_str, tier).await;
+        let scanner_results = Self::run_scanners(
+            &pool,
+            scan_id,
+            &target_url,
+            timeout,
+            framework_str,
+            platform_str,
+            tier,
+        )
+        .await;
 
         // Check if all scanners failed
         let all_failed = scanner_results.iter().all(|r| r.findings.is_none());
@@ -232,7 +286,8 @@ impl ScanOrchestrator {
                 ScanStatus::Failed,
                 None,
                 Some(format!("All scanners failed: {}", combined_error)),
-            ).await?;
+            )
+            .await?;
 
             return Err(OrchestratorError::AllScannersFailed(combined_error));
         }
@@ -260,19 +315,28 @@ impl ScanOrchestrator {
             ScanStatus::Completed,
             Some(score.clone()),
             None,
-        ).await?;
+        )
+        .await?;
 
         // Generate results token
         let token = Self::generate_results_token();
-        let expires_at = chrono::Utc::now().naive_utc() + match tier {
-            "authenticated" => chrono::Duration::days(30),
-            _ => chrono::Duration::hours(24), // free tier: 24 hours
-        };
+        let expires_at = chrono::Utc::now().naive_utc()
+            + match tier {
+                "authenticated" => chrono::Duration::days(30),
+                _ => chrono::Duration::hours(24), // free tier: 24 hours
+            };
         scans_db::set_results_token(&pool, scan_id, &token, expires_at).await?;
 
         // Send email notification (don't fail scan if email fails)
-        if let Err(e) = Self::send_completion_email(&pool, scan_id, &target_url, &score, &all_findings, &token).await {
-            tracing::warn!("Failed to send completion email for scan {}: {}", scan_id, e);
+        if let Err(e) =
+            Self::send_completion_email(&pool, scan_id, &target_url, &score, &all_findings, &token)
+                .await
+        {
+            tracing::warn!(
+                "Failed to send completion email for scan {}: {}",
+                scan_id,
+                e
+            );
         }
 
         Ok(())
@@ -282,7 +346,7 @@ impl ScanOrchestrator {
         use rand::Rng;
         let mut rng = rand::thread_rng();
         let bytes: [u8; 32] = rng.r#gen();
-        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&bytes)
+        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes)
     }
 
     async fn send_completion_email(
@@ -294,21 +358,34 @@ impl ScanOrchestrator {
         results_token: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // Get scan record to retrieve email
-        let scan = scans_db::get_scan(pool, scan_id).await?
+        let scan = scans_db::get_scan(pool, scan_id)
+            .await?
             .ok_or("Scan not found")?;
 
         // Compute findings summary
         let summary = crate::email::FindingsSummary {
-            critical: findings.iter().filter(|f| f.severity == crate::models::Severity::Critical).count() as i64,
-            high: findings.iter().filter(|f| f.severity == crate::models::Severity::High).count() as i64,
-            medium: findings.iter().filter(|f| f.severity == crate::models::Severity::Medium).count() as i64,
-            low: findings.iter().filter(|f| f.severity == crate::models::Severity::Low).count() as i64,
+            critical: findings
+                .iter()
+                .filter(|f| f.severity == crate::models::Severity::Critical)
+                .count() as i64,
+            high: findings
+                .iter()
+                .filter(|f| f.severity == crate::models::Severity::High)
+                .count() as i64,
+            medium: findings
+                .iter()
+                .filter(|f| f.severity == crate::models::Severity::Medium)
+                .count() as i64,
+            low: findings
+                .iter()
+                .filter(|f| f.severity == crate::models::Severity::Low)
+                .count() as i64,
             total: findings.len() as i64,
         };
 
         // Get base URL from environment
-        let base_url = std::env::var("SHIPSECURE_BASE_URL")
-            .expect("SHIPSECURE_BASE_URL must be set");
+        let base_url =
+            std::env::var("SHIPSECURE_BASE_URL").expect("SHIPSECURE_BASE_URL must be set");
 
         // Send email
         crate::email::send_scan_complete_email(
@@ -318,7 +395,8 @@ impl ScanOrchestrator {
             &summary,
             results_token,
             &base_url,
-        ).await?;
+        )
+        .await?;
 
         Ok(())
     }
@@ -334,7 +412,9 @@ impl ScanOrchestrator {
     ) -> Vec<ScannerResult> {
         // Tier-specific configuration — activate enhanced config for authenticated/paid tiers
         let (max_js_files, extended_files, vibecode_timeout, other_timeout) = match tier {
-            "authenticated" | "paid" => (30, true, Duration::from_secs(300), Duration::from_secs(60)),
+            "authenticated" | "paid" => {
+                (30, true, Duration::from_secs(300), Duration::from_secs(60))
+            }
             _ => (20, false, Duration::from_secs(180), Duration::from_secs(60)),
         };
         // Spawn each scanner independently so stage updates happen as each completes
@@ -590,7 +670,13 @@ impl ScanOrchestrator {
         });
 
         // Await all scanner tasks
-        let results = tokio::join!(headers_handle, tls_handle, files_handle, secrets_handle, vibecode_handle);
+        let results = tokio::join!(
+            headers_handle,
+            tls_handle,
+            files_handle,
+            secrets_handle,
+            vibecode_handle
+        );
 
         vec![
             results.0.unwrap_or_else(|_| ScannerResult {
@@ -619,89 +705,6 @@ impl ScanOrchestrator {
                 error: Some("Task panicked".to_string()),
             }),
         ]
-    }
-
-    async fn run_scanner_with_retry<F, Fut>(
-        scanner_name: &str,
-        scanner_fn: F,
-        timeout: Duration,
-    ) -> ScannerResult
-    where
-        F: Fn() -> Fut,
-        Fut: std::future::Future<Output = Result<Vec<Finding>, security_headers::ScannerError>>,
-    {
-        // First attempt
-        match tokio::time::timeout(timeout, scanner_fn()).await {
-            Ok(Ok(findings)) => {
-                return ScannerResult {
-                    scanner_name: scanner_name.to_string(),
-                    findings: Some(findings),
-                    error: None,
-                };
-            }
-            Ok(Err(e)) => {
-                tracing::warn!("Scanner {} failed on first attempt: {}", scanner_name, e);
-                // Retry once
-                match tokio::time::timeout(timeout, scanner_fn()).await {
-                    Ok(Ok(findings)) => {
-                        return ScannerResult {
-                            scanner_name: scanner_name.to_string(),
-                            findings: Some(findings),
-                            error: None,
-                        };
-                    }
-                    Ok(Err(e)) => {
-                        let error_msg = format!("Failed after retry: {}", e);
-                        tracing::error!("Scanner {} {}", scanner_name, error_msg);
-                        return ScannerResult {
-                            scanner_name: scanner_name.to_string(),
-                            findings: None,
-                            error: Some(error_msg),
-                        };
-                    }
-                    Err(_) => {
-                        let error_msg = "Timeout on retry";
-                        tracing::error!("Scanner {} {}", scanner_name, error_msg);
-                        return ScannerResult {
-                            scanner_name: scanner_name.to_string(),
-                            findings: None,
-                            error: Some(error_msg.to_string()),
-                        };
-                    }
-                }
-            }
-            Err(_) => {
-                tracing::warn!("Scanner {} timed out on first attempt", scanner_name);
-                // Retry once
-                match tokio::time::timeout(timeout, scanner_fn()).await {
-                    Ok(Ok(findings)) => {
-                        return ScannerResult {
-                            scanner_name: scanner_name.to_string(),
-                            findings: Some(findings),
-                            error: None,
-                        };
-                    }
-                    Ok(Err(e)) => {
-                        let error_msg = format!("Failed after timeout retry: {}", e);
-                        tracing::error!("Scanner {} {}", scanner_name, error_msg);
-                        return ScannerResult {
-                            scanner_name: scanner_name.to_string(),
-                            findings: None,
-                            error: Some(error_msg),
-                        };
-                    }
-                    Err(_) => {
-                        let error_msg = "Timeout on both attempts";
-                        tracing::error!("Scanner {} {}", scanner_name, error_msg);
-                        return ScannerResult {
-                            scanner_name: scanner_name.to_string(),
-                            findings: None,
-                            error: Some(error_msg.to_string()),
-                        };
-                    }
-                }
-            }
-        }
     }
 
     fn deduplicate_findings(findings: Vec<Finding>) -> Vec<Finding> {

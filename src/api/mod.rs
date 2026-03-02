@@ -1,10 +1,10 @@
 pub mod auth;
-pub mod scans;
+pub mod domains;
 pub mod errors;
-pub mod results;
-pub mod stats;
-pub mod webhooks;
 pub mod health;
 pub mod metrics;
-pub mod domains;
+pub mod results;
+pub mod scans;
+pub mod stats;
 pub mod users;
+pub mod webhooks;

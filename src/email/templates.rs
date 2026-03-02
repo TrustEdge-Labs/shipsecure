@@ -12,7 +12,7 @@ pub fn scan_complete_html(
         "A+" | "A" | "A-" => "#10b981", // green
         "B+" | "B" | "B-" => "#f59e0b", // yellow
         "C+" | "C" | "C-" => "#f97316", // orange
-        _ => "#ef4444", // red (D, F)
+        _ => "#ef4444",                 // red (D, F)
     };
 
     format!(

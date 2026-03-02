@@ -88,14 +88,20 @@ pub async fn send_scan_complete_email(
 
     if !response.status().is_success() {
         let status = response.status();
-        let error_body = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+        let error_body = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
         return Err(EmailError::SendFailed(format!(
             "Resend API returned {}: {}",
-            status,
-            error_body
+            status, error_body
         )));
     }
 
-    tracing::info!("Successfully sent completion email to {} for scan of {}", to, target_url);
+    tracing::info!(
+        "Successfully sent completion email to {} for scan of {}",
+        to,
+        target_url
+    );
     Ok(())
 }

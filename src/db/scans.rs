@@ -110,11 +110,11 @@ pub async fn update_scan_status(
         _ => None,
     };
 
-    if let Some(_) = completed_at {
+    if completed_at.is_some() {
         sqlx::query(
             "UPDATE scans
              SET status = $1, score = $2, error_message = $3, completed_at = NOW()
-             WHERE id = $4"
+             WHERE id = $4",
         )
         .bind(status)
         .bind(score)
@@ -126,7 +126,7 @@ pub async fn update_scan_status(
         sqlx::query(
             "UPDATE scans
              SET status = $1, score = $2, error_message = $3
-             WHERE id = $4"
+             WHERE id = $4",
         )
         .bind(status)
         .bind(score)
@@ -145,7 +145,7 @@ pub async fn count_scans_by_email_today(pool: &PgPool, email: &str) -> Result<i6
     let count: (i64,) = sqlx::query_as(
         "SELECT COUNT(*)
          FROM scans
-         WHERE email = $1 AND created_at >= CURRENT_DATE"
+         WHERE email = $1 AND created_at >= CURRENT_DATE",
     )
     .bind(email)
     .fetch_one(pool)
@@ -172,7 +172,7 @@ pub async fn count_anonymous_scans_by_email_and_domain_today(
          WHERE email = $1
            AND target_url LIKE $2
            AND clerk_user_id IS NULL
-           AND created_at >= CURRENT_DATE"
+           AND created_at >= CURRENT_DATE",
     )
     .bind(email)
     .bind(&pattern)
@@ -188,7 +188,7 @@ pub async fn count_scans_by_ip_today(pool: &PgPool, ip: &str) -> Result<i64, sql
     let count: (i64,) = sqlx::query_as(
         "SELECT COUNT(*)
          FROM scans
-         WHERE submitter_ip = $1::inet AND created_at >= CURRENT_DATE"
+         WHERE submitter_ip = $1::inet AND created_at >= CURRENT_DATE",
     )
     .bind(ip)
     .fetch_one(pool)
@@ -254,7 +254,7 @@ pub async fn set_results_token(
     sqlx::query(
         "UPDATE scans
          SET results_token = $1, expires_at = $2
-         WHERE id = $3"
+         WHERE id = $3",
     )
     .bind(token)
     .bind(expires_at)
@@ -271,7 +271,7 @@ pub async fn count_completed_scans(pool: &PgPool) -> Result<i64, sqlx::Error> {
     let count: (i64,) = sqlx::query_as(
         "SELECT COUNT(*)
          FROM scans
-         WHERE status = 'completed'"
+         WHERE status = 'completed'",
     )
     .fetch_one(pool)
     .await?;
@@ -281,11 +281,15 @@ pub async fn count_completed_scans(pool: &PgPool) -> Result<i64, sqlx::Error> {
 
 /// Update detected framework for a scan
 #[allow(dead_code)]
-pub async fn update_detected_framework(pool: &PgPool, scan_id: Uuid, framework: &str) -> Result<(), sqlx::Error> {
+pub async fn update_detected_framework(
+    pool: &PgPool,
+    scan_id: Uuid,
+    framework: &str,
+) -> Result<(), sqlx::Error> {
     sqlx::query(
         "UPDATE scans
          SET detected_framework = $1
-         WHERE id = $2"
+         WHERE id = $2",
     )
     .bind(framework)
     .bind(scan_id)
@@ -297,11 +301,15 @@ pub async fn update_detected_framework(pool: &PgPool, scan_id: Uuid, framework: 
 
 /// Update detected platform for a scan
 #[allow(dead_code)]
-pub async fn update_detected_platform(pool: &PgPool, scan_id: Uuid, platform: &str) -> Result<(), sqlx::Error> {
+pub async fn update_detected_platform(
+    pool: &PgPool,
+    scan_id: Uuid,
+    platform: &str,
+) -> Result<(), sqlx::Error> {
     sqlx::query(
         "UPDATE scans
          SET detected_platform = $1
-         WHERE id = $2"
+         WHERE id = $2",
     )
     .bind(platform)
     .bind(scan_id)
@@ -316,13 +324,16 @@ pub async fn update_detected_platform(pool: &PgPool, scan_id: Uuid, platform: &s
 /// Filters to only anonymous scans (clerk_user_id IS NULL) so authenticated scans from the
 /// same IP do not inflate the anonymous rate limit.
 #[allow(dead_code)]
-pub async fn count_anonymous_scans_by_ip_today(pool: &PgPool, ip: &str) -> Result<i64, sqlx::Error> {
+pub async fn count_anonymous_scans_by_ip_today(
+    pool: &PgPool,
+    ip: &str,
+) -> Result<i64, sqlx::Error> {
     let count: (i64,) = sqlx::query_as(
         "SELECT COUNT(*)
          FROM scans
          WHERE submitter_ip = $1::inet
            AND clerk_user_id IS NULL
-           AND created_at >= CURRENT_DATE"
+           AND created_at >= CURRENT_DATE",
     )
     .bind(ip)
     .fetch_one(pool)
@@ -334,12 +345,15 @@ pub async fn count_anonymous_scans_by_ip_today(pool: &PgPool, ip: &str) -> Resul
 ///
 /// Used for the Developer tier monthly quota (5 scans/month).
 #[allow(dead_code)]
-pub async fn count_scans_by_user_this_month(pool: &PgPool, clerk_user_id: &str) -> Result<i64, sqlx::Error> {
+pub async fn count_scans_by_user_this_month(
+    pool: &PgPool,
+    clerk_user_id: &str,
+) -> Result<i64, sqlx::Error> {
     let count: (i64,) = sqlx::query_as(
         "SELECT COUNT(*)
          FROM scans
          WHERE clerk_user_id = $1
-           AND created_at >= DATE_TRUNC('month', NOW() AT TIME ZONE 'UTC')"
+           AND created_at >= DATE_TRUNC('month', NOW() AT TIME ZONE 'UTC')",
     )
     .bind(clerk_user_id)
     .fetch_one(pool)
@@ -378,7 +392,7 @@ pub async fn get_user_scan_history(
          ORDER BY CASE WHEN s.expires_at IS NULL THEN 1 ELSE 0 END ASC,
                   s.expires_at ASC NULLS LAST,
                   s.created_at DESC
-         LIMIT $2 OFFSET $3"
+         LIMIT $2 OFFSET $3",
     )
     .bind(clerk_user_id)
     .bind(limit)
@@ -391,12 +405,15 @@ pub async fn get_user_scan_history(
 
 /// Total count of completed/failed scans for a user — used for pagination metadata.
 #[allow(dead_code)]
-pub async fn count_user_scans_history(pool: &PgPool, clerk_user_id: &str) -> Result<i64, sqlx::Error> {
+pub async fn count_user_scans_history(
+    pool: &PgPool,
+    clerk_user_id: &str,
+) -> Result<i64, sqlx::Error> {
     let count: (i64,) = sqlx::query_as(
         "SELECT COUNT(*)
          FROM scans
          WHERE clerk_user_id = $1
-           AND status NOT IN ('pending', 'in_progress')"
+           AND status NOT IN ('pending', 'in_progress')",
     )
     .bind(clerk_user_id)
     .fetch_one(pool)
@@ -417,7 +434,7 @@ pub async fn delete_expired_scans_by_tier(pool: &PgPool, tier: &str) -> Result<u
         "DELETE FROM scans
          WHERE tier = $1
            AND status IN ('completed', 'failed')
-           AND expires_at + INTERVAL '24 hours' < NOW()"
+           AND expires_at + INTERVAL '24 hours' < NOW()",
     )
     .bind(tier)
     .execute(pool)
@@ -449,7 +466,7 @@ pub async fn get_user_active_scans(
          FROM scans s
          WHERE s.clerk_user_id = $1
            AND s.status IN ('pending', 'in_progress')
-         ORDER BY s.created_at DESC"
+         ORDER BY s.created_at DESC",
     )
     .bind(clerk_user_id)
     .fetch_all(pool)

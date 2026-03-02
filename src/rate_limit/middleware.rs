@@ -49,24 +49,32 @@ pub async fn check_rate_limits(
                     "rate_limit_total",
                     "limiter" => "scan_ip_hard_cap",
                     "action" => "blocked"
-                ).increment(1);
+                )
+                .increment(1);
                 return Err(ApiError::RateLimitedWithReset {
-                    message: "Too many scans from this network today. Please try again tomorrow.".to_string(),
+                    message: "Too many scans from this network today. Please try again tomorrow."
+                        .to_string(),
                     resets_at,
                 });
             }
 
             // Layer 2: email+domain fair-use limit
-            let count = scans::count_anonymous_scans_by_email_and_domain_today(pool, email, target_domain).await?;
+            let count =
+                scans::count_anonymous_scans_by_email_and_domain_today(pool, email, target_domain)
+                    .await?;
             if count >= 1 {
                 let resets_at = next_midnight_utc();
                 metrics::counter!(
                     "rate_limit_total",
                     "limiter" => "scan_email_domain",
                     "action" => "blocked"
-                ).increment(1);
+                )
+                .increment(1);
                 return Err(ApiError::RateLimitedWithReset {
-                    message: format!("You've already scanned {} today. Try again tomorrow, or use a different email to scan again now.", target_domain),
+                    message: format!(
+                        "You've already scanned {} today. Try again tomorrow, or use a different email to scan again now.",
+                        target_domain
+                    ),
                     resets_at,
                 });
             }
@@ -80,7 +88,8 @@ pub async fn check_rate_limits(
                     "rate_limit_total",
                     "limiter" => "scan_user",
                     "action" => "blocked"
-                ).increment(1);
+                )
+                .increment(1);
                 return Err(ApiError::RateLimitedWithReset {
                     message: format!("You've used all 5 scans for this month ({} of 5).", count),
                     resets_at,

@@ -1,5 +1,5 @@
-use axum::extract::{Query, State};
 use axum::Json;
+use axum::extract::{Query, State};
 use axum_jwt_auth::Claims;
 use serde::Deserialize;
 use serde_json::json;
@@ -29,7 +29,11 @@ pub async fn get_user_scans(
         db::scans::count_user_scans_history(&state.pool, &claims.sub),
     )?;
 
-    let total_pages = if total == 0 { 0 } else { (total + per_page - 1) / per_page };
+    let total_pages = if total == 0 {
+        0
+    } else {
+        (total + per_page - 1) / per_page
+    };
 
     Ok(Json(json!({
         "scans": scans,

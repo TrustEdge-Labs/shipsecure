@@ -161,21 +161,19 @@ SvelteKit exposes variables prefixed with `PUBLIC_` to the browser. Remove the p
 
         // EnvLeak + Nuxt
         (VulnType::EnvLeak, Some("nuxt")) => {
-            format!(
-                r#"**In your `nuxt.config.ts`:**
+            r#"**In your `nuxt.config.ts`:**
 ```diff
-export default defineNuxtConfig({{
-  runtimeConfig: {{
--   public: {{
+export default defineNuxtConfig({
+  runtimeConfig: {
+-   public: {
 -     secretKey: process.env.SECRET_KEY
--   }}
+-   }
 +   secretKey: process.env.SECRET_KEY  // Server-only (not under public)
-  }}
-}})
+  }
+})
 ```
 
-In Nuxt, values under `runtimeConfig.public` are sent to the client. Move secrets to the top level of `runtimeConfig` for server-only access."#
-            )
+In Nuxt, values under `runtimeConfig.public` are sent to the client. Move secrets to the top level of `runtimeConfig` for server-only access."#.to_string()
         }
 
         // EnvLeak + generic (no framework or vite_react)
@@ -334,9 +332,18 @@ mod tests {
         assert_eq!(classify_vuln("firebase-rules", ""), VulnType::FirebaseRules);
         assert_eq!(classify_vuln("nextjs-env-leak", ""), VulnType::EnvLeak);
         assert_eq!(classify_vuln("env-in-build-output", ""), VulnType::EnvLeak);
-        assert_eq!(classify_vuln("unprotected-api-routes", ""), VulnType::UnprotectedRoute);
-        assert_eq!(classify_vuln("netlify-function-exposure", ""), VulnType::NetlifyExposure);
-        assert_eq!(classify_vuln("vercel-env-leak", ""), VulnType::VercelEnvLeak);
+        assert_eq!(
+            classify_vuln("unprotected-api-routes", ""),
+            VulnType::UnprotectedRoute
+        );
+        assert_eq!(
+            classify_vuln("netlify-function-exposure", ""),
+            VulnType::NetlifyExposure
+        );
+        assert_eq!(
+            classify_vuln("vercel-env-leak", ""),
+            VulnType::VercelEnvLeak
+        );
     }
 
     #[test]

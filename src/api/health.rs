@@ -1,6 +1,6 @@
+use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::Json;
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -32,19 +32,25 @@ pub struct HealthCache {
     inner: Arc<Mutex<Option<(Instant, ReadinessResponse)>>>,
 }
 
-impl HealthCache {
-    pub fn new() -> Self {
+impl Default for HealthCache {
+    fn default() -> Self {
         Self {
             inner: Arc::new(Mutex::new(None)),
         }
     }
+}
+
+impl HealthCache {
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     pub fn get_cached(&self, ttl: Duration) -> Option<ReadinessResponse> {
         let guard = self.inner.lock().unwrap();
-        if let Some((timestamp, response)) = &*guard {
-            if timestamp.elapsed() < ttl {
-                return Some(response.clone());
-            }
+        if let Some((timestamp, response)) = &*guard
+            && timestamp.elapsed() < ttl
+        {
+            return Some(response.clone());
         }
         None
     }
@@ -69,11 +75,14 @@ pub async fn health_readiness(
     // Check shutdown state first -- per user decision: /health/ready returns unhealthy during shutdown
     if state.orchestrator.is_shutting_down() {
         let (active, max) = state.orchestrator.get_capacity();
-        return (StatusCode::SERVICE_UNAVAILABLE, Json(ReadinessResponse {
-            db_connected: true, // Assume true during shutdown
-            scan_capacity: ScanCapacity { active, max },
-            status: "unhealthy".to_string(),
-        }));
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ReadinessResponse {
+                db_connected: true, // Assume true during shutdown
+                scan_capacity: ScanCapacity { active, max },
+                status: "unhealthy".to_string(),
+            }),
+        );
     }
 
     // 1. Check cache first
@@ -99,9 +108,7 @@ pub async fn health_readiness(
     let threshold = Duration::from_millis(threshold_ms);
 
     let db_start = Instant::now();
-    let db_result = sqlx::query("SELECT 1")
-        .fetch_one(&state.pool)
-        .await;
+    let db_result = sqlx::query("SELECT 1").fetch_one(&state.pool).await;
     let db_latency = db_start.elapsed();
 
     // 4. Determine status

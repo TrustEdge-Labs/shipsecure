@@ -1,5 +1,5 @@
 use sqlx::PgPool;
-use tokio::time::{interval_at, Duration, Instant, MissedTickBehavior};
+use tokio::time::{Duration, Instant, MissedTickBehavior, interval_at};
 use tokio_util::sync::CancellationToken;
 use tokio_util::task::TaskTracker;
 

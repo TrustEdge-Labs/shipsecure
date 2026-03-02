@@ -174,7 +174,7 @@ Plans:
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
 | 39. Backend CI Pipeline | v1.8 | Complete    | 2026-03-02 | 2026-03-02 |
-| 40. Docker Healthchecks & Docs | 1/1 | Complete   | 2026-03-02 | - |
+| 40. Docker Healthchecks & Docs | 1/1 | Complete    | 2026-03-02 | - |
 | 41. Frontend Test Coverage | v1.8 | 0/TBD | Not started | - |
 
 **Total: 8 milestones shipped, 38 phases complete, 96 plans complete. v1.8 in progress (3 phases, 1/3 complete).**

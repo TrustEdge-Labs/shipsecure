@@ -171,7 +171,7 @@ Plans:
 | 25-28. Testing | v1.5 | 11/11 | Complete | 2026-02-17 |
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
-| 39. Backend CI Pipeline | v1.8 | 1/1 | Complete | 2026-03-02 |
+| 39. Backend CI Pipeline | v1.8 | Complete    | 2026-03-02 | 2026-03-02 |
 | 40. Docker Healthchecks & Docs | v1.8 | 0/TBD | Not started | - |
 | 41. Frontend Test Coverage | v1.8 | 0/TBD | Not started | - |
 

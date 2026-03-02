@@ -182,6 +182,7 @@ infrastructure/  # Ansible playbooks, templates, and deployment automation
 - **Rate limiting** — 1 scan/IP/24h anonymous, 5 scans/user/month Developer tier, with `429 + resets_at`
 - **Data retention** — Hourly cleanup: 24h expiry for anonymous scans, 30d for Developer, 24h grace period
 - **Observability** — Structured JSON logging, request correlation IDs, Prometheus metrics, health checks (liveness + readiness)
+- **Docker healthchecks** — Both containers self-report health; frontend waits for backend via `service_healthy` depends_on
 - **Graceful shutdown** — SIGTERM drains in-flight scans with configurable timeout via TaskTracker/CancellationToken
 
 ## Extending ShipSecure
@@ -362,16 +363,32 @@ See `src/orchestrator/worker_pool.rs` for the full pattern used by the existing 
 
 ## Testing
 
+### Backend
+
+```bash
+# Run all tests
+cargo test
+
+# Run clippy lints
+cargo clippy --all-targets --all-features -- -D warnings
+
+# Check formatting
+cargo fmt --all -- --check
+
+# Coverage report (requires cargo-llvm-cov)
+cargo llvm-cov
+```
+
 ### Frontend
 
 ```bash
 cd frontend
 
 # Unit and component tests (Vitest + React Testing Library)
-npm test
+npm test                # 126 tests across 15 test files
 
 # Coverage report
-npm run test:coverage
+npm run test:coverage   # 88.75% lines / 89.22% branches / 84.9% functions
 
 # E2E tests (Playwright)
 npm run build && npx playwright test
@@ -381,7 +398,14 @@ Coverage thresholds enforced at 80% lines / 80% functions / 75% branches.
 
 ### CI/CD
 
-GitHub Actions runs unit tests and E2E tests on every push and PR. Branch protection on `main` requires all checks to pass.
+GitHub Actions runs on every push and PR to `main`:
+
+- **backend-ci** — cargo fmt, clippy (-D warnings), cargo test
+- **backend-coverage** — cargo-llvm-cov coverage report
+- **unit-tests** — Vitest with coverage enforcement
+- **e2e-tests** — Playwright against production build
+
+Branch protection on `main` requires all checks to pass (no admin bypass).
 
 ## Contributing
 

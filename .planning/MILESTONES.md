@@ -1,5 +1,30 @@
 # Project Milestones: TrustEdge Audit
 
+## v1.8 CI & Quality Hardening (Shipped: 2026-03-02)
+
+**Delivered:** Backend CI quality gates, Docker container health monitoring, and full frontend test coverage — closing all CI and quality gaps before sharing with real users
+
+**Phases completed:** 39-41 (3 plans, 7 tasks total)
+
+**Key accomplishments:**
+- Backend CI pipeline with cargo fmt, clippy (-D warnings), and test gates on every push/PR to main
+- Backend test coverage reporting via cargo-llvm-cov (report-only, no threshold enforcement yet)
+- Docker healthcheck directives on both production containers with service_healthy startup ordering
+- Frontend lightweight /api/health endpoint for container health probing
+- 30 new unit tests for 3 previously excluded v1.6 components (DomainBadge, MetaTagSnippet, ScanHistoryTable)
+- Coverage thresholds enforced across all active components — 126 tests, 88.75% lines / 89.22% branches / 84.9% functions
+
+**Stats:**
+- 54 files changed (+2,834 / -765 lines)
+- 3 phases, 3 plans, 7 tasks, 14 commits
+- 1 day (Mar 1, 2026)
+
+**Git range:** `feat(39-01)` → `feat(41-01)`
+
+**What's next:** Next milestone TBD — product is CI-hardened and ready for real user validation.
+
+---
+
 ## v1.0 MVP (Shipped: 2026-02-06)
 
 **Delivered:** Complete security scanning SaaS with free URL scanning, vibe-code intelligence, and paid audit monetization via Stripe
@@ -200,10 +225,25 @@
 
 ## v1.7 Frontend Polish (Shipped: 2026-02-25)
 
-**Phases completed:** 3 phases, 7 plans, 0 tasks
+**Delivered:** Accessibility improvements, hydration fixes, and design consistency across the frontend
+
+**Phases completed:** 36-38 (7 plans total)
 
 **Key accomplishments:**
-- (none recorded)
+- WCAG 2.5.5 touch targets (44px min) on header nav links, logo, and CFAA checkbox
+- Dashboard table row a11y — single link per row, no duplicate announcements
+- React hydration fix — suppressHydrationWarning on html + body elements
+- Scan form email helper text and dashboard active-scan polling via router.refresh()
+- --card-radius design token (0.75rem) applied to all card/panel elements
+- PageContainer shared layout component with configurable max-width
+- Plausible data-domain="shipsecure.ai" fix on analytics script tag
+
+**Stats:**
+- 33 files changed
+- 3 phases, 7 plans
+- 1 day (Feb 25, 2026)
+
+**Git range:** `feat(36-01)` → `docs(phase-38)`
 
 ---
 

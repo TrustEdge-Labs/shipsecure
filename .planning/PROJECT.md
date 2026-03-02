@@ -89,18 +89,17 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - ✓ PageContainer shared layout component with configurable max-width — v1.7
 - ✓ Plausible data-domain="shipsecure.ai" on analytics script tag — v1.7
 
+- ✓ Backend CI pipeline with cargo fmt, clippy (-D warnings), and test gates on every push/PR — v1.8
+- ✓ Backend test coverage reporting via cargo-llvm-cov in CI — v1.8
+- ✓ Docker healthcheck directives on both production containers with service_healthy startup ordering — v1.8
+- ✓ Frontend /api/health lightweight endpoint for container health probing — v1.8
+- ✓ Unit tests for DomainBadge, MetaTagSnippet, and ScanHistoryTable components — v1.8
+- ✓ Coverage thresholds enforced across all active components (no exclusions remaining) — v1.8
+- ✓ README accuracy (Next.js 16, proxy.ts) — v1.8
+
 ### Active
 
-## Current Milestone: v1.8 CI & Quality Hardening
-
-**Goal:** Close CI gaps and test coverage holes so the product is bulletproof before sharing with real users.
-
-**Target features:**
-- Backend CI pipeline (cargo test, clippy, fmt) in GitHub Actions
-- Docker healthchecks in docker-compose.prod.yml
-- Frontend test coverage for excluded v1.6 components
-- README accuracy fix (Next.js version)
-- Backend test coverage reporting in CI
+(None — planning next milestone)
 
 ### Out of Scope
 
@@ -134,7 +133,8 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **v1.6 shipped 2026-02-19:** Auth & Tiered Access — Clerk auth, domain verification, results gating, tiered scans, rate limiting, scan history dashboard, data retention, 95 files changed, 7 phases, 13 plans, 2 days
 - **Post-v1.6 deployment hardening (2026-02-21):** 19 commits fixing CI/CD pipeline, Docker Compose standalone mode, systemd integration, env var management. Production deploy pipeline now reliable.
 - **v1.7 shipped 2026-02-25:** Frontend polish — touch targets, a11y, hydration fix, email copy, dashboard polling, design tokens, PageContainer, Plausible fix, 33 files changed, 3 phases, 7 plans
-- **Current:** 8 milestones shipped, 38 phases, 95 plans completed
+- **v1.8 shipped 2026-03-02:** CI & quality hardening — backend CI pipeline, Docker healthchecks, frontend test coverage for v1.6 components, 54 files changed, 3 phases, 3 plans, 1 day
+- **Current:** 9 milestones shipped, 41 phases, 98 plans completed
 
 ## Constraints
 
@@ -204,6 +204,14 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | Meta tag verification only (no file upload) | Lower friction than DNS TXT, file upload deferred | ✓ Good — simple meta tag flow, shared-hosting blocklist prevents abuse |
 | jsonwebtoken + axum-jwt-auth for Rust JWT | Local JWKS-based verification, no per-request Clerk API calls | ✓ Good — cached JWKS keys, RS256 verification, zero latency overhead |
 | 24h grace period before scan deletion | Users see "Expired" badge in dashboard before data disappears | ✓ Good — interval_at deferred task, TaskTracker integration for graceful shutdown |
+| Independent backend-ci job (no needs:) | Backend CI runs in parallel with frontend jobs — no cross-dependency | ✓ Good — faster CI feedback, no coupling |
+| cargo fmt first in CI pipeline | Fastest gate runs first — fail early on formatting before clippy/test | ✓ Good — saves CI minutes on trivial failures |
+| Coverage report-only (no --fail-under) | Establish baseline before setting thresholds | ✓ Good — per REQUIREMENTS.md "Out of Scope" |
+| Healthchecks in compose, not Dockerfiles | Environment-specific tuning without rebuilding images | ✓ Good — different timings for dev vs prod |
+| Backend curl, frontend wget for healthchecks | Use what's already in the base image (debian:bookworm-slim has curl, node:20-alpine has wget) | ✓ Good — no extra packages needed |
+| service_healthy depends_on condition | Frontend waits for backend DB connectivity, not just container start | ✓ Good — prevents frontend startup race condition |
+| fireEvent.click over userEvent.click for clipboard tests | happy-dom's Permissions API security context rejects full pointer event chain | ✓ Good — vi.spyOn + fireEvent is reliable in happy-dom |
+| vi.useFakeTimers for date-dependent component tests | Deterministic assertions regardless of when tests run | ✓ Good — no flaky date-boundary failures |
 
 ---
-*Last updated: 2026-02-25 after v1.7 milestone*
+*Last updated: 2026-03-02 after v1.8 milestone*

@@ -5,16 +5,20 @@
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** v1.8 CI & Quality Hardening
+**Current focus:** v1.8 CI & Quality Hardening — Phase 39: Backend CI Pipeline
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 39 (Backend CI Pipeline)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-01 — Milestone v1.8 started
+Status: Roadmap created, ready to plan Phase 39
+Last activity: 2026-03-01 — v1.8 roadmap written (3 phases, 10 requirements)
 
 Progress: 8 milestones shipped, 38 phases, 95 plans completed
+
+```
+v1.8 Progress: [          ] 0/3 phases complete
+```
 
 ## Performance Metrics
 
@@ -35,6 +39,7 @@ Progress: 8 milestones shipped, 38 phases, 95 plans completed
 | v1.5 Testing | 25-28 | 11 | 2 |
 | v1.6 Auth & Tiered Access | 29-35 | 13 | 2 |
 | v1.7 Frontend Polish | 36-38 | 7 | 1 |
+| v1.8 CI & Quality Hardening | 39-41 | TBD | — |
 
 ## Accumulated Context
 
@@ -53,5 +58,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Milestone v1.8 started — defining requirements
+Stopped at: v1.8 roadmap created — ready to plan Phase 39
 Resume file: —

@@ -45,22 +45,22 @@ None — this is a hardening milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CI-01 | TBD | Pending |
-| CI-02 | TBD | Pending |
-| CI-03 | TBD | Pending |
-| CI-04 | TBD | Pending |
-| INFRA-01 | TBD | Pending |
-| INFRA-02 | TBD | Pending |
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
-| DOC-01 | TBD | Pending |
+| CI-01 | Phase 39 | Pending |
+| CI-02 | Phase 39 | Pending |
+| CI-03 | Phase 39 | Pending |
+| CI-04 | Phase 39 | Pending |
+| INFRA-01 | Phase 40 | Pending |
+| INFRA-02 | Phase 40 | Pending |
+| DOC-01 | Phase 40 | Pending |
+| TEST-01 | Phase 41 | Pending |
+| TEST-02 | Phase 41 | Pending |
+| TEST-03 | Phase 41 | Pending |
 
 **Coverage:**
 - v1.8 requirements: 10 total
-- Mapped to phases: 0
-- Unmapped: 10
+- Mapped to phases: 10
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-01*
-*Last updated: 2026-03-01 after initial definition*
+*Last updated: 2026-03-01 after roadmap creation — all 10 requirements mapped*

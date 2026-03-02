@@ -10,6 +10,7 @@
 - ✅ **v1.5 Frontend Testing** — Phases 25-28 (shipped 2026-02-17)
 - ✅ **v1.6 Auth & Tiered Access** — Phases 29-35 (shipped 2026-02-19)
 - ✅ **v1.7 Frontend Polish** — Phases 36-38 (shipped 2026-02-25)
+- 🔄 **v1.8 CI & Quality Hardening** — Phases 39-41 (in progress)
 
 ## Phases
 
@@ -115,6 +116,47 @@ See: `.planning/milestones/v1.7-ROADMAP.md`
 
 </details>
 
+### v1.8 CI & Quality Hardening (Phases 39-41)
+
+- [ ] **Phase 39: Backend CI Pipeline** - Add cargo test, clippy, fmt, and coverage to GitHub Actions
+- [ ] **Phase 40: Docker Healthchecks & Docs** - Healthcheck directives on backend/frontend containers and README fix
+- [ ] **Phase 41: Frontend Test Coverage** - Unit tests for three v1.6 components excluded from coverage
+
+## Phase Details
+
+### Phase 39: Backend CI Pipeline
+**Goal**: Every push and PR triggers backend quality gates — tests, linting, formatting, and coverage reporting all pass in CI
+**Depends on**: Nothing (additive CI work, no code dependencies)
+**Requirements**: CI-01, CI-02, CI-03, CI-04
+**Success Criteria** (what must be TRUE):
+  1. A push to main triggers a backend-ci job that runs cargo test and fails the build on any test failure
+  2. cargo clippy runs in CI with -D warnings and fails the build on any lint warning
+  3. cargo fmt --check runs in CI and fails the build if code is not formatted
+  4. A coverage report (llvm-cov or tarpaulin) is generated and visible in CI output after each run
+**Plans**: TBD
+
+### Phase 40: Docker Healthchecks & Docs
+**Goal**: Production containers self-report health to Docker, and the README accurately describes the tech stack
+**Depends on**: Nothing (independent of Phase 39)
+**Requirements**: INFRA-01, INFRA-02, DOC-01
+**Success Criteria** (what must be TRUE):
+  1. `docker inspect shipsecure-backend` shows a healthcheck polling /health, with status healthy after startup
+  2. `docker inspect shipsecure-frontend` shows a healthcheck polling an HTTP endpoint, with status healthy after startup
+  3. An unhealthy backend container is distinguishable from a healthy one without reading logs
+  4. README states Next.js 16 (not 15) as the frontend framework
+**Plans**: TBD
+
+### Phase 41: Frontend Test Coverage
+**Goal**: The three v1.6 components excluded from coverage now have unit tests, bringing all active components under the coverage threshold
+**Depends on**: Nothing (independent test authoring)
+**Requirements**: TEST-01, TEST-02, TEST-03
+**Success Criteria** (what must be TRUE):
+  1. `vitest run --coverage` passes with domain-badge component covered (renders, shows verified/unverified states)
+  2. `vitest run --coverage` passes with meta-tag-snippet component covered (renders snippet, copy interaction)
+  3. `vitest run --coverage` passes with scan-history-table component covered (renders rows, severity counts, expiry states)
+  4. Coverage thresholds (80/80/75) continue to pass with all three components included in scope
+**Plans**: TBD
+
 ## Progress
 
 | Phase | Milestone | Plans | Status | Completed |
@@ -127,8 +169,11 @@ See: `.planning/milestones/v1.7-ROADMAP.md`
 | 25-28. Testing | v1.5 | 11/11 | Complete | 2026-02-17 |
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
+| 39. Backend CI Pipeline | v1.8 | 0/TBD | Not started | - |
+| 40. Docker Healthchecks & Docs | v1.8 | 0/TBD | Not started | - |
+| 41. Frontend Test Coverage | v1.8 | 0/TBD | Not started | - |
 
-**Total: 8 milestones shipped, 38 phases, 95 plans**
+**Total: 8 milestones shipped, 38 phases complete, 95 plans complete. v1.8 in progress (3 phases).**
 
 ---
-*Last updated: 2026-02-25 after v1.7 milestone*
+*Last updated: 2026-03-01 after v1.8 roadmap creation*

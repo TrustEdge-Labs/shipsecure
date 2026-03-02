@@ -146,7 +146,9 @@ Plans:
   2. `docker inspect shipsecure-frontend` shows a healthcheck polling an HTTP endpoint, with status healthy after startup
   3. An unhealthy backend container is distinguishable from a healthy one without reading logs
   4. README states Next.js 16 (not 15) as the frontend framework
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 40-01-PLAN.md -- Docker healthchecks and README fixes
 
 ### Phase 41: Frontend Test Coverage
 **Goal**: The three v1.6 components excluded from coverage now have unit tests, bringing all active components under the coverage threshold

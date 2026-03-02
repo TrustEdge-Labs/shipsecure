@@ -118,7 +118,7 @@ See: `.planning/milestones/v1.7-ROADMAP.md`
 
 ### v1.8 CI & Quality Hardening (Phases 39-41)
 
-- [ ] **Phase 39: Backend CI Pipeline** - Add cargo test, clippy, fmt, and coverage to GitHub Actions
+- [ ] **Phase 39: Backend CI Pipeline** (1 plan) - Add cargo test, clippy, fmt, and coverage to GitHub Actions
 - [ ] **Phase 40: Docker Healthchecks & Docs** - Healthcheck directives on backend/frontend containers and README fix
 - [ ] **Phase 41: Frontend Test Coverage** - Unit tests for three v1.6 components excluded from coverage
 
@@ -133,7 +133,9 @@ See: `.planning/milestones/v1.7-ROADMAP.md`
   2. cargo clippy runs in CI with -D warnings and fails the build on any lint warning
   3. cargo fmt --check runs in CI and fails the build if code is not formatted
   4. A coverage report (llvm-cov or tarpaulin) is generated and visible in CI output after each run
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 39-01-PLAN.md -- Backend CI quality gates (test, clippy, fmt, coverage)
 
 ### Phase 40: Docker Healthchecks & Docs
 **Goal**: Production containers self-report health to Docker, and the README accurately describes the tech stack
@@ -169,7 +171,7 @@ See: `.planning/milestones/v1.7-ROADMAP.md`
 | 25-28. Testing | v1.5 | 11/11 | Complete | 2026-02-17 |
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
-| 39. Backend CI Pipeline | v1.8 | 0/TBD | Not started | - |
+| 39. Backend CI Pipeline | v1.8 | 0/1 | Planned | - |
 | 40. Docker Healthchecks & Docs | v1.8 | 0/TBD | Not started | - |
 | 41. Frontend Test Coverage | v1.8 | 0/TBD | Not started | - |
 

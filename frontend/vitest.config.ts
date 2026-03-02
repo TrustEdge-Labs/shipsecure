@@ -31,10 +31,6 @@ export default defineConfig({
         'app/**/opengraph-image.tsx',
         'app/robots.ts',
         'app/sitemap.ts',
-        // v1.6 components awaiting test coverage
-        'components/domain-badge.tsx',
-        'components/meta-tag-snippet.tsx',
-        'components/scan-history-table.tsx',
       ],
       thresholds: {
         lines: 80,

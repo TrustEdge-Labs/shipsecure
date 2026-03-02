@@ -47,7 +47,7 @@ Live at [shipsecure.ai](https://shipsecure.ai)
 | Layer | Technology |
 |-------|-----------|
 | Backend | Rust (Axum) |
-| Frontend | Next.js 15 (App Router), React, Tailwind CSS |
+| Frontend | Next.js 16 (App Router), React, Tailwind CSS |
 | Database | PostgreSQL |
 | Auth | Clerk (email/password, Google OAuth, GitHub OAuth) |
 | Scanners | Nuclei (native binary), testssl.sh (native binary), custom probes |
@@ -164,7 +164,7 @@ src/
 frontend/
   app/           # Next.js pages (landing, scan, results, dashboard, verify-domain, sign-in/up)
   components/    # UI components (scan form, results dashboard, scan history, auth gate, header)
-  middleware.ts  # Clerk auth middleware (protects /dashboard, /verify-domain)
+  proxy.ts      # Clerk auth middleware (protects /dashboard, /verify-domain)
   __tests__/     # Vitest unit tests and Playwright E2E tests
 migrations/      # PostgreSQL schema migrations
 infrastructure/  # Ansible playbooks, templates, and deployment automation

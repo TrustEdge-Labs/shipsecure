@@ -21,9 +21,9 @@ Requirements for CI & Quality Hardening milestone.
 
 ### Test Coverage
 
-- [ ] **TEST-01**: Unit tests for domain-badge component
-- [ ] **TEST-02**: Unit tests for meta-tag-snippet component
-- [ ] **TEST-03**: Unit tests for scan-history-table component
+- [x] **TEST-01**: Unit tests for domain-badge component
+- [x] **TEST-02**: Unit tests for meta-tag-snippet component
+- [x] **TEST-03**: Unit tests for scan-history-table component
 
 ### Documentation
 
@@ -52,9 +52,9 @@ None — this is a hardening milestone.
 | INFRA-01 | Phase 40 | Complete |
 | INFRA-02 | Phase 40 | Complete |
 | DOC-01 | Phase 40 | Complete |
-| TEST-01 | Phase 41 | Pending |
-| TEST-02 | Phase 41 | Pending |
-| TEST-03 | Phase 41 | Pending |
+| TEST-01 | Phase 41 | Complete |
+| TEST-02 | Phase 41 | Complete |
+| TEST-03 | Phase 41 | Complete |
 
 **Coverage:**
 - v1.8 requirements: 10 total

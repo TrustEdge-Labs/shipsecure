@@ -159,7 +159,9 @@ Plans:
   2. `vitest run --coverage` passes with meta-tag-snippet component covered (renders snippet, copy interaction)
   3. `vitest run --coverage` passes with scan-history-table component covered (renders rows, severity counts, expiry states)
   4. Coverage thresholds (80/80/75) continue to pass with all three components included in scope
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 41-01-PLAN.md -- Unit tests for domain-badge, meta-tag-snippet, scan-history-table + coverage config update
 
 ## Progress
 

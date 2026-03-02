@@ -10,20 +10,20 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 39 (Backend CI Pipeline)
-Plan: —
-Status: Roadmap created, ready to plan Phase 39
-Last activity: 2026-03-01 — v1.8 roadmap written (3 phases, 10 requirements)
+Plan: 01 complete
+Status: Phase 39 Plan 01 complete — backend CI pipeline added
+Last activity: 2026-03-02 — backend-ci and backend-coverage jobs added to ci.yml
 
-Progress: 8 milestones shipped, 38 phases, 95 plans completed
+Progress: 8 milestones shipped, 38 phases, 96 plans completed
 
 ```
-v1.8 Progress: [          ] 0/3 phases complete
+v1.8 Progress: [          ] 0/3 phases complete (Phase 39 in progress)
 ```
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 95
+- Total plans completed: 96
 - Average duration: ~30 min
 - Total execution time: ~47 hours
 
@@ -47,6 +47,12 @@ v1.8 Progress: [          ] 0/3 phases complete
 
 All decisions logged in PROJECT.md Key Decisions table.
 
+**39-01 decisions:**
+- backend-ci runs independently with no needs: (parallel to frontend, no coupling)
+- cargo fmt --check runs first (fastest gate) before clippy and test
+- backend-coverage is report-only with no --fail-under threshold per CI-04 scope
+- main.rs excluded from coverage via --ignore-filename-regex (binary entrypoint only)
+
 ### Pending Todos
 
 None.
@@ -57,6 +63,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: v1.8 roadmap created — ready to plan Phase 39
+Last session: 2026-03-02
+Stopped at: Completed 39-01-PLAN.md — backend CI pipeline (backend-ci + backend-coverage jobs)
 Resume file: —

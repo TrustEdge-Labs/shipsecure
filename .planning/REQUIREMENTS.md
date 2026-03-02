@@ -9,10 +9,10 @@ Requirements for CI & Quality Hardening milestone.
 
 ### CI Pipeline
 
-- [ ] **CI-01**: Backend tests (cargo test) run on every push and PR to main
-- [ ] **CI-02**: Cargo clippy runs with zero warnings on every push and PR
-- [ ] **CI-03**: Cargo fmt --check enforces formatting on every push and PR
-- [ ] **CI-04**: Backend test coverage is reported in CI (cargo llvm-cov or tarpaulin)
+- [x] **CI-01**: Backend tests (cargo test) run on every push and PR to main
+- [x] **CI-02**: Cargo clippy runs with zero warnings on every push and PR
+- [x] **CI-03**: Cargo fmt --check enforces formatting on every push and PR
+- [x] **CI-04**: Backend test coverage is reported in CI (cargo llvm-cov or tarpaulin)
 
 ### Infrastructure
 
@@ -45,10 +45,10 @@ None — this is a hardening milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CI-01 | Phase 39 | Pending |
-| CI-02 | Phase 39 | Pending |
-| CI-03 | Phase 39 | Pending |
-| CI-04 | Phase 39 | Pending |
+| CI-01 | Phase 39 | Complete |
+| CI-02 | Phase 39 | Complete |
+| CI-03 | Phase 39 | Complete |
+| CI-04 | Phase 39 | Complete |
 | INFRA-01 | Phase 40 | Pending |
 | INFRA-02 | Phase 40 | Pending |
 | DOC-01 | Phase 40 | Pending |

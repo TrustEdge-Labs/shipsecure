@@ -15,7 +15,9 @@ Live at [shipsecure.ai](https://shipsecure.ai)
 
 ## What It Scans
 
-**Anonymous tier** (no signup — paste a URL and email):
+**Anonymous tier** (no signup — enter your email and scan):
+
+Anonymous scans target [OWASP Juice Shop](https://demo.owasp-juice.shop), a well-known intentionally vulnerable web application. This lets visitors see real scan results against a live target without needing to sign up. The URL field is pre-filled and locked to the demo target to prevent abuse.
 
 - **Security headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - **TLS/SSL** — Certificate validity, cipher strength, protocol versions, known vulnerabilities (via SSL Labs API)

@@ -4,6 +4,8 @@ import { GradeSummary } from '@/components/grade-summary'
 import { ResultsDashboard } from '@/components/results-dashboard'
 import { ScanResponse } from '@/lib/types'
 
+const DEMO_TARGET_HOST = 'demo.owasp-juice.shop'
+
 interface ResultsPageProps {
   params: Promise<{
     token: string
@@ -140,6 +142,14 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   }
 
   const downloadUrl = `/api/v1/results/${token}/download`
+  const isDemoTarget = (() => {
+    try {
+      return new URL(data.target_url).hostname === DEMO_TARGET_HOST
+    } catch {
+      return false
+    }
+  })()
+  const isAnonymous = !sessionToken
 
   return (
     <div className="min-h-screen bg-surface-secondary py-8 px-4">
@@ -147,7 +157,9 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         {/* Header */}
         <div className="bg-surface-elevated rounded-(card) shadow-md p-6 mb-6">
           <h1 className="text-3xl font-bold text-text-primary mb-4">
-            Security Scan Results
+            {isDemoTarget && isAnonymous
+              ? `Live Scan Results for ${DEMO_TARGET_HOST}`
+              : 'Security Scan Results'}
           </h1>
 
           <div className="space-y-2 text-sm">
@@ -227,6 +239,30 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             Fixed some issues? Scan again
           </a>
         </div>
+
+        {/* Demo target CTA for anonymous users */}
+        {isDemoTarget && isAnonymous && (
+          <div className="bg-info-bg border border-info-border rounded-(card) p-6 mt-6">
+            <p className="text-sm text-info-text mb-3">
+              <a
+                href={`https://${DEMO_TARGET_HOST}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-brand-primary hover:underline"
+              >
+                OWASP Juice Shop
+              </a>{' '}
+              is a real, interactive website. You can visit the site and try to find these vulnerabilities yourself!
+            </p>
+            <p className="text-sm text-info-text">
+              When you&apos;re ready,{' '}
+              <a href="/sign-up" className="font-semibold text-brand-primary hover:underline">
+                sign up
+              </a>{' '}
+              to protect your own applications.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

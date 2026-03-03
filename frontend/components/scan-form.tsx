@@ -4,6 +4,8 @@ import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { submitScan, type ScanFormState } from '@/app/actions/scan'
 
+const DEMO_TARGET_URL = 'https://demo.owasp-juice.shop'
+
 interface ScanFormProps {
   isAuthenticated?: boolean
 }
@@ -69,14 +71,36 @@ export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
         <label htmlFor="url" className="block text-sm font-medium text-text-secondary mb-1">
           Website URL
         </label>
+        {!isAuthenticated && (
+          <input type="hidden" name="url" value={DEMO_TARGET_URL} />
+        )}
         <input
           id="url"
-          name="url"
+          name={isAuthenticated ? 'url' : undefined}
           type="url"
           placeholder="https://your-app.vercel.app"
-          required
-          className="w-full px-4 py-3 rounded-lg border border-border-default bg-surface-elevated text-text-primary focus:ring-2 focus:ring-focus-ring focus:border-focus-ring outline-none transition"
+          required={isAuthenticated}
+          disabled={!isAuthenticated}
+          defaultValue={!isAuthenticated ? DEMO_TARGET_URL : undefined}
+          className={`w-full px-4 py-3 rounded-lg border border-border-default bg-surface-elevated text-text-primary outline-none transition ${
+            isAuthenticated
+              ? 'focus:ring-2 focus:ring-focus-ring focus:border-focus-ring'
+              : 'opacity-70 cursor-not-allowed'
+          }`}
         />
+        {!isAuthenticated && (
+          <p className="mt-2 text-sm text-text-secondary">
+            To prevent abuse, anonymous scans are limited to our live demo target,{' '}
+            <a href="https://demo.owasp-juice.shop" target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline font-medium">
+              OWASP Juice Shop
+            </a>
+            . The results are real.{' '}
+            <a href="/sign-up" className="text-brand-primary hover:underline font-medium">
+              Sign up for free
+            </a>{' '}
+            to scan your own domain.
+          </p>
+        )}
         {state.errors?.url && (
           <p className="mt-1 text-sm text-danger-primary">{state.errors.url[0]}</p>
         )}

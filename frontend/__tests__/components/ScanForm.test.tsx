@@ -25,12 +25,28 @@ describe('ScanForm', () => {
   })
 
   describe('Form Fields', () => {
-    test('renders URL input with label "Website URL"', () => {
+    test('renders disabled URL input pre-filled with demo target for anonymous users', () => {
       renderWithProviders(<ScanForm />)
       const urlInput = screen.getByLabelText(/website url/i)
       expect(urlInput).toBeInTheDocument()
       expect(urlInput).toHaveAttribute('type', 'url')
+      expect(urlInput).toBeDisabled()
+      expect(urlInput).toHaveValue('https://demo.owasp-juice.shop')
+    })
+
+    test('renders editable URL input for authenticated users', () => {
+      renderWithProviders(<ScanForm isAuthenticated />)
+      const urlInput = screen.getByLabelText(/website url/i)
+      expect(urlInput).toBeInTheDocument()
+      expect(urlInput).toHaveAttribute('type', 'url')
       expect(urlInput).toHaveAttribute('name', 'url')
+      expect(urlInput).not.toBeDisabled()
+    })
+
+    test('shows demo target explanation for anonymous users', () => {
+      renderWithProviders(<ScanForm />)
+      expect(screen.getByText(/anonymous scans are limited to our live demo target/i)).toBeInTheDocument()
+      expect(screen.getByText(/sign up for free/i)).toBeInTheDocument()
     })
 
     test('renders email input with label containing "Email"', () => {
@@ -118,9 +134,9 @@ describe('ScanForm', () => {
   })
 
   describe('User Interactions', () => {
-    test('user can type in URL field', async () => {
+    test('user can type in URL field when authenticated', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<ScanForm />)
+      renderWithProviders(<ScanForm isAuthenticated />)
 
       const urlInput = screen.getByLabelText(/website url/i)
       await user.type(urlInput, 'https://example.com')

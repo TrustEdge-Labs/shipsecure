@@ -199,9 +199,9 @@ export default async function Home() {
           <div className="grid md:grid-cols-3 gap-6 mb-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-brand-primary mb-2">1</div>
-              <h3 className="font-semibold text-text-primary mb-2">Submit your URL</h3>
+              <h3 className="font-semibold text-text-primary mb-2">Start a scan</h3>
               <p className="text-sm text-text-secondary">
-                Enter any URL. No signup, no API key. Scans start immediately.
+                Try it instantly with our demo target, or sign up to scan your own domains. No API key needed.
               </p>
             </div>
             <div className="text-center">

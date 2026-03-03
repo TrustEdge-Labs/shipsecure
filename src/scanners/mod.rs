@@ -1,4 +1,3 @@
-pub mod aggregator;
 pub mod container;
 pub mod detector;
 pub mod exposed_files;

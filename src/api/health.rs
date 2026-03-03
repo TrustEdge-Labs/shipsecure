@@ -46,7 +46,7 @@ impl HealthCache {
     }
 
     pub fn get_cached(&self, ttl: Duration) -> Option<ReadinessResponse> {
-        let guard = self.inner.lock().unwrap();
+        let guard = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         if let Some((timestamp, response)) = &*guard
             && timestamp.elapsed() < ttl
         {
@@ -56,7 +56,7 @@ impl HealthCache {
     }
 
     pub fn update(&self, response: ReadinessResponse) {
-        let mut guard = self.inner.lock().unwrap();
+        let mut guard = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         *guard = Some((Instant::now(), response));
     }
 }

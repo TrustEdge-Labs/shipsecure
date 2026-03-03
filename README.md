@@ -135,7 +135,7 @@ Copy `frontend/.env.example` and set the following:
 | `GET` | `/health/ready` | No | Readiness check (DB, scan capacity) |
 | `GET` | `/metrics` | No (localhost) | Prometheus metrics |
 | `POST` | `/api/v1/scans` | Optional | Submit a scan (auth upgrades tier) |
-| `GET` | `/api/v1/scans/{id}` | No | Get scan status and findings |
+| `GET` | `/api/v1/scans/{id}` | No | Get scan progress (status + stages only) |
 | `GET` | `/api/v1/results/{token}` | Optional | Get results by capability token (auth ungates findings) |
 | `GET` | `/api/v1/results/{token}/download` | Optional | Download results as markdown |
 | `GET` | `/api/v1/quota` | Required | Get scan quota usage |
@@ -176,7 +176,7 @@ infrastructure/  # Ansible playbooks, templates, and deployment automation
 - **Tiered scanning** — Anonymous gets light config (20 JS files, 180s timeout); authenticated gets full config (30 JS files, 300s timeout)
 - **Results gating** — Server-side: high/critical findings stripped for non-owners. Frontend: lock overlay with signup CTA
 - **Domain verification** — Meta tag verification with shared-hosting TLD blocklist, 30-day TTL
-- **SSRF protection** — Blocks private IPs, cloud metadata endpoints (AWS/GCP/Azure), validates DNS resolution
+- **SSRF protection** — Blocks private IPs, cloud metadata endpoints (AWS/GCP/Azure), validates DNS resolution, pins resolved IPs to prevent DNS rebinding
 - **Auth** — Clerk JWT verification via cached JWKS public keys (no per-request API calls), webhook user sync
 - **Capability tokens** — 256-bit unguessable tokens for results sharing, auth optional for full access
 - **Rate limiting** — 1 scan/IP/24h anonymous, 5 scans/user/month Developer tier, with `429 + resets_at`
@@ -184,6 +184,8 @@ infrastructure/  # Ansible playbooks, templates, and deployment automation
 - **Observability** — Structured JSON logging, request correlation IDs, Prometheus metrics, health checks (liveness + readiness)
 - **Docker healthchecks** — Both containers self-report health; frontend waits for backend via `service_healthy` depends_on
 - **Graceful shutdown** — SIGTERM drains in-flight scans with configurable timeout via TaskTracker/CancellationToken
+- **Security headers** — Frontend serves Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- **Deploy safety** — Post-deploy health check with automatic rollback to previous image on failure
 
 ## Extending ShipSecure
 
@@ -304,10 +306,16 @@ Scanners are Rust async functions in `src/scanners/` that return `Vec<Finding>`.
 use crate::models::finding::{Finding, Severity};
 use crate::scanners::container::ScannerError;
 use chrono::Utc;
+use std::net::SocketAddr;
 use uuid::Uuid;
 
-pub async fn scan(target_url: &str) -> Result<Vec<Finding>, ScannerError> {
-    let client = reqwest::Client::builder()
+pub async fn scan(
+    target_url: &str,
+    hostname: &str,
+    resolved_addrs: &[SocketAddr],
+) -> Result<Vec<Finding>, ScannerError> {
+    // Use SSRF-safe client builder to pin DNS to pre-validated IPs
+    let client = crate::ssrf::safe_client_builder(hostname, resolved_addrs)
         .timeout(std::time::Duration::from_secs(30))
         .redirect(reqwest::redirect::Policy::limited(3))
         .build()
@@ -355,11 +363,12 @@ pub mod my_scanner; // Add this line
 Add a `tokio::spawn` block alongside the existing scanners in `run_scanners()`. The orchestrator runs all scanners concurrently and collects their findings. Each scanner gets:
 
 - Its own timeout (configured per tier)
+- Pre-validated `hostname` and `resolved_addrs` for SSRF-safe HTTP clients
 - A tracing span for structured logging
 - A database stage update call on completion
 - Metrics counter for success/failure tracking
 
-See `src/orchestrator/worker_pool.rs` for the full pattern used by the existing 5 scanners.
+All scanners that make outbound HTTP requests **must** use `crate::ssrf::safe_client_builder(hostname, resolved_addrs)` instead of `reqwest::Client::builder()` to prevent DNS rebinding attacks. See `src/orchestrator/worker_pool.rs` for the full pattern used by the existing 5 scanners.
 
 ## Testing
 

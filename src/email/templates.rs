@@ -1,5 +1,13 @@
 use crate::email::FindingsSummary;
 
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#x27;")
+}
+
 /// Generate HTML email for scan completion
 pub fn scan_complete_html(
     target_url: &str,
@@ -8,7 +16,12 @@ pub fn scan_complete_html(
     results_url: &str,
     expires_at: &str,
 ) -> String {
-    let grade_color = match grade {
+    let target_url = html_escape(target_url);
+    let grade = html_escape(grade);
+    let results_url = html_escape(results_url);
+    let expires_at = html_escape(expires_at);
+
+    let grade_color = match grade.as_str() {
         "A+" | "A" | "A-" => "#10b981", // green
         "B+" | "B" | "B-" => "#f59e0b", // yellow
         "C+" | "C" | "C-" => "#f97316", // orange

@@ -2,6 +2,7 @@ use crate::models::finding::{Finding, Severity};
 use chrono::Utc;
 use reqwest::header::{HeaderMap, HeaderName};
 use std::fmt;
+use std::net::SocketAddr;
 use std::time::Duration;
 use uuid::Uuid;
 
@@ -35,9 +36,12 @@ impl From<reqwest::Error> for ScannerError {
 }
 
 /// Scan a URL for security headers and return findings for missing headers
-pub async fn scan_security_headers(url: &str) -> Result<Vec<Finding>, ScannerError> {
-    // Create HTTP client with configuration
-    let client = reqwest::Client::builder()
+pub async fn scan_security_headers(
+    url: &str,
+    hostname: &str,
+    resolved_addrs: &[SocketAddr],
+) -> Result<Vec<Finding>, ScannerError> {
+    let client = crate::ssrf::safe_client_builder(hostname, resolved_addrs)
         .timeout(Duration::from_secs(30))
         .redirect(reqwest::redirect::Policy::none())
         .user_agent("ShipSecure-Scanner/1.0")

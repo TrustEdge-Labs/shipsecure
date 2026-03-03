@@ -2,6 +2,7 @@ use crate::models::finding::{Finding, Severity};
 use chrono::Utc;
 use regex::Regex;
 use std::collections::HashSet;
+use std::net::SocketAddr;
 use url::Url;
 use uuid::Uuid;
 
@@ -150,11 +151,18 @@ lazy_static::lazy_static! {
 /// # Arguments
 /// * `url` - The target URL to scan
 /// * `max_files` - Maximum number of JS files to scan (e.g., 20 for free, 50 for paid)
-pub async fn scan_js_secrets(url: &str, max_files: usize) -> Result<Vec<Finding>, ScannerError> {
+/// * `hostname` - The target hostname for SSRF-safe DNS pinning
+/// * `resolved_addrs` - Pre-validated socket addresses from SSRF check
+pub async fn scan_js_secrets(
+    url: &str,
+    max_files: usize,
+    hostname: &str,
+    resolved_addrs: &[SocketAddr],
+) -> Result<Vec<Finding>, ScannerError> {
     let mut findings = Vec::new();
 
     // Discover JavaScript URLs
-    let js_urls = discover_js_urls(url).await?;
+    let js_urls = discover_js_urls(url, hostname, resolved_addrs).await?;
 
     // Limit to max_files
     let js_urls: Vec<String> = js_urls.into_iter().take(max_files).collect();
@@ -162,7 +170,13 @@ pub async fn scan_js_secrets(url: &str, max_files: usize) -> Result<Vec<Finding>
     // Fetch and scan each JS file concurrently
     let scan_tasks: Vec<_> = js_urls
         .iter()
-        .map(|js_url| scan_single_js_file(js_url.clone()))
+        .map(|js_url| {
+            scan_single_js_file(
+                js_url.clone(),
+                hostname.to_string(),
+                resolved_addrs.to_vec(),
+            )
+        })
         .collect();
 
     let results = futures::future::join_all(scan_tasks).await;
@@ -176,14 +190,17 @@ pub async fn scan_js_secrets(url: &str, max_files: usize) -> Result<Vec<Finding>
 }
 
 /// Discover JavaScript URLs from the target page
-async fn discover_js_urls(url: &str) -> Result<HashSet<String>, ScannerError> {
+async fn discover_js_urls(
+    url: &str,
+    hostname: &str,
+    resolved_addrs: &[SocketAddr],
+) -> Result<HashSet<String>, ScannerError> {
     let mut js_urls = HashSet::new();
 
     let base_url =
         Url::parse(url).map_err(|e| ScannerError::ParseError(format!("Invalid URL: {}", e)))?;
 
-    // Fetch the HTML page
-    let client = reqwest::Client::builder()
+    let client = crate::ssrf::safe_client_builder(hostname, resolved_addrs)
         .timeout(std::time::Duration::from_secs(10))
         .user_agent("ShipSecure-Scanner/1.0")
         .build()
@@ -229,11 +246,14 @@ async fn discover_js_urls(url: &str) -> Result<HashSet<String>, ScannerError> {
 }
 
 /// Scan a single JavaScript file for secrets
-async fn scan_single_js_file(js_url: String) -> Result<Vec<Finding>, ScannerError> {
+async fn scan_single_js_file(
+    js_url: String,
+    hostname: String,
+    resolved_addrs: Vec<SocketAddr>,
+) -> Result<Vec<Finding>, ScannerError> {
     let mut findings = Vec::new();
 
-    // Fetch JS content with timeout
-    let client = reqwest::Client::builder()
+    let client = crate::ssrf::safe_client_builder(&hostname, &resolved_addrs)
         .timeout(std::time::Duration::from_secs(10))
         .user_agent("ShipSecure-Scanner/1.0")
         .build()

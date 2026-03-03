@@ -1,6 +1,7 @@
 use crate::models::detection::{DetectionResult, Framework, Platform};
 use reqwest::header::HeaderMap;
 use scraper::{Html, Selector};
+use std::net::SocketAddr;
 use std::time::Duration;
 
 const HIGH_CONFIDENCE_THRESHOLD: u8 = 60;
@@ -35,9 +36,12 @@ impl From<reqwest::Error> for ScannerError {
 }
 
 /// Detect framework and platform stack from target URL
-pub async fn detect_stack(target_url: &str) -> Result<DetectionResult, ScannerError> {
-    // Make GET request with timeout and redirect following
-    let client = reqwest::Client::builder()
+pub async fn detect_stack(
+    target_url: &str,
+    hostname: &str,
+    resolved_addrs: &[SocketAddr],
+) -> Result<DetectionResult, ScannerError> {
+    let client = crate::ssrf::safe_client_builder(hostname, resolved_addrs)
         .timeout(Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::limited(10))
         .user_agent("ShipSecure-Scanner/1.0")

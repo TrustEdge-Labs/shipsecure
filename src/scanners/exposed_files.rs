@@ -2,6 +2,7 @@ use crate::models::finding::{Finding, Severity};
 use chrono::Utc;
 use reqwest::Client;
 use std::fmt;
+use std::net::SocketAddr;
 use std::time::Duration;
 use url::Url;
 use uuid::Uuid;
@@ -56,7 +57,14 @@ struct ProbeResult {
 /// # Arguments
 /// * `url` - The target URL to scan
 /// * `extended` - If true, includes additional probe paths for paid tier
-pub async fn scan_exposed_files(url: &str, extended: bool) -> Result<Vec<Finding>, ScannerError> {
+/// * `hostname` - The target hostname for SSRF-safe DNS pinning
+/// * `resolved_addrs` - Pre-validated socket addresses from SSRF check
+pub async fn scan_exposed_files(
+    url: &str,
+    extended: bool,
+    hostname: &str,
+    resolved_addrs: &[SocketAddr],
+) -> Result<Vec<Finding>, ScannerError> {
     // Parse and normalize base URL
     let parsed_url =
         Url::parse(url).map_err(|e| ScannerError::Other(format!("Invalid URL: {}", e)))?;
@@ -74,8 +82,7 @@ pub async fn scan_exposed_files(url: &str, extended: bool) -> Result<Vec<Finding
         }
     );
 
-    // Create HTTP client
-    let client = Client::builder()
+    let client = crate::ssrf::safe_client_builder(hostname, resolved_addrs)
         .timeout(Duration::from_secs(10))
         .redirect(reqwest::redirect::Policy::limited(5))
         .user_agent("ShipSecure-Scanner/1.0")

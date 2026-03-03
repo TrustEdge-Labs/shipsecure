@@ -1,5 +1,6 @@
 use base64::Engine;
 use sqlx::PgPool;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Semaphore;
@@ -89,12 +90,13 @@ impl ScanOrchestrator {
 
     /// Spawn a scan task in the background (fire-and-forget) with a specific tier.
     ///
-    /// The scan will acquire a semaphore permit, run scanners, and update the database.
-    /// Errors are logged but not propagated.
+    /// `resolved_addrs` are the SSRF-validated DNS results. Scanners use these
+    /// to pin DNS resolution and prevent rebinding attacks.
     fn spawn_scan_with_tier(
         &self,
         scan_id: Uuid,
         target_url: String,
+        resolved_addrs: Vec<SocketAddr>,
         request_id: Option<Uuid>,
         tier: &'static str,
     ) {
@@ -134,8 +136,15 @@ impl ScanOrchestrator {
                 tracing::info!("scan_started");
                 let start = Instant::now();
 
-                let result =
-                    Self::execute_scan_internal(pool, scan_id, target_url, timeout, tier).await;
+                let result = Self::execute_scan_internal(
+                    pool,
+                    scan_id,
+                    target_url,
+                    resolved_addrs,
+                    timeout,
+                    tier,
+                )
+                .await;
                 let is_success = result.is_ok();
                 let duration_secs = start.elapsed().as_secs_f64();
 
@@ -171,8 +180,14 @@ impl ScanOrchestrator {
     /// The scan will acquire a semaphore permit, run scanners with light config
     /// (20 JS files, 180s vibecode timeout), and update the database.
     /// Errors are logged but not propagated.
-    pub fn spawn_scan(&self, scan_id: Uuid, target_url: String, request_id: Option<Uuid>) {
-        self.spawn_scan_with_tier(scan_id, target_url, request_id, "free");
+    pub fn spawn_scan(
+        &self,
+        scan_id: Uuid,
+        target_url: String,
+        resolved_addrs: Vec<SocketAddr>,
+        request_id: Option<Uuid>,
+    ) {
+        self.spawn_scan_with_tier(scan_id, target_url, resolved_addrs, request_id, "free");
     }
 
     /// Spawn an AUTHENTICATED tier scan task in the background (fire-and-forget).
@@ -184,9 +199,16 @@ impl ScanOrchestrator {
         &self,
         scan_id: Uuid,
         target_url: String,
+        resolved_addrs: Vec<SocketAddr>,
         request_id: Option<Uuid>,
     ) {
-        self.spawn_scan_with_tier(scan_id, target_url, request_id, "authenticated");
+        self.spawn_scan_with_tier(
+            scan_id,
+            target_url,
+            resolved_addrs,
+            request_id,
+            "authenticated",
+        );
     }
 
     /// Execute a scan synchronously (for testing or controlled execution)
@@ -198,12 +220,14 @@ impl ScanOrchestrator {
         &self,
         scan_id: Uuid,
         target_url: String,
+        resolved_addrs: Vec<SocketAddr>,
     ) -> Result<(), OrchestratorError> {
         let _permit = self.semaphore.acquire().await.expect("Semaphore closed");
         Self::execute_scan_internal(
             self.pool.clone(),
             scan_id,
             target_url,
+            resolved_addrs,
             self.max_scanner_timeout,
             "free",
         )
@@ -214,14 +238,22 @@ impl ScanOrchestrator {
         pool: PgPool,
         scan_id: Uuid,
         target_url: String,
+        resolved_addrs: Vec<SocketAddr>,
         timeout: Duration,
         tier: &str,
     ) -> Result<(), OrchestratorError> {
         // Update scan to InProgress
         scans_db::update_scan_status(&pool, scan_id, ScanStatus::InProgress, None, None).await?;
 
+        // Extract hostname for SSRF-safe client building
+        let hostname = url::Url::parse(&target_url)
+            .ok()
+            .and_then(|u| u.host_str().map(|h| h.to_string()))
+            .unwrap_or_default();
+
         // Stage 1: Framework/Platform Detection (runs first, feeds downstream)
-        let detection = match detector::detect_stack(&target_url).await {
+        let detection = match detector::detect_stack(&target_url, &hostname, &resolved_addrs).await
+        {
             Ok(result) => {
                 // Store detection results in database
                 if let Some(ref fw) = result.framework {
@@ -263,6 +295,7 @@ impl ScanOrchestrator {
             &pool,
             scan_id,
             &target_url,
+            &resolved_addrs,
             timeout,
             framework_str,
             platform_str,
@@ -401,10 +434,12 @@ impl ScanOrchestrator {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn run_scanners(
         pool: &PgPool,
         scan_id: Uuid,
         target_url: &str,
+        resolved_addrs: &[SocketAddr],
         _timeout: Duration,
         framework: Option<String>,
         platform: Option<String>,
@@ -417,6 +452,14 @@ impl ScanOrchestrator {
             }
             _ => (20, false, Duration::from_secs(180), Duration::from_secs(60)),
         };
+
+        // Extract hostname for SSRF-safe client building
+        let hostname = url::Url::parse(target_url)
+            .ok()
+            .and_then(|u| u.host_str().map(|h| h.to_string()))
+            .unwrap_or_default();
+        let resolved = resolved_addrs.to_vec();
+
         // Spawn each scanner independently so stage updates happen as each completes
         let pool_clone1 = pool.clone();
         let pool_clone2 = pool.clone();
@@ -428,6 +471,12 @@ impl ScanOrchestrator {
         let url3 = target_url.to_string();
         let url4 = target_url.to_string();
         let url5 = target_url.to_string();
+        let hostname1 = hostname.clone();
+        let hostname2 = hostname.clone();
+        let hostname3 = hostname.clone();
+        let resolved1 = resolved.clone();
+        let resolved2 = resolved.clone();
+        let resolved3 = resolved.clone();
         let framework_str_clone = framework.clone();
         let platform_str_clone = platform.clone();
         let tier_clone = tier.to_string();
@@ -439,7 +488,7 @@ impl ScanOrchestrator {
                 let start = Instant::now();
                 let result = tokio::time::timeout(
                     other_timeout,
-                    security_headers::scan_security_headers(&url1)
+                    security_headers::scan_security_headers(&url1, &hostname1, &resolved1)
                 ).await;
 
                 let _ = scans_db::update_scan_stage(&pool_clone1, scan_id, "headers", true).await;
@@ -529,7 +578,7 @@ impl ScanOrchestrator {
                 let start = Instant::now();
                 let result = tokio::time::timeout(
                     other_timeout,
-                    exposed_files::scan_exposed_files(&url3, extended_files)
+                    exposed_files::scan_exposed_files(&url3, extended_files, &hostname2, &resolved2)
                 ).await;
 
                 let _ = scans_db::update_scan_stage(&pool_clone3, scan_id, "files", true).await;
@@ -574,7 +623,7 @@ impl ScanOrchestrator {
                 let start = Instant::now();
                 let result = tokio::time::timeout(
                     other_timeout,
-                    js_secrets::scan_js_secrets(&url4, max_js_files)
+                    js_secrets::scan_js_secrets(&url4, max_js_files, &hostname3, &resolved3)
                 ).await;
 
                 let _ = scans_db::update_scan_stage(&pool_clone4, scan_id, "secrets", true).await;

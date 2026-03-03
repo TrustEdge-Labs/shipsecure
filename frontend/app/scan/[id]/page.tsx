@@ -1,8 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ProgressChecklist } from '@/components/progress-checklist'
+
+const BASE_POLL_MS = 2000
+const MAX_POLL_MS = 30000
+const MAX_CONSECUTIVE_ERRORS = 20
 
 interface ScanStatus {
   id: string
@@ -26,51 +30,89 @@ export default function ScanProgressPage() {
   const [scan, setScan] = useState<ScanStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [errorCount, setErrorCount] = useState(0)
+  const [gaveUp, setGaveUp] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const stoppedRef = useRef(false)
+  const consecutiveErrorsRef = useRef(0)
 
-  useEffect(() => {
-    const fetchScan = async () => {
-      try {
-        const res = await fetch(`/api/v1/scans/${scanId}`, {
-          cache: 'no-store',
-        })
+  const scheduleNext = useCallback((errors: number) => {
+    if (stoppedRef.current) return
+    const backoff = Math.min(BASE_POLL_MS * Math.pow(1.5, errors), MAX_POLL_MS)
+    timeoutRef.current = setTimeout(fetchScan, backoff)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-        if (!res.ok) {
-          setErrorCount(prev => prev + 1)
-          setLoading(false)
+  const fetchScan = useCallback(async () => {
+    if (stoppedRef.current) return
+    try {
+      const res = await fetch(`/api/v1/scans/${scanId}`, {
+        cache: 'no-store',
+      })
+
+      if (!res.ok) {
+        consecutiveErrorsRef.current += 1
+        setErrorCount(consecutiveErrorsRef.current)
+        setLoading(false)
+        if (consecutiveErrorsRef.current >= MAX_CONSECUTIVE_ERRORS) {
+          stoppedRef.current = true
+          setGaveUp(true)
           return
         }
-
-        const data: ScanStatus = await res.json()
-        setScan(data)
-        setLoading(false)
-        setErrorCount(0)
-
-        // Auto-redirect when scan completes
-        if (data.status === 'completed' && data.results_token) {
-          setTimeout(() => {
-            router.push(`/results/${data.results_token}`)
-          }, 1000)
-        }
-
-        // Stop polling if scan is in final state
-        if (data.status === 'completed' || data.status === 'failed') {
-          clearInterval(interval)
-        }
-      } catch (error) {
-        console.error('Error fetching scan:', error)
-        setErrorCount(prev => prev + 1)
-        setLoading(false)
+        scheduleNext(consecutiveErrorsRef.current)
+        return
       }
-    }
 
-    // Initial fetch
+      const data: ScanStatus = await res.json()
+      setScan(data)
+      setLoading(false)
+      consecutiveErrorsRef.current = 0
+      setErrorCount(0)
+
+      if (data.status === 'completed' && data.results_token) {
+        stoppedRef.current = true
+        setTimeout(() => router.push(`/results/${data.results_token}`), 1000)
+        return
+      }
+
+      if (data.status === 'failed') {
+        stoppedRef.current = true
+        return
+      }
+
+      scheduleNext(0)
+    } catch {
+      consecutiveErrorsRef.current += 1
+      setErrorCount(consecutiveErrorsRef.current)
+      setLoading(false)
+      if (consecutiveErrorsRef.current >= MAX_CONSECUTIVE_ERRORS) {
+        stoppedRef.current = true
+        setGaveUp(true)
+        return
+      }
+      scheduleNext(consecutiveErrorsRef.current)
+    }
+  }, [scanId, router, scheduleNext])
+
+  useEffect(() => {
+    stoppedRef.current = false
+    consecutiveErrorsRef.current = 0
     fetchScan()
 
-    // Poll every 2 seconds
-    const interval = setInterval(fetchScan, 2000)
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      } else if (!stoppedRef.current) {
+        fetchScan()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
 
-    return () => clearInterval(interval)
-  }, [scanId, router])
+    return () => {
+      stoppedRef.current = true
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [fetchScan])
 
   if (loading) {
     return (
@@ -179,7 +221,15 @@ export default function ScanProgressPage() {
           </div>
         )}
 
-        {errorCount >= 3 && isScanning && (
+        {gaveUp && (
+          <div className="bg-danger-bg border border-danger-border rounded-md p-4 mb-6">
+            <p className="text-sm text-danger-text">
+              Lost connection to our servers after multiple retries. Please refresh the page or check back later.
+            </p>
+          </div>
+        )}
+
+        {!gaveUp && errorCount >= 3 && isScanning && (
           <div className="bg-caution-bg border border-caution-border rounded-md p-4 mb-6">
             <p className="text-sm text-caution-text">
               Having trouble connecting to our servers. We're still trying -- you can also refresh the page or check back later.

@@ -105,8 +105,14 @@ enum VerificationFailureReason {
 async fn fetch_and_check_meta_tag(
     target_url: &str,
     expected_token: &str,
+    resolved_addrs: &[std::net::SocketAddr],
 ) -> Result<(), VerificationFailureReason> {
-    let client = reqwest::Client::builder()
+    let hostname = url::Url::parse(target_url)
+        .ok()
+        .and_then(|u| u.host_str().map(|h| h.to_string()))
+        .unwrap_or_default();
+
+    let client = ssrf::safe_client_builder(&hostname, resolved_addrs)
         .timeout(std::time::Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::limited(5))
         .user_agent("ShipSecure-Verifier/1.0")
@@ -119,10 +125,17 @@ async fn fetch_and_check_meta_tag(
         .await
         .map_err(|e| VerificationFailureReason::FetchFailed(e.to_string()))?;
 
-    let html_body = response
-        .text()
+    // Limit response body to 1MB to prevent memory exhaustion from malicious domains
+    let bytes = response
+        .bytes()
         .await
         .map_err(|e| VerificationFailureReason::FetchFailed(e.to_string()))?;
+    if bytes.len() > 1_048_576 {
+        return Err(VerificationFailureReason::FetchFailed(
+            "Response body exceeds 1MB limit".to_string(),
+        ));
+    }
+    let html_body = String::from_utf8_lossy(&bytes).to_string();
 
     let document = Html::parse_document(&html_body);
 
@@ -290,13 +303,19 @@ pub async fn verify_confirm(
 
     let target_url = format!("https://{}", domain);
 
-    // SSRF validation before any outbound fetch
-    ssrf::validate_scan_target(&target_url)
+    // SSRF validation before any outbound fetch — returns resolved IPs to prevent rebinding
+    let validated = ssrf::validate_scan_target(&target_url)
         .await
         .map_err(|e| ApiError::SsrfBlocked(e.to_string()))?;
 
     // Fetch and check meta tag
-    match fetch_and_check_meta_tag(&target_url, &record.verification_token).await {
+    match fetch_and_check_meta_tag(
+        &target_url,
+        &record.verification_token,
+        &validated.resolved_addrs,
+    )
+    .await
+    {
         Ok(()) => {
             // Tag found and matches — mark verified with 30-day expiry
             let expires_at = Utc::now() + Duration::days(30);
@@ -363,13 +382,19 @@ pub async fn verify_check(
 
     let target_url = format!("https://{}", domain);
 
-    // SSRF validation before any outbound fetch
-    ssrf::validate_scan_target(&target_url)
+    // SSRF validation before any outbound fetch — returns resolved IPs to prevent rebinding
+    let validated = ssrf::validate_scan_target(&target_url)
         .await
         .map_err(|e| ApiError::SsrfBlocked(e.to_string()))?;
 
     // Fetch and check meta tag (no DB write — pre-check only)
-    match fetch_and_check_meta_tag(&target_url, &record.verification_token).await {
+    match fetch_and_check_meta_tag(
+        &target_url,
+        &record.verification_token,
+        &validated.resolved_addrs,
+    )
+    .await
+    {
         Ok(()) => Ok(Json(serde_json::json!({
             "found": true,
             "domain": domain,
@@ -401,6 +426,7 @@ pub async fn verify_check(
 /// GET /api/v1/domains
 ///
 /// List all domain verification records for the authenticated user.
+/// Excludes `verification_token` from the response to prevent token leakage.
 pub async fn list_domains(
     State(state): State<AppState>,
     Claims { claims, .. }: Claims<ClerkClaims>,
@@ -408,5 +434,20 @@ pub async fn list_domains(
     let clerk_user_id = claims.sub;
     let domains = db::domains::list_user_domains(&state.pool, &clerk_user_id).await?;
 
-    Ok(Json(serde_json::json!(domains)))
+    let response: Vec<serde_json::Value> = domains
+        .iter()
+        .map(|d| {
+            serde_json::json!({
+                "id": d.id,
+                "domain": d.domain,
+                "status": d.status,
+                "verified_at": d.verified_at,
+                "expires_at": d.expires_at,
+                "created_at": d.created_at,
+                "updated_at": d.updated_at,
+            })
+        })
+        .collect();
+
+    Ok(Json(serde_json::json!(response)))
 }

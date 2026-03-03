@@ -1,7 +1,15 @@
 use std::fmt;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use tokio::net::lookup_host;
 use url::Url;
+
+/// Result of SSRF-validated URL resolution, containing both the canonical URL
+/// and the pre-resolved IP addresses that passed the blocklist check.
+#[derive(Debug, Clone)]
+pub struct ValidatedTarget {
+    pub url: String,
+    pub resolved_addrs: Vec<SocketAddr>,
+}
 
 #[derive(Debug)]
 pub enum SsrfError {
@@ -30,44 +38,65 @@ impl fmt::Display for SsrfError {
 
 impl std::error::Error for SsrfError {}
 
-/// Validate a URL for SSRF protection by checking scheme and resolving DNS to block private IPs
-pub async fn validate_scan_target(url: &str) -> Result<String, SsrfError> {
-    // Parse the URL
+/// Validate a URL for SSRF protection by checking scheme and resolving DNS to block private IPs.
+///
+/// Returns a `ValidatedTarget` containing the canonical URL and pre-resolved
+/// socket addresses. Downstream scanners MUST use the resolved addresses
+/// (via `build_safe_client`) to prevent DNS rebinding attacks.
+pub async fn validate_scan_target(url: &str) -> Result<ValidatedTarget, SsrfError> {
     let parsed = Url::parse(url).map_err(|_| SsrfError::InvalidUrl)?;
 
-    // Check scheme - only http/https allowed
     let scheme = parsed.scheme();
     if scheme != "http" && scheme != "https" {
         return Err(SsrfError::BlockedScheme);
     }
 
-    // Get host
     let host = parsed.host_str().ok_or(SsrfError::InvalidUrl)?;
+    let port = parsed
+        .port()
+        .unwrap_or(if scheme == "https" { 443 } else { 80 });
 
     // If the host is an IP literal, check it directly
     if let Ok(ip) = host.parse::<IpAddr>() {
         check_ip_blocked(&ip)?;
-        return Ok(url.to_string());
+        return Ok(ValidatedTarget {
+            url: url.to_string(),
+            resolved_addrs: vec![SocketAddr::new(ip, port)],
+        });
     }
 
     // For hostnames, resolve DNS and check all resolved IPs
-    let addr = format!(
-        "{}:{}",
-        host,
-        parsed
-            .port()
-            .unwrap_or(if scheme == "https" { 443 } else { 80 })
-    );
-    let addrs = lookup_host(&addr)
+    let addr = format!("{}:{}", host, port);
+    let addrs: Vec<SocketAddr> = lookup_host(&addr)
         .await
-        .map_err(|_| SsrfError::DnsResolutionFailed)?;
+        .map_err(|_| SsrfError::DnsResolutionFailed)?
+        .collect();
 
-    // Check all resolved IPs
-    for socket_addr in addrs {
+    for socket_addr in &addrs {
         check_ip_blocked(&socket_addr.ip())?;
     }
 
-    Ok(url.to_string())
+    Ok(ValidatedTarget {
+        url: url.to_string(),
+        resolved_addrs: addrs,
+    })
+}
+
+/// Build a reqwest `ClientBuilder` that pins DNS resolution to the pre-validated
+/// addresses, preventing DNS rebinding attacks.
+///
+/// The returned builder has SSRF-safe DNS pinning configured. Callers should
+/// chain additional settings (timeout, user-agent, redirect policy) before
+/// calling `.build()`.
+pub fn safe_client_builder(
+    hostname: &str,
+    resolved_addrs: &[SocketAddr],
+) -> reqwest::ClientBuilder {
+    let mut builder = reqwest::Client::builder();
+    for addr in resolved_addrs {
+        builder = builder.resolve(hostname, *addr);
+    }
+    builder
 }
 
 fn check_ip_blocked(ip: &IpAddr) -> Result<(), SsrfError> {

@@ -17,7 +17,8 @@ ShipSecure — security scanning SaaS for vibe-coded apps. Rust/Axum backend, Ne
 
 ```
 push to main → GitHub Actions builds Docker images → pushes to GHCR →
-scp compose files + systemd service to server → systemctl restart shipsecure
+scp compose files + systemd service to server → systemctl restart shipsecure →
+post-deploy health check → auto-rollback to previous SHA on failure
 ```
 
 Key files:
@@ -60,6 +61,28 @@ When adding a new required env var to the backend or frontend:
 2. Add it to `.env.example` with documentation
 3. Add it to `deploy/setup-production.sh` validation list
 4. Update this table
+
+### Database Backups
+
+PostgreSQL is hosted on DigitalOcean Managed Databases with automated daily backups and 7-day retention.
+
+**Manual backup:**
+```bash
+ssh -p 2222 deploy@shipsecure.ai
+pg_dump "$DATABASE_URL" --format=custom --file=/opt/shipsecure/backup-$(date +%Y%m%d).dump
+```
+
+**Restore from backup:**
+```bash
+pg_restore --clean --if-exists -d "$DATABASE_URL" /opt/shipsecure/backup-YYYYMMDD.dump
+```
+
+**Point-in-time recovery (DigitalOcean):**
+1. Go to DigitalOcean Dashboard > Databases > shipsecure
+2. Click "Backups" tab
+3. Select the desired backup point and click "Restore"
+
+Run `sqlx migrate run` after restoring if the backup predates recent migrations.
 
 ### Server Reset
 

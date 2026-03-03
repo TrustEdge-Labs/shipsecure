@@ -1,8 +1,8 @@
 /**
  * E2E tests for error flows and recovery paths.
  * Covers all E2E-03 error scenarios:
- * - Invalid URL shows client-side form validation error
- * - Server rejection of unreachable domain shows error message
+ * - Anonymous user URL is locked to demo target
+ * - Server rejection shows error and form remains usable
  * - 404 missing scan via direct URL navigation shows Scan Not Found
  * - Results token 404 shows Next.js not-found page
  * - Network timeout shows connection error warning
@@ -17,47 +17,27 @@ import { scanFixtures } from './fixtures/scan';
 
 test.describe('Error Flows', () => {
 
-  test('invalid URL shows client-side validation error', async ({ page, next }) => {
+  test('anonymous user URL is locked to demo target', async ({ page, next }) => {
     // Home page needs scan count
     mockScanCount(next, 0);
 
     await page.goto('/');
 
-    // Fill form with invalid URL (browser type="url" input validation will fire)
-    await page.fill('input[name="url"]', 'not-a-url');
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.check('input[name="authorization"]');
+    // Anonymous users see a disabled URL input pre-filled with the demo target
+    const visibleUrlInput = page.locator('input#url');
+    await expect(visibleUrlInput).toBeVisible();
+    await expect(visibleUrlInput).toBeDisabled();
+    await expect(visibleUrlInput).toHaveValue('https://demo.owasp-juice.shop');
 
-    // Click submit — browser's native URL validation prevents form submission
-    await page.click('button[type="submit"]');
+    // The actual form value is carried by a hidden input
+    const hiddenUrlInput = page.locator('input[type="hidden"][name="url"]');
+    await expect(hiddenUrlInput).toHaveValue('https://demo.owasp-juice.shop');
 
-    // The URL input should be in an invalid state (browser constraint validation)
-    const urlInput = page.locator('input[name="url"]');
-    const isValid = await urlInput.evaluate((el: HTMLInputElement) => el.validity.valid);
-    expect(isValid).toBe(false);
-
-    // Page remains on home page (submission blocked by browser validation)
-    expect(page.url()).not.toContain('/scan/');
-
-    // Recovery: bypass browser URL type validation to also test Zod server-side path
-    // (simulates what happens when client-side validation is bypassed)
-    await urlInput.evaluate((el: HTMLInputElement) => el.setAttribute('type', 'text'));
-    await page.fill('input[name="url"]', 'not-a-url');
-    await page.click('button[type="submit"]');
-
-    // Zod validation error appears (server action returned field-level error)
-    // The error message from Zod: "Please enter a valid URL (e.g., https://example.com)"
-    await expect(page.locator('text=valid URL').first()).toBeVisible({ timeout: 10000 });
-
-    // Recovery: form is still interactive — user can correct the URL and resubmit
-    await urlInput.evaluate((el: HTMLInputElement) => el.setAttribute('type', 'url'));
-    await page.fill('input[name="url"]', 'https://example.com');
-    await expect(urlInput).toHaveValue('https://example.com');
     // Submit button is still visible and accessible
     await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
 
-  test('server rejection of unreachable domain shows error', async ({ page, next }) => {
+  test('server rejection shows error and form remains usable', async ({ page, next }) => {
     // Home page needs scan count
     mockScanCount(next, 0);
 
@@ -84,8 +64,7 @@ test.describe('Error Flows', () => {
 
     await page.goto('/');
 
-    // Fill valid form data with a URL that will be server-rejected
-    await page.fill('input[name="url"]', 'https://unreachable-domain.example.com');
+    // Fill email and check authorization (URL is pre-filled for anonymous users)
     await page.fill('input[name="email"]', 'test@example.com');
     await page.check('input[name="authorization"]');
     await page.click('button[type="submit"]');
@@ -95,10 +74,7 @@ test.describe('Error Flows', () => {
       page.locator('text=Target URL is unreachable').first()
     ).toBeVisible({ timeout: 10000 });
 
-    // Recovery: form is still usable — user can modify the URL and resubmit
-    await page.fill('input[name="url"]', 'https://different-url.example.com');
-    await expect(page.locator('input[name="url"]')).toHaveValue('https://different-url.example.com');
-    // Submit button still visible (user has not been navigated away)
+    // Recovery: form is still usable — submit button still visible
     await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
 

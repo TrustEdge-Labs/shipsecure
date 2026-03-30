@@ -99,7 +99,22 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 
 ### Active
 
-(None — planning next milestone)
+## Current Milestone: v1.9 Customer Acquisition
+
+**Goal:** Get the first 10 authenticated users scanning their own sites through funnel polish, CVE-driven content marketing, and community launch on HN/Reddit.
+
+**Target features:**
+- Reopen anonymous scans for any URL (revert Juice Shop lockdown)
+- Per-target rate limiting (5/domain/hour, cached results)
+- Increase anonymous rate limit to 3/IP/day
+- Drop domain verification requirement for authenticated scans
+- Share results button (copy URL + text OG meta tags)
+- Expired results page with "scan again" CTA
+- Plausible conversion events (demo-scan-started, signup-completed, first-real-scan, share-click)
+- /blog route with MDX for CVE content hosting
+- /check/{platform} landing pages (Lovable, Bolt, v0) with platform-specific visual treatment
+- Empty blog "coming soon" page with scan CTA
+- DESIGN.md formalized (Geist, industrial/utilitarian, no purple)
 
 ### Out of Scope
 
@@ -122,7 +137,7 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - Target audience: solo developers and small teams shipping with AI tools who don't have security expertise
 - Three-tier access: anonymous instant audit (lead gen) → free Developer tier (verified domain, history) → paid Pro tier (future)
 - "Teaser" conversion strategy: anonymous scans show full low/medium findings but gate high/critical behind signup — proves scanner power while creating FOMO
-- Anonymous instant audit remains zero-friction lead gen (no signup), but now capped at 1 scan with 24hr retention
+- Anonymous instant audit is the primary lead gen funnel (paste any URL, see results, sign up for more)
 - Remediation playbooks are a key differentiator — not just "you have a vulnerability" but "here's exactly how to fix it"
 - **v1.0 shipped 2026-02-06:** ~7,000 LOC Rust, ~21,000 LOC TypeScript, 165 files, 4 phases, 23 plans
 - **v1.1 shipped 2026-02-08:** Production live at https://shipsecure.ai, 77 files changed, 3 phases, 10 plans
@@ -134,7 +149,8 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **Post-v1.6 deployment hardening (2026-02-21):** 19 commits fixing CI/CD pipeline, Docker Compose standalone mode, systemd integration, env var management. Production deploy pipeline now reliable.
 - **v1.7 shipped 2026-02-25:** Frontend polish — touch targets, a11y, hydration fix, email copy, dashboard polling, design tokens, PageContainer, Plausible fix, 33 files changed, 3 phases, 7 plans
 - **v1.8 shipped 2026-03-02:** CI & quality hardening — backend CI pipeline, Docker healthchecks, frontend test coverage for v1.6 components, 54 files changed, 3 phases, 3 plans, 1 day
-- **Current:** 9 milestones shipped, 41 phases, 98 plans completed
+- **Current:** 9 milestones shipped, 41 phases, 98 plans completed. Zero customers, zero revenue. Distribution problem, not product problem.
+- **v1.9 context (2026-03-30):** CEO review redirected from Skill Scan v1 to customer acquisition. 8+ competing scanners exist. CVE-driven content marketing chosen as distribution channel. DESIGN.md formalized (Geist, industrial/utilitarian).
 
 ## Constraints
 

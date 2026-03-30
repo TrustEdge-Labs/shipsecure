@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
-milestone: null
-milestone_name: null
-status: between_milestones
-last_updated: "2026-03-02T04:15:00.000Z"
+milestone: v1.9
+milestone_name: Customer Acquisition
+status: defining_requirements
+last_updated: "2026-03-30T01:00:00.000Z"
 progress:
   total_phases: 0
   completed_phases: 0
@@ -15,17 +15,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-02)
+See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Planning next milestone
+**Current focus:** Customer acquisition — first 10 users
 
 ## Current Position
 
-Phase: —
+Phase: Not started (defining requirements)
 Plan: —
-Status: v1.8 milestone completed and archived. Ready for next milestone.
-Last activity: 2026-03-02 — v1.8 CI & Quality Hardening shipped
+Status: Defining requirements for v1.9 Customer Acquisition
+Last activity: 2026-03-30 — Milestone v1.9 started
 
 Progress: 9 milestones shipped, 41 phases, 98 plans completed
 

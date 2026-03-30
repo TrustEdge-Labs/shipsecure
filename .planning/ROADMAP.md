@@ -11,6 +11,7 @@
 - ✅ **v1.6 Auth & Tiered Access** — Phases 29-35 (shipped 2026-02-19)
 - ✅ **v1.7 Frontend Polish** — Phases 36-38 (shipped 2026-02-25)
 - ✅ **v1.8 CI & Quality Hardening** — Phases 39-41 (shipped 2026-03-02)
+- 🚧 **v1.9 Customer Acquisition** — Phases 42-45 (in progress)
 
 ## Phases
 
@@ -127,10 +128,66 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 
 </details>
 
+### 🚧 v1.9 Customer Acquisition (In Progress)
+
+**Milestone Goal:** Get the first 10 authenticated users scanning their own sites through funnel polish, CVE-driven content marketing, and community launch on HN/Reddit.
+
+- [ ] **Phase 42: Funnel Unlock** — Reopen anonymous scans, raise rate limits, remove domain verification gate for authenticated users
+- [ ] **Phase 43: Share & Results UX** — Share button, OG meta tags, expired results page with scan-again CTA
+- [ ] **Phase 44: Content Routes** — /blog MDX infrastructure and /check/{platform} landing pages for Lovable, Bolt, v0
+- [ ] **Phase 45: Analytics Events** — Plausible conversion events wired to scan, signup, and share actions
+
+## Phase Details
+
+### Phase 42: Funnel Unlock
+**Goal**: Any visitor can scan any URL with no demo lockdown, and authenticated users can scan without domain verification
+**Depends on**: Phase 41
+**Requirements**: FUNNEL-01, FUNNEL-02, FUNNEL-03, FUNNEL-04
+**Success Criteria** (what must be TRUE):
+  1. Anonymous user can paste any public URL and receive scan results (not locked to Juice Shop demo)
+  2. Anonymous scans are blocked after 3 from the same IP in a 24-hour window with a clear error message
+  3. A domain that has been scanned 5 times in the past hour returns cached results instead of re-scanning
+  4. Authenticated user can scan any URL without completing domain verification first
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 43: Share & Results UX
+**Goal**: Scan results are shareable with rich social previews and expired results guide users back into the funnel
+**Depends on**: Phase 42
+**Requirements**: FUNNEL-05, FUNNEL-06, FUNNEL-07
+**Success Criteria** (what must be TRUE):
+  1. Results page shows a share button that copies the capability URL to clipboard
+  2. Pasting a results URL into Slack or Twitter renders an OG preview card showing the scan grade and finding count
+  3. Visiting an expired results URL shows a dedicated page (not a 404) with the original target URL pre-filled in the scan form
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 44: Content Routes
+**Goal**: /blog and /check/{platform} routes exist and serve as inbound marketing surfaces for CVE-driven traffic
+**Depends on**: Phase 41
+**Requirements**: CONTENT-01, CONTENT-02, CONTENT-03, CONTENT-04
+**Success Criteria** (what must be TRUE):
+  1. /blog renders an MDX post with correct typography when a post file exists
+  2. /blog shows a "coming soon" page with a scan CTA when no posts exist
+  3. /check/lovable, /check/bolt, and /check/v0 each load with platform-specific accent colors and CVE context copy
+  4. Each /check/{platform} page pre-fills the scan form URL field with a platform-appropriate placeholder (e.g., a .lovable.app URL)
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 45: Analytics Events
+**Goal**: Plausible captures the three conversion events that matter for measuring funnel health
+**Depends on**: Phase 42, Phase 43
+**Requirements**: ANALYTICS-01, ANALYTICS-02, ANALYTICS-03
+**Success Criteria** (what must be TRUE):
+  1. Submitting an anonymous scan fires a "Scan Started" custom event visible in the Plausible dashboard
+  2. Completing Clerk signup fires a "Signup Completed" custom event visible in the Plausible dashboard
+  3. Clicking the share button fires a "Share Clicked" custom event visible in the Plausible dashboard
+**Plans**: TBD
+
 ## Progress
 
-| Phase | Milestone | Plans | Status | Completed |
-|-------|-----------|-------|--------|-----------|
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
 | 1-4. MVP | v1.0 | 23/23 | Complete | 2026-02-06 |
 | 5-7. Deployment | v1.1 | 10/10 | Complete | 2026-02-08 |
 | 8-12. Launch | v1.2 | 10/10 | Complete | 2026-02-10 |
@@ -140,8 +197,12 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
 | 39-41. CI & Quality Hardening | v1.8 | 3/3 | Complete | 2026-03-02 |
+| 42. Funnel Unlock | v1.9 | 0/TBD | Not started | - |
+| 43. Share & Results UX | v1.9 | 0/TBD | Not started | - |
+| 44. Content Routes | v1.9 | 0/TBD | Not started | - |
+| 45. Analytics Events | v1.9 | 0/TBD | Not started | - |
 
-**Total: 9 milestones shipped, 41 phases complete, 98 plans complete.**
+**Total: 9 milestones shipped, 41 phases complete, 98 plans complete. v1.9 in progress (4 phases).**
 
 ---
-*Last updated: 2026-03-02 after v1.8 milestone completion*
+*Last updated: 2026-03-29 after v1.9 roadmap creation*

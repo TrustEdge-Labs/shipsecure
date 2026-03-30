@@ -35,4 +35,20 @@
 - Light mode -- target audience lives in dark IDEs, single theme reduces maintenance
 
 ## Traceability
-(Filled by roadmap)
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| FUNNEL-01 | Phase 42 | Pending |
+| FUNNEL-02 | Phase 42 | Pending |
+| FUNNEL-03 | Phase 42 | Pending |
+| FUNNEL-04 | Phase 42 | Pending |
+| FUNNEL-05 | Phase 43 | Pending |
+| FUNNEL-06 | Phase 43 | Pending |
+| FUNNEL-07 | Phase 43 | Pending |
+| CONTENT-01 | Phase 44 | Pending |
+| CONTENT-02 | Phase 44 | Pending |
+| CONTENT-03 | Phase 44 | Pending |
+| CONTENT-04 | Phase 44 | Pending |
+| ANALYTICS-01 | Phase 45 | Pending |
+| ANALYTICS-02 | Phase 45 | Pending |
+| ANALYTICS-03 | Phase 45 | Pending |

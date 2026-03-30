@@ -1,7 +1,7 @@
 /**
  * E2E tests for error flows and recovery paths.
  * Covers all E2E-03 error scenarios:
- * - Anonymous user URL is locked to demo target
+ * - Anonymous user can enter custom URL
  * - Server rejection shows error and form remains usable
  * - 404 missing scan via direct URL navigation shows Scan Not Found
  * - Results token 404 shows Next.js not-found page
@@ -17,21 +17,22 @@ import { scanFixtures } from './fixtures/scan';
 
 test.describe('Error Flows', () => {
 
-  test('anonymous user URL is locked to demo target', async ({ page, next }) => {
-    // Home page needs scan count
+  test('anonymous user can enter custom URL', async ({ page, next }) => {
     mockScanCount(next, 0);
-
     await page.goto('/');
 
-    // Anonymous users see a disabled URL input pre-filled with the demo target
-    const visibleUrlInput = page.locator('input#url');
-    await expect(visibleUrlInput).toBeVisible();
-    await expect(visibleUrlInput).toBeDisabled();
-    await expect(visibleUrlInput).toHaveValue('https://demo.owasp-juice.shop');
+    // Anonymous users see an editable URL input
+    const urlInput = page.locator('input#url');
+    await expect(urlInput).toBeVisible();
+    await expect(urlInput).toBeEnabled();
 
-    // The actual form value is carried by a hidden input
+    // User can type a custom URL
+    await urlInput.fill('https://my-app.vercel.app');
+    await expect(urlInput).toHaveValue('https://my-app.vercel.app');
+
+    // No hidden input carrying a demo URL
     const hiddenUrlInput = page.locator('input[type="hidden"][name="url"]');
-    await expect(hiddenUrlInput).toHaveValue('https://demo.owasp-juice.shop');
+    await expect(hiddenUrlInput).toHaveCount(0);
 
     // Submit button is still visible and accessible
     await expect(page.locator('button[type="submit"]')).toBeVisible();
@@ -64,7 +65,8 @@ test.describe('Error Flows', () => {
 
     await page.goto('/');
 
-    // Fill email and check authorization (URL is pre-filled for anonymous users)
+    // Fill the form fields
+    await page.fill('input#url', 'https://demo.owasp-juice.shop');
     await page.fill('input[name="email"]', 'test@example.com');
     await page.check('input[name="authorization"]');
     await page.click('button[type="submit"]');

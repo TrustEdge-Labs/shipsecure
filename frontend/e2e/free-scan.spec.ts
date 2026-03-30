@@ -20,7 +20,8 @@ test.describe('Free Scan Flow', () => {
     // 2. Verify home page loaded
     await expect(page.locator('h1')).toContainText('Security scanning');
 
-    // 3. Fill the form (URL is pre-filled via hidden input for anonymous users)
+    // 3. Fill the form
+    await page.fill('input#url', 'https://demo.owasp-juice.shop');
     await page.fill('input[name="email"]', 'test@example.com');
     await page.check('input[name="authorization"]');
 
@@ -59,7 +60,8 @@ test.describe('Free Scan Flow', () => {
     // 1. Navigate to home page
     await page.goto('/');
 
-    // 2. Fill email but do NOT check the authorization checkbox (URL is pre-filled for anonymous)
+    // 2. Fill form fields but do NOT check the authorization checkbox
+    await page.fill('input#url', 'https://demo.owasp-juice.shop');
     await page.fill('input[name="email"]', 'test@example.com');
 
     // 3. Click submit without checking authorization

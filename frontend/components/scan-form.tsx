@@ -4,8 +4,6 @@ import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { submitScan, type ScanFormState } from '@/app/actions/scan'
 
-const DEMO_TARGET_URL = 'https://demo.owasp-juice.shop'
-
 interface ScanFormProps {
   isAuthenticated?: boolean
 }
@@ -42,14 +40,7 @@ export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
     <form action={formAction} className="space-y-4">
       {state.errors?._form && (
         <div className="p-3 bg-danger-bg border border-danger-border rounded-lg text-danger-text text-sm">
-          {state.errors._form[0].startsWith('DOMAIN_VERIFICATION_REQUIRED:') ? (
-            <>
-              Please verify ownership of <strong>{state.errors._form[0].split(':')[1]}</strong> first.{' '}
-              <a href="/verify-domain" className="underline font-medium hover:text-danger-text/80">
-                Verify your domain to get started
-              </a>
-            </>
-          ) : state.errors._form[0].startsWith('RATE_LIMITED:') ? (
+          {state.errors._form[0].startsWith('RATE_LIMITED:') ? (
             <>
               {state.errors._form[0].replace('RATE_LIMITED:', '')}
               {!isAuthenticated && (
@@ -71,36 +62,14 @@ export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
         <label htmlFor="url" className="block text-sm font-medium text-text-secondary mb-1">
           Website URL
         </label>
-        {!isAuthenticated && (
-          <input type="hidden" name="url" value={DEMO_TARGET_URL} />
-        )}
         <input
           id="url"
-          name={isAuthenticated ? 'url' : undefined}
+          name="url"
           type="url"
           placeholder="https://your-app.vercel.app"
-          required={isAuthenticated}
-          disabled={!isAuthenticated}
-          defaultValue={!isAuthenticated ? DEMO_TARGET_URL : undefined}
-          className={`w-full px-4 py-3 rounded-lg border border-border-default bg-surface-elevated text-text-primary outline-none transition ${
-            isAuthenticated
-              ? 'focus:ring-2 focus:ring-focus-ring focus:border-focus-ring'
-              : 'opacity-70 cursor-not-allowed'
-          }`}
+          required
+          className="w-full px-4 py-3 rounded-lg border border-border-default bg-surface-elevated text-text-primary focus:ring-2 focus:ring-focus-ring focus:border-focus-ring outline-none transition"
         />
-        {!isAuthenticated && (
-          <p className="mt-2 text-sm text-text-secondary">
-            To prevent abuse, anonymous scans are limited to our live demo target,{' '}
-            <a href="https://demo.owasp-juice.shop" target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline font-medium">
-              OWASP Juice Shop
-            </a>
-            . The results are real.{' '}
-            <a href="/sign-up" className="text-brand-primary hover:underline font-medium">
-              Sign up for free
-            </a>{' '}
-            to scan your own domain.
-          </p>
-        )}
         {state.errors?.url && (
           <p className="mt-1 text-sm text-danger-primary">{state.errors.url[0]}</p>
         )}
@@ -156,7 +125,7 @@ export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
         <p>
           {isAuthenticated
             ? '5 scans per month included with your account.'
-            : '1 free scan per app per day. Sign in for 5 scans/month.'
+            : '3 free scans per day. Sign in for 5 scans/month and scan history.'
           }
         </p>
         <p>

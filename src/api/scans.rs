@@ -128,30 +128,11 @@ pub async fn create_scan(
         Some(_) => "authenticated",
     };
 
-    // 5. Domain verification gate for authenticated users
-    if let Some(ref user_id) = clerk_user_id {
-        let domain =
-            crate::api::results::extract_domain_from_url(validated_url).ok_or_else(|| {
-                ApiError::ValidationError("Could not parse domain from URL".to_string())
-            })?;
-        let verified = db::domains::is_domain_verified(&state.pool, user_id, &domain)
-            .await
-            .unwrap_or(false);
-        if !verified {
-            return Err(ApiError::Custom {
-                status: StatusCode::FORBIDDEN,
-                error_type: "https://shipsecure.ai/errors/domain-not-verified".to_string(),
-                title: "Domain Not Verified".to_string(),
-                detail: "You must verify ownership of this domain before scanning. Visit /verify-domain to get started.".to_string(),
-            });
-        }
-    }
-
-    // 6. Rate limit check — anonymous: 1/email+domain/day + 10/IP/day hard cap; authenticated: 5/user/month
+    // 5. Rate limit check — per-target: 5/domain/hour (cached); anonymous: 3/IP/day; authenticated: 5/user/month
     let client_ip = addr.ip().to_string();
     let target_domain = crate::api::results::extract_domain_from_url(validated_url)
         .unwrap_or_else(|| validated_url.clone());
-    rate_limit::check_rate_limits(
+    let cached_scan_id = rate_limit::check_rate_limits(
         &state.pool,
         clerk_user_id.as_deref(),
         &req.email,
@@ -160,7 +141,18 @@ pub async fn create_scan(
     )
     .await?;
 
-    // 7. Create scan in database with tier and clerk_user_id
+    // Per-target cache hit — return existing scan results
+    if let Some(scan_id) = cached_scan_id {
+        let response = json!({
+            "id": scan_id,
+            "status": "completed",
+            "url": format!("/api/v1/scans/{}", scan_id),
+            "cached": true
+        });
+        return Ok((StatusCode::OK, Json(response)));
+    }
+
+    // 6. Create scan in database with tier and clerk_user_id
     let scan = db::scans::create_scan(
         &state.pool,
         validated_url,
@@ -172,7 +164,7 @@ pub async fn create_scan(
     )
     .await?;
 
-    // 8. Spawn scan execution (fire-and-forget) — route to tier-appropriate method
+    // 7. Spawn scan execution (fire-and-forget) — route to tier-appropriate method
     match tier {
         "authenticated" => state.orchestrator.spawn_authenticated_scan(
             scan.id,
@@ -188,7 +180,7 @@ pub async fn create_scan(
         ),
     };
 
-    // 9. Return 201 Created
+    // 8. Return 201 Created
     let response = json!({
         "id": scan.id,
         "status": "pending",

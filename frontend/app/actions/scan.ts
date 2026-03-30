@@ -53,29 +53,6 @@ export async function submitScan(
   const { getToken, userId } = await auth()
   const token = userId ? await getToken() : null
 
-  // If authenticated, check domain verification before submitting the scan
-  if (userId && token) {
-    try {
-      const urlObj = new URL(validatedFields.data.url)
-      const domain = urlObj.hostname.replace(/^www\./, '').toLowerCase()
-
-      const domainsRes = await fetch(`${backendUrl}/api/v1/domains`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-      const domains = domainsRes.ok ? await domainsRes.json() : []
-      const isVerified = domains.some((d: { domain: string; status: string }) =>
-        d.domain === domain && d.status === 'verified'
-      )
-      if (!isVerified) {
-        return {
-          errors: { _form: [`DOMAIN_VERIFICATION_REQUIRED:${domain}`] }
-        }
-      }
-    } catch {
-      // If domain check fails, let the backend enforce it
-    }
-  }
-
   // Build headers with optional auth token
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (token) {

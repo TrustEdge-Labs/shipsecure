@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Customer Acquisition
-status: planning
-stopped_at: Phase 42 context gathered
-last_updated: "2026-03-30T14:41:36.986Z"
-last_activity: 2026-03-29 — v1.9 roadmap created (4 phases, 14 requirements mapped)
+status: executing
+stopped_at: Completed 42-01-PLAN.md
+last_updated: "2026-03-30T22:28:01.516Z"
+last_activity: 2026-03-30 -- Phase 42 execution started
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Phase 42 — Funnel Unlock
+**Current focus:** Phase 42 — funnel-unlock
 
 ## Current Position
 
-Phase: 42 of 45 (Funnel Unlock)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-29 — v1.9 roadmap created (4 phases, 14 requirements mapped)
+Phase: 42 (funnel-unlock) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 42
+Last activity: 2026-03-30 -- Phase 42 execution started
 
 Progress: 9 milestones shipped, 41 phases, 98 plans completed
 
@@ -52,6 +52,7 @@ Progress: 9 milestones shipped, 41 phases, 98 plans completed
 | v1.6 Auth & Tiered Access | 29-35 | 13 | 2 |
 | v1.7 Frontend Polish | 36-38 | 7 | 1 |
 | v1.8 CI & Quality Hardening | 39-41 | 3 | 1 |
+| Phase 42-funnel-unlock P01 | 20 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - Domain verification removed (not deferred) — reduces friction, add back only if abuse occurs
 - Juice Shop lockdown reverted — reopening anonymous scans to any URL is the primary funnel fix
 - /check/{platform} pages with CVE context chosen as content marketing channel (CVE-2025-48757 timely hook)
+- [Phase 42-funnel-unlock]: Per-target rate limit (5/domain/hour) returns cached scan ID — transparent to caller, bypasses daily IP quota
+- [Phase 42-funnel-unlock]: Domain verification gate removed entirely for authenticated users — reduces friction without security regression
 
 ### Pending Todos
 
@@ -77,6 +80,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30T14:41:36.983Z
-Stopped at: Phase 42 context gathered
-Resume file: .planning/phases/42-funnel-unlock/42-CONTEXT.md
+Last session: 2026-03-30T22:28:01.513Z
+Stopped at: Completed 42-01-PLAN.md
+Resume file: None

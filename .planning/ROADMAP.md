@@ -148,9 +148,9 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
   2. Anonymous scans are blocked after 3 from the same IP in a 24-hour window with a clear error message
   3. A domain that has been scanned 5 times in the past hour returns cached results instead of re-scanning
   4. Authenticated user can scan any URL without completing domain verification first
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 42-01-PLAN.md — Backend rate limit overhaul + domain verification removal
+- [x] 42-01-PLAN.md — Backend rate limit overhaul + domain verification removal
 - [ ] 42-02-PLAN.md — Frontend form unlock + E2E test updates
 **UI hint**: yes
 
@@ -200,7 +200,7 @@ Plans:
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
 | 39-41. CI & Quality Hardening | v1.8 | 3/3 | Complete | 2026-03-02 |
-| 42. Funnel Unlock | v1.9 | 0/2 | Planning | - |
+| 42. Funnel Unlock | v1.9 | 1/2 | In Progress|  |
 | 43. Share & Results UX | v1.9 | 0/TBD | Not started | - |
 | 44. Content Routes | v1.9 | 0/TBD | Not started | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Not started | - |

@@ -1,12 +1,17 @@
 use chrono::{Datelike, TimeZone, Utc};
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::api::errors::ApiError;
 use crate::db::scans;
 
 /// Hard cap on anonymous scans from a single IP per day, regardless of email.
 /// Prevents abuse via rotating email addresses.
-const ANONYMOUS_IP_DAILY_HARD_CAP: i64 = 10;
+const ANONYMOUS_IP_DAILY_HARD_CAP: i64 = 3;
+
+/// Per-target hourly cap: if the same domain is scanned this many times in an hour,
+/// return cached results for the most recent completed scan transparently.
+const PER_TARGET_HOURLY_CAP: i64 = 5;
 
 fn next_midnight_utc() -> chrono::DateTime<chrono::Utc> {
     let now = Utc::now();
@@ -27,21 +32,41 @@ fn first_of_next_month_utc() -> chrono::DateTime<chrono::Utc> {
 
 /// Check rate limits based on caller identity.
 ///
-/// Anonymous scans have two layers:
-/// 1. Fair-use: 1 scan per email+domain per day (so users can scan multiple apps)
-/// 2. Abuse prevention: hard cap of 10 scans per IP per day (stops email rotation attacks)
+/// Returns `Ok(None)` to proceed with a new scan, or `Ok(Some(scan_id))` to return
+/// cached results for an existing scan (per-target cache hit).
 ///
-/// Authenticated: 5 scans per calendar month
+/// Two layers for anonymous callers:
+/// 1. Per-target: 5 scans of the same domain per hour — returns cached results when exceeded
+/// 2. Per-IP hard cap: 3 scans per IP per day (abuse prevention, stops email rotation)
+///
+/// Authenticated: per-target cache also applies; 5 scans per calendar month quota.
 pub async fn check_rate_limits(
     pool: &PgPool,
     clerk_user_id: Option<&str>,
-    email: &str,
+    _email: &str,
     target_domain: &str,
     ip: &str,
-) -> Result<(), ApiError> {
+) -> Result<Option<Uuid>, ApiError> {
+    // Per-target rate limit: 5 scans of same domain in last hour (applies to all callers)
+    let target_count = scans::count_scans_by_domain_last_hour(pool, target_domain).await?;
+    if target_count >= PER_TARGET_HOURLY_CAP {
+        if let Some(cached_scan) =
+            scans::get_recent_completed_scan_for_domain(pool, target_domain).await?
+        {
+            metrics::counter!(
+                "rate_limit_total",
+                "limiter" => "scan_per_target",
+                "action" => "cached"
+            )
+            .increment(1);
+            return Ok(Some(cached_scan.id));
+        }
+        // No completed scan to return — fall through to normal scan
+    }
+
     match clerk_user_id {
         None => {
-            // Layer 1: IP-based hard cap (abuse prevention)
+            // IP hard cap (abuse prevention)
             let ip_count = scans::count_anonymous_scans_by_ip_today(pool, ip).await?;
             if ip_count >= ANONYMOUS_IP_DAILY_HARD_CAP {
                 let resets_at = next_midnight_utc();
@@ -52,29 +77,8 @@ pub async fn check_rate_limits(
                 )
                 .increment(1);
                 return Err(ApiError::RateLimitedWithReset {
-                    message: "Too many scans from this network today. Please try again tomorrow."
+                    message: "You've used your 3 free scans today. Sign up for 5 scans/month and scan history."
                         .to_string(),
-                    resets_at,
-                });
-            }
-
-            // Layer 2: email+domain fair-use limit
-            let count =
-                scans::count_anonymous_scans_by_email_and_domain_today(pool, email, target_domain)
-                    .await?;
-            if count >= 1 {
-                let resets_at = next_midnight_utc();
-                metrics::counter!(
-                    "rate_limit_total",
-                    "limiter" => "scan_email_domain",
-                    "action" => "blocked"
-                )
-                .increment(1);
-                return Err(ApiError::RateLimitedWithReset {
-                    message: format!(
-                        "You've already scanned {} today. Try again tomorrow, or use a different email to scan again now.",
-                        target_domain
-                    ),
                     resets_at,
                 });
             }
@@ -97,7 +101,7 @@ pub async fn check_rate_limits(
             }
         }
     }
-    Ok(())
+    Ok(None)
 }
 
 #[cfg(test)]

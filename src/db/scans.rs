@@ -341,6 +341,59 @@ pub async fn count_anonymous_scans_by_ip_today(
     Ok(count.0)
 }
 
+/// Count all scans (anonymous + authenticated) targeting a given domain in the last hour.
+///
+/// Used for per-target rate limiting: if the same domain is scanned 5+ times in an hour,
+/// return cached results instead of re-scanning.
+#[allow(dead_code)]
+pub async fn count_scans_by_domain_last_hour(
+    pool: &PgPool,
+    domain: &str,
+) -> Result<i64, sqlx::Error> {
+    let pattern = format!("%://{domain}%");
+    let count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*)
+         FROM scans
+         WHERE target_url LIKE $1
+           AND created_at >= NOW() - INTERVAL '1 hour'",
+    )
+    .bind(&pattern)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(count.0)
+}
+
+/// Get the most recent non-expired completed scan for a given domain.
+///
+/// Used to return cached results when the per-target hourly cap is exceeded.
+/// Returns None if no completed scan exists or all are expired.
+#[allow(dead_code)]
+pub async fn get_recent_completed_scan_for_domain(
+    pool: &PgPool,
+    domain: &str,
+) -> Result<Option<Scan>, sqlx::Error> {
+    let pattern = format!("%://{domain}%");
+    let scan = sqlx::query_as::<_, Scan>(
+        "SELECT id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
+                expires_at::timestamp, detected_framework, detected_platform,
+                stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
+                tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
+                clerk_user_id
+         FROM scans
+         WHERE target_url LIKE $1
+           AND status = 'completed'
+           AND (expires_at IS NULL OR expires_at > NOW())
+         ORDER BY completed_at DESC
+         LIMIT 1",
+    )
+    .bind(&pattern)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(scan)
+}
+
 /// Count scans submitted by a Clerk user in the current calendar month (UTC).
 ///
 /// Used for the Developer tier monthly quota (5 scans/month).

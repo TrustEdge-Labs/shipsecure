@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Customer Acquisition
 status: executing
-stopped_at: Completed 42-01-PLAN.md
-last_updated: "2026-03-30T22:28:01.516Z"
-last_activity: 2026-03-30 -- Phase 42 execution started
+stopped_at: Completed 42-funnel-unlock 42-02-PLAN.md
+last_updated: "2026-03-30T22:28:40.730Z"
+last_activity: 2026-03-30
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 42 (funnel-unlock) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 42
-Last activity: 2026-03-30 -- Phase 42 execution started
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-03-30
 
 Progress: 9 milestones shipped, 41 phases, 98 plans completed
 
@@ -53,6 +53,7 @@ Progress: 9 milestones shipped, 41 phases, 98 plans completed
 | v1.7 Frontend Polish | 36-38 | 7 | 1 |
 | v1.8 CI & Quality Hardening | 39-41 | 3 | 1 |
 | Phase 42-funnel-unlock P01 | 20 | 2 tasks | 4 files |
+| Phase 42-funnel-unlock P02 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - /check/{platform} pages with CVE context chosen as content marketing channel (CVE-2025-48757 timely hook)
 - [Phase 42-funnel-unlock]: Per-target rate limit (5/domain/hour) returns cached scan ID — transparent to caller, bypasses daily IP quota
 - [Phase 42-funnel-unlock]: Domain verification gate removed entirely for authenticated users — reduces friction without security regression
+- [Phase 42-funnel-unlock]: Remove DOMAIN_VERIFICATION_REQUIRED branch from ScanForm — domain verification dropped per D-01, makes error handler dead code
+- [Phase 42-funnel-unlock]: isAuthenticated prop retained in ScanForm — still controls rate limit upsell link visibility and quota copy
 
 ### Pending Todos
 
@@ -80,6 +83,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30T22:28:01.513Z
-Stopped at: Completed 42-01-PLAN.md
+Last session: 2026-03-30T22:28:40.727Z
+Stopped at: Completed 42-funnel-unlock 42-02-PLAN.md
 Resume file: None

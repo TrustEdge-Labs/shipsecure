@@ -132,7 +132,7 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 
 **Milestone Goal:** Get the first 10 authenticated users scanning their own sites through funnel polish, CVE-driven content marketing, and community launch on HN/Reddit.
 
-- [ ] **Phase 42: Funnel Unlock** — Reopen anonymous scans, raise rate limits, remove domain verification gate for authenticated users
+- [x] **Phase 42: Funnel Unlock** — Reopen anonymous scans, raise rate limits, remove domain verification gate for authenticated users (completed 2026-03-30)
 - [ ] **Phase 43: Share & Results UX** — Share button, OG meta tags, expired results page with scan-again CTA
 - [ ] **Phase 44: Content Routes** — /blog MDX infrastructure and /check/{platform} landing pages for Lovable, Bolt, v0
 - [ ] **Phase 45: Analytics Events** — Plausible conversion events wired to scan, signup, and share actions
@@ -148,10 +148,10 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
   2. Anonymous scans are blocked after 3 from the same IP in a 24-hour window with a clear error message
   3. A domain that has been scanned 5 times in the past hour returns cached results instead of re-scanning
   4. Authenticated user can scan any URL without completing domain verification first
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 42-01-PLAN.md — Backend rate limit overhaul + domain verification removal
-- [ ] 42-02-PLAN.md — Frontend form unlock + E2E test updates
+- [x] 42-02-PLAN.md — Frontend form unlock + E2E test updates
 **UI hint**: yes
 
 ### Phase 43: Share & Results UX
@@ -200,7 +200,7 @@ Plans:
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
 | 39-41. CI & Quality Hardening | v1.8 | 3/3 | Complete | 2026-03-02 |
-| 42. Funnel Unlock | v1.9 | 1/2 | In Progress|  |
+| 42. Funnel Unlock | v1.9 | 2/2 | Complete   | 2026-03-30 |
 | 43. Share & Results UX | v1.9 | 0/TBD | Not started | - |
 | 44. Content Routes | v1.9 | 0/TBD | Not started | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Not started | - |

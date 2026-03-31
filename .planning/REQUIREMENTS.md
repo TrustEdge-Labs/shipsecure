@@ -1,10 +1,10 @@
 # Requirements: v1.9 Customer Acquisition
 
 ## Funnel
-- [ ] **FUNNEL-01**: Anonymous user can scan any URL (not locked to demo target)
-- [ ] **FUNNEL-02**: Anonymous scans rate-limited to 3 per IP per day
-- [ ] **FUNNEL-03**: Per-target rate limit of 5 scans per domain per hour (return cached results when exceeded)
-- [ ] **FUNNEL-04**: Authenticated user can scan any URL without domain verification
+- [x] **FUNNEL-01**: Anonymous user can scan any URL (not locked to demo target)
+- [x] **FUNNEL-02**: Anonymous scans rate-limited to 3 per IP per day
+- [x] **FUNNEL-03**: Per-target rate limit of 5 scans per domain per hour (return cached results when exceeded)
+- [x] **FUNNEL-04**: Authenticated user can scan any URL without domain verification
 - [ ] **FUNNEL-05**: User can copy scan results URL via share button on results page
 - [ ] **FUNNEL-06**: Expired results page shows "scan again" CTA with pre-filled URL
 - [ ] **FUNNEL-07**: Results page has OG meta tags with grade and finding count for social sharing
@@ -38,10 +38,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FUNNEL-01 | Phase 42 | Pending |
-| FUNNEL-02 | Phase 42 | Pending |
-| FUNNEL-03 | Phase 42 | Pending |
-| FUNNEL-04 | Phase 42 | Pending |
+| FUNNEL-01 | Phase 42 | Complete |
+| FUNNEL-02 | Phase 42 | Complete |
+| FUNNEL-03 | Phase 42 | Complete |
+| FUNNEL-04 | Phase 42 | Complete |
 | FUNNEL-05 | Phase 43 | Pending |
 | FUNNEL-06 | Phase 43 | Pending |
 | FUNNEL-07 | Phase 43 | Pending |

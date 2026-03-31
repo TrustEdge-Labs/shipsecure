@@ -204,7 +204,7 @@ Plans:
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
 | 39-41. CI & Quality Hardening | v1.8 | 3/3 | Complete | 2026-03-02 |
 | 42. Funnel Unlock | v1.9 | 2/2 | Complete    | 2026-03-31 |
-| 43. Share & Results UX | v1.9 | 2/2 | Complete   | 2026-03-31 |
+| 43. Share & Results UX | v1.9 | 2/2 | Complete    | 2026-03-31 |
 | 44. Content Routes | v1.9 | 0/TBD | Not started | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Not started | - |
 

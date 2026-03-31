@@ -34,6 +34,7 @@ export interface Finding {
 export interface ScanResponse {
   id: string
   target_url: string
+  // Possible values: 'pending' | 'in_progress' | 'completed' | 'failed' | 'expired'
   status: string
   score: string | null
   tier: string

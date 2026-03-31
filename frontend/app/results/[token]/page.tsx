@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { auth } from '@clerk/nextjs/server'
 import { GradeSummary } from '@/components/grade-summary'
 import { ResultsDashboard } from '@/components/results-dashboard'
+import { ShareButton } from '@/components/share-button'
 import { ScanResponse } from '@/lib/types'
 
 const DEMO_TARGET_HOST = 'demo.owasp-juice.shop'
@@ -41,16 +42,71 @@ export async function generateMetadata({ params }: ResultsPageProps) {
 
     const data: ScanResponse = await res.json()
 
-    return {
-      title: `Security Scan: ${data.score || 'In Progress'} Grade - ShipSecure`,
-      description: `Security scan results for ${data.target_url}`,
-      robots: {
-        index: false,
-        follow: false,
-        nocache: true,
-      },
+    // Extract domain from target_url for title
+    const domain = (() => {
+      try { return new URL(data.target_url).hostname } catch { return data.target_url }
+    })()
+
+    // In-progress scans keep simple title (no OG enrichment)
+    if (data.status !== 'completed' && data.status !== 'expired') {
+      return {
+        title: 'Security Scan: In Progress - ShipSecure',
+        robots: { index: false, follow: false, nocache: true },
+      }
     }
-  } catch (error) {
+
+    // Expired scans get a tombstone title
+    if (data.status === 'expired') {
+      return {
+        title: `${domain} - Results Expired | ShipSecure`,
+        description: `These scan results have expired. Scan ${domain} again free at shipsecure.ai.`,
+        openGraph: {
+          title: `${domain} - Results Expired | ShipSecure`,
+          description: `These scan results have expired. Scan ${domain} again free at shipsecure.ai.`,
+          type: 'website',
+          siteName: 'ShipSecure',
+          url: `https://shipsecure.ai/results/${token}`,
+        },
+        twitter: {
+          card: 'summary' as const,
+          title: `${domain} - Results Expired | ShipSecure`,
+          description: `These scan results have expired. Scan ${domain} again free at shipsecure.ai.`,
+        },
+        robots: { index: false, follow: false, nocache: true },
+      }
+    }
+
+    // Completed scan — enrich OG tags with grade and finding counts
+    const title = data.score
+      ? `${domain} - Grade ${data.score} | ShipSecure`
+      : `${domain} - Security Scan | ShipSecure`
+
+    const highCount = data.summary?.high || 0
+    const criticalCount = data.summary?.critical || 0
+    const totalCount = data.summary?.total || 0
+    const severeCount = highCount + criticalCount
+    const description = totalCount > 0
+      ? `Security scan found ${totalCount} issues. ${severeCount} high/critical severity. Scan your app free at shipsecure.ai.`
+      : `Security scan complete. Scan your app free at shipsecure.ai.`
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: 'website',
+        siteName: 'ShipSecure',
+        url: `https://shipsecure.ai/results/${token}`,
+      },
+      twitter: {
+        card: 'summary' as const,
+        title,
+        description,
+      },
+      robots: { index: false, follow: false, nocache: true },
+    }
+  } catch {
     return {
       title: 'Results Not Found - ShipSecure',
       robots: {
@@ -91,6 +147,38 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   } catch (error) {
     console.error('Error fetching results:', error)
     notFound()
+  }
+
+  // Expired results: dedicated page with scan-again CTA
+  if (data.status === 'expired') {
+    return (
+      <div className="min-h-screen bg-surface-secondary py-8 px-4">
+        <div className="max-w-md mx-auto mt-16">
+          <div className="bg-surface-elevated rounded-(card) shadow-md p-8 text-center">
+            <div className="text-4xl mb-4">
+              <svg className="w-12 h-12 mx-auto text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h1 className="text-xl font-semibold text-text-primary mb-2">
+              These results have expired
+            </h1>
+            <p className="text-text-secondary mb-6">
+              Free scan results are available for 24 hours.
+            </p>
+            <a
+              href={`/?url=${encodeURIComponent(data.target_url)}`}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] w-full bg-brand-primary text-white rounded-md hover:bg-brand-primary/90 transition-colors font-medium"
+            >
+              Scan again
+            </a>
+            <p className="text-text-tertiary text-sm mt-4">
+              <a href="/sign-up" className="text-brand-primary hover:underline">Sign up</a> for 30-day scan history
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // If scan not completed yet, show in-progress message
@@ -218,6 +306,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
         {/* Actions */}
         <div className="flex gap-4 flex-wrap">
+          <ShareButton url={`https://shipsecure.ai/results/${token}`} />
+
           {data.owner_verified && (
             <a
               href={downloadUrl}

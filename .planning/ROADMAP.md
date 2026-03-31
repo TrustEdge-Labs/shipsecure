@@ -128,7 +128,7 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 
 </details>
 
-### 🚧 v1.9 Customer Acquisition (In Progress)
+### v1.9 Customer Acquisition (In Progress)
 
 **Milestone Goal:** Get the first 10 authenticated users scanning their own sites through funnel polish, CVE-driven content marketing, and community launch on HN/Reddit.
 
@@ -162,7 +162,10 @@ Plans:
   1. Results page shows a share button that copies the capability URL to clipboard
   2. Pasting a results URL into Slack or Twitter renders an OG preview card showing the scan grade and finding count
   3. Visiting an expired results URL shows a dedicated page (not a 404) with the original target URL pre-filled in the scan form
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 43-01-PLAN.md — Backend soft-delete migration, expired scan query, results endpoint update
+- [ ] 43-02-PLAN.md — ShareButton component, OG meta enrichment, expired results UI
 **UI hint**: yes
 
 ### Phase 44: Content Routes
@@ -201,11 +204,11 @@ Plans:
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
 | 39-41. CI & Quality Hardening | v1.8 | 3/3 | Complete | 2026-03-02 |
 | 42. Funnel Unlock | v1.9 | 2/2 | Complete    | 2026-03-31 |
-| 43. Share & Results UX | v1.9 | 0/TBD | Not started | - |
+| 43. Share & Results UX | v1.9 | 0/2 | Planned | - |
 | 44. Content Routes | v1.9 | 0/TBD | Not started | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Not started | - |
 
 **Total: 9 milestones shipped, 41 phases complete, 98 plans complete. v1.9 in progress (4 phases).**
 
 ---
-*Last updated: 2026-03-30 after Phase 42 planning*
+*Last updated: 2026-03-31 after Phase 43 planning*

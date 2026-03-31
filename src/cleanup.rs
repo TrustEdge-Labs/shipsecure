@@ -7,8 +7,9 @@ use crate::db::scans;
 
 /// Spawn the hourly retention cleanup task.
 ///
-/// Deletes expired completed/failed scans (with 24h grace period beyond expires_at).
-/// Registered with the TaskTracker so graceful shutdown waits for any in-progress DELETE.
+/// Soft-expires completed/failed scans by setting status = 'expired' once expires_at passes.
+/// No grace period — soft-expire is non-destructive, data is preserved for the results endpoint.
+/// Registered with the TaskTracker so graceful shutdown waits for any in-progress UPDATE.
 /// First tick is deferred by 1 hour — no cleanup runs on startup/deploy.
 pub fn spawn_cleanup_task(
     pool: PgPool,
@@ -35,7 +36,7 @@ pub fn spawn_cleanup_task(
 }
 
 async fn run_cleanup(pool: &PgPool) {
-    let anon = match scans::delete_expired_scans_by_tier(pool, "free").await {
+    let anon = match scans::soft_expire_scans_by_tier(pool, "free").await {
         Ok(n) => n,
         Err(e) => {
             tracing::error!(error = %e, "retention_cleanup_failed");
@@ -43,7 +44,7 @@ async fn run_cleanup(pool: &PgPool) {
         }
     };
 
-    let dev = match scans::delete_expired_scans_by_tier(pool, "authenticated").await {
+    let dev = match scans::soft_expire_scans_by_tier(pool, "authenticated").await {
         Ok(n) => n,
         Err(e) => {
             tracing::error!(error = %e, "retention_cleanup_failed");
@@ -52,9 +53,9 @@ async fn run_cleanup(pool: &PgPool) {
     };
 
     tracing::info!(
-        anonymous_deleted = anon,
-        developer_deleted = dev,
-        total_deleted = anon + dev,
+        anonymous_expired = anon,
+        developer_expired = dev,
+        total_expired = anon + dev,
         "retention_cleanup"
     );
 }

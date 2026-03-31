@@ -8,6 +8,7 @@ use serde_json::json;
 
 use crate::api::errors::ApiError;
 use crate::api::scans::AppState;
+use crate::models::scan::ScanStatus;
 use crate::models::Severity;
 use crate::{db, models};
 
@@ -48,17 +49,41 @@ pub async fn get_results_by_token(
     // 1. Optionally extract Clerk user ID from Authorization header
     let authenticated_user_id = extract_optional_clerk_user(&state, &headers).await;
 
-    // 2. Query scan by token (checks expiry automatically)
-    let scan = db::scans::get_scan_by_token(&state.pool, &token)
-        .await?
-        .ok_or_else(|| ApiError::Custom {
+    // 2. Query scan by token (checks expiry automatically via expires_at filter)
+    let active_scan = db::scans::get_scan_by_token(&state.pool, &token).await?;
+
+    // 2b. If not found via active query, check if it's an expired scan and return minimal response
+    if active_scan.is_none() {
+        let expired_scan =
+            db::scans::get_scan_by_token_including_expired(&state.pool, &token).await?;
+        if let Some(scan) = expired_scan {
+            if scan.status == ScanStatus::Expired {
+                // Return lightweight expired response — target_url preserved for scan-again CTA
+                let response = json!({
+                    "id": scan.results_token,
+                    "target_url": scan.target_url,
+                    "status": "expired",
+                    "score": null,
+                    "tier": scan.tier,
+                    "expires_at": scan.expires_at,
+                    "created_at": scan.created_at,
+                    "completed_at": scan.completed_at,
+                    "findings": [],
+                    "summary": {"total": 0, "critical": 0, "high": 0, "medium": 0, "low": 0},
+                    "owner_verified": false,
+                });
+                return Ok(Json(response));
+            }
+        }
+        return Err(ApiError::Custom {
             status: StatusCode::NOT_FOUND,
             error_type: "https://shipsecure.ai/errors/results-not-found".to_string(),
             title: "Results Not Found".to_string(),
-            detail:
-                "Results not found or link has expired. Free scan results are available for 3 days."
-                    .to_string(),
-        })?;
+            detail: "Results not found or link has expired. Free scan results are available for 3 days.".to_string(),
+        });
+    }
+
+    let scan = active_scan.unwrap();
 
     // 3. Compute owner_verified — identity match AND active domain verification required.
     //    None == None returns false (anonymous scans always gated for anonymous callers).
@@ -176,16 +201,32 @@ pub async fn download_results_markdown(
     let authenticated_user_id = extract_optional_clerk_user(&state, &headers).await;
 
     // 2. Query scan by token (checks expiry automatically)
-    let scan = db::scans::get_scan_by_token(&state.pool, &token)
-        .await?
-        .ok_or_else(|| ApiError::Custom {
+    //    For expired scans, return 410 Gone — the markdown download is no longer available.
+    let active_scan = db::scans::get_scan_by_token(&state.pool, &token).await?;
+
+    if active_scan.is_none() {
+        // Check if it's explicitly expired (vs. never existed)
+        let expired_scan =
+            db::scans::get_scan_by_token_including_expired(&state.pool, &token).await?;
+        if let Some(scan) = expired_scan {
+            if scan.status == ScanStatus::Expired {
+                return Err(ApiError::Custom {
+                    status: StatusCode::GONE,
+                    error_type: "https://shipsecure.ai/errors/results-expired".to_string(),
+                    title: "Results Expired".to_string(),
+                    detail: "This scan report has expired. Scan again at shipsecure.ai to get a fresh report.".to_string(),
+                });
+            }
+        }
+        return Err(ApiError::Custom {
             status: StatusCode::NOT_FOUND,
             error_type: "https://shipsecure.ai/errors/results-not-found".to_string(),
             title: "Results Not Found".to_string(),
-            detail:
-                "Results not found or link has expired. Free scan results are available for 3 days."
-                    .to_string(),
-        })?;
+            detail: "Results not found or link has expired. Free scan results are available for 3 days.".to_string(),
+        });
+    }
+
+    let scan = active_scan.unwrap();
 
     // 3. Compute owner_verified — identity match AND active domain verification required.
     //    None == None returns false (anonymous scans always gated for anonymous callers).

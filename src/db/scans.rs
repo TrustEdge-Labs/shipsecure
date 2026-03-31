@@ -496,6 +496,53 @@ pub async fn delete_expired_scans_by_tier(pool: &PgPool, tier: &str) -> Result<u
     Ok(result.rows_affected())
 }
 
+/// Soft-expire completed/failed scans for a specific tier by setting status to 'expired'.
+///
+/// Returns the number of rows updated.
+/// Marks expired as soon as expires_at passes — no grace period (soft-expire is non-destructive).
+/// Only targets status IN ('completed', 'failed') — never modifies pending/in_progress.
+pub async fn soft_expire_scans_by_tier(pool: &PgPool, tier: &str) -> Result<u64, sqlx::Error> {
+    let result = sqlx::query(
+        "UPDATE scans
+         SET status = 'expired'
+         WHERE tier = $1
+           AND status IN ('completed', 'failed')
+           AND expires_at IS NOT NULL
+           AND expires_at < NOW()",
+    )
+    .bind(tier)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected())
+}
+
+/// Get a scan by results token regardless of expiry status (including expired scans).
+///
+/// Used as a fallback in the results endpoint when the primary token lookup returns None,
+/// allowing the frontend to render a dedicated "results expired" page with the original
+/// target_url pre-filled in a scan-again CTA.
+#[allow(dead_code)]
+pub async fn get_scan_by_token_including_expired(
+    pool: &PgPool,
+    token: &str,
+) -> Result<Option<Scan>, sqlx::Error> {
+    let scan = sqlx::query_as::<_, Scan>(
+        "SELECT id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
+                expires_at::timestamp, detected_framework, detected_platform,
+                stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
+                tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
+                clerk_user_id
+         FROM scans
+         WHERE results_token = $1",
+    )
+    .bind(token)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(scan)
+}
+
 /// Non-paginated list of in-progress/pending scans for a user.
 ///
 /// Active scans have no findings yet; severity counts are hardcoded to zero.

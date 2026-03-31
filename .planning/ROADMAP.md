@@ -177,7 +177,10 @@ Plans:
   2. /blog shows a "coming soon" page with a scan CTA when no posts exist
   3. /check/lovable, /check/bolt, and /check/v0 each load with platform-specific accent colors and CVE context copy
   4. Each /check/{platform} page pre-fills the scan form URL field with a platform-appropriate placeholder (e.g., a .lovable.app URL)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 44-01-PLAN.md — MDX blog infrastructure and /blog routes
+- [ ] 44-02-PLAN.md — /check/{platform} landing pages with platform accents and scan form pre-fill
 **UI hint**: yes
 
 ### Phase 45: Analytics Events
@@ -205,10 +208,10 @@ Plans:
 | 39-41. CI & Quality Hardening | v1.8 | 3/3 | Complete | 2026-03-02 |
 | 42. Funnel Unlock | v1.9 | 2/2 | Complete    | 2026-03-31 |
 | 43. Share & Results UX | v1.9 | 2/2 | Complete    | 2026-03-31 |
-| 44. Content Routes | v1.9 | 0/TBD | Not started | - |
+| 44. Content Routes | v1.9 | 0/2 | Planning    | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Not started | - |
 
 **Total: 9 milestones shipped, 41 phases complete, 98 plans complete. v1.9 in progress (4 phases).**
 
 ---
-*Last updated: 2026-03-31 after Phase 43 planning*
+*Last updated: 2026-03-31 after Phase 44 planning*

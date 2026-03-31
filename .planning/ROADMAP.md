@@ -133,7 +133,7 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 **Milestone Goal:** Get the first 10 authenticated users scanning their own sites through funnel polish, CVE-driven content marketing, and community launch on HN/Reddit.
 
 - [x] **Phase 42: Funnel Unlock** — Reopen anonymous scans, raise rate limits, remove domain verification gate for authenticated users (completed 2026-03-30)
-- [ ] **Phase 43: Share & Results UX** — Share button, OG meta tags, expired results page with scan-again CTA
+- [x] **Phase 43: Share & Results UX** — Share button, OG meta tags, expired results page with scan-again CTA (completed 2026-03-31)
 - [ ] **Phase 44: Content Routes** — /blog MDX infrastructure and /check/{platform} landing pages for Lovable, Bolt, v0
 - [ ] **Phase 45: Analytics Events** — Plausible conversion events wired to scan, signup, and share actions
 
@@ -162,10 +162,10 @@ Plans:
   1. Results page shows a share button that copies the capability URL to clipboard
   2. Pasting a results URL into Slack or Twitter renders an OG preview card showing the scan grade and finding count
   3. Visiting an expired results URL shows a dedicated page (not a 404) with the original target URL pre-filled in the scan form
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 43-01-PLAN.md — Backend soft-delete migration, expired scan query, results endpoint update
-- [ ] 43-02-PLAN.md — ShareButton component, OG meta enrichment, expired results UI
+- [x] 43-02-PLAN.md — ShareButton component, OG meta enrichment, expired results UI
 **UI hint**: yes
 
 ### Phase 44: Content Routes
@@ -204,7 +204,7 @@ Plans:
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
 | 39-41. CI & Quality Hardening | v1.8 | 3/3 | Complete | 2026-03-02 |
 | 42. Funnel Unlock | v1.9 | 2/2 | Complete    | 2026-03-31 |
-| 43. Share & Results UX | v1.9 | 1/2 | In Progress|  |
+| 43. Share & Results UX | v1.9 | 2/2 | Complete   | 2026-03-31 |
 | 44. Content Routes | v1.9 | 0/TBD | Not started | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Not started | - |
 

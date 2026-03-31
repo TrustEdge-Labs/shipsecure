@@ -5,9 +5,9 @@
 - [x] **FUNNEL-02**: Anonymous scans rate-limited to 3 per IP per day
 - [x] **FUNNEL-03**: Per-target rate limit of 5 scans per domain per hour (return cached results when exceeded)
 - [x] **FUNNEL-04**: Authenticated user can scan any URL without domain verification
-- [ ] **FUNNEL-05**: User can copy scan results URL via share button on results page
+- [x] **FUNNEL-05**: User can copy scan results URL via share button on results page
 - [x] **FUNNEL-06**: Expired results page shows "scan again" CTA with pre-filled URL
-- [ ] **FUNNEL-07**: Results page has OG meta tags with grade and finding count for social sharing
+- [x] **FUNNEL-07**: Results page has OG meta tags with grade and finding count for social sharing
 
 ## Content
 - [ ] **CONTENT-01**: /blog route renders MDX blog posts with proper typography
@@ -42,9 +42,9 @@
 | FUNNEL-02 | Phase 42 | Complete |
 | FUNNEL-03 | Phase 42 | Complete |
 | FUNNEL-04 | Phase 42 | Complete |
-| FUNNEL-05 | Phase 43 | Pending |
+| FUNNEL-05 | Phase 43 | Complete |
 | FUNNEL-06 | Phase 43 | Complete |
-| FUNNEL-07 | Phase 43 | Pending |
+| FUNNEL-07 | Phase 43 | Complete |
 | CONTENT-01 | Phase 44 | Pending |
 | CONTENT-02 | Phase 44 | Pending |
 | CONTENT-03 | Phase 44 | Pending |

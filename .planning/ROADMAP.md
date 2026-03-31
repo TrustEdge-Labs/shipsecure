@@ -162,9 +162,9 @@ Plans:
   1. Results page shows a share button that copies the capability URL to clipboard
   2. Pasting a results URL into Slack or Twitter renders an OG preview card showing the scan grade and finding count
   3. Visiting an expired results URL shows a dedicated page (not a 404) with the original target URL pre-filled in the scan form
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 43-01-PLAN.md — Backend soft-delete migration, expired scan query, results endpoint update
+- [x] 43-01-PLAN.md — Backend soft-delete migration, expired scan query, results endpoint update
 - [ ] 43-02-PLAN.md — ShareButton component, OG meta enrichment, expired results UI
 **UI hint**: yes
 
@@ -204,7 +204,7 @@ Plans:
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
 | 39-41. CI & Quality Hardening | v1.8 | 3/3 | Complete | 2026-03-02 |
 | 42. Funnel Unlock | v1.9 | 2/2 | Complete    | 2026-03-31 |
-| 43. Share & Results UX | v1.9 | 0/2 | Planned | - |
+| 43. Share & Results UX | v1.9 | 1/2 | In Progress|  |
 | 44. Content Routes | v1.9 | 0/TBD | Not started | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Not started | - |
 

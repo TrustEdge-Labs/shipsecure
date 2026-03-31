@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Customer Acquisition
 status: executing
-stopped_at: Phase 43 context gathered
-last_updated: "2026-03-31T02:22:32.668Z"
+stopped_at: Completed 43-01-PLAN.md (soft-delete scan expiry)
+last_updated: "2026-03-31T02:38:32.867Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
 ---
 
 # Project State
@@ -20,12 +20,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Phase 42 — funnel-unlock
+**Current focus:** Phase 43 — share-results-ux
 
 ## Current Position
 
-Phase: 43
-Plan: Not started
+Phase: 43 (share-results-ux) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
 Last activity: 2026-03-31
 
@@ -54,6 +54,7 @@ Progress: 9 milestones shipped, 41 phases, 98 plans completed
 | v1.8 CI & Quality Hardening | 39-41 | 3 | 1 |
 | Phase 42-funnel-unlock P01 | 20 | 2 tasks | 4 files |
 | Phase 42-funnel-unlock P02 | 3 | 2 tasks | 3 files |
+| Phase 43-share-results-ux P01 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work:
 - [Phase 42-funnel-unlock]: Domain verification gate removed entirely for authenticated users — reduces friction without security regression
 - [Phase 42-funnel-unlock]: Remove DOMAIN_VERIFICATION_REQUIRED branch from ScanForm — domain verification dropped per D-01, makes error handler dead code
 - [Phase 42-funnel-unlock]: isAuthenticated prop retained in ScanForm — still controls rate limit upsell link visibility and quota copy
+- [Phase 43-share-results-ux]: Soft-expire has no grace period — non-destructive UPDATE means expires_at is exact cutoff; delete_expired_scans_by_tier retained for future hard-delete pass on old expired rows
+- [Phase 43-share-results-ux]: Expired results return HTTP 200 with status='expired' tombstone JSON (not 404/410); download endpoint returns 410 Gone — no binary tombstone equivalent
 
 ### Pending Todos
 
@@ -83,6 +86,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-31T02:22:32.664Z
-Stopped at: Phase 43 context gathered
-Resume file: .planning/phases/43-share-results-ux/43-CONTEXT.md
+Last session: 2026-03-31T02:38:32.864Z
+Stopped at: Completed 43-01-PLAN.md (soft-delete scan expiry)
+Resume file: None

@@ -10,6 +10,7 @@ pub enum ScanStatus {
     InProgress,
     Completed,
     Failed,
+    Expired,
 }
 
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]

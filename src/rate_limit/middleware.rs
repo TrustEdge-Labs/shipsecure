@@ -49,19 +49,17 @@ pub async fn check_rate_limits(
 ) -> Result<Option<Uuid>, ApiError> {
     // Per-target rate limit: 5 scans of same domain in last hour (applies to all callers)
     let target_count = scans::count_scans_by_domain_last_hour(pool, target_domain).await?;
-    if target_count >= PER_TARGET_HOURLY_CAP {
-        if let Some(cached_scan) =
+    if target_count >= PER_TARGET_HOURLY_CAP
+        && let Some(cached_scan) =
             scans::get_recent_completed_scan_for_domain(pool, target_domain).await?
-        {
-            metrics::counter!(
-                "rate_limit_total",
-                "limiter" => "scan_per_target",
-                "action" => "cached"
-            )
-            .increment(1);
-            return Ok(Some(cached_scan.id));
-        }
-        // No completed scan to return — fall through to normal scan
+    {
+        metrics::counter!(
+            "rate_limit_total",
+            "limiter" => "scan_per_target",
+            "action" => "cached"
+        )
+        .increment(1);
+        return Ok(Some(cached_scan.id));
     }
 
     match clerk_user_id {

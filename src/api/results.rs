@@ -8,8 +8,8 @@ use serde_json::json;
 
 use crate::api::errors::ApiError;
 use crate::api::scans::AppState;
-use crate::models::scan::ScanStatus;
 use crate::models::Severity;
+use crate::models::scan::ScanStatus;
 use crate::{db, models};
 
 /// Extract the bare domain from a scan target URL using the same normalization
@@ -56,30 +56,32 @@ pub async fn get_results_by_token(
     if active_scan.is_none() {
         let expired_scan =
             db::scans::get_scan_by_token_including_expired(&state.pool, &token).await?;
-        if let Some(scan) = expired_scan {
-            if scan.status == ScanStatus::Expired {
-                // Return lightweight expired response — target_url preserved for scan-again CTA
-                let response = json!({
-                    "id": scan.results_token,
-                    "target_url": scan.target_url,
-                    "status": "expired",
-                    "score": null,
-                    "tier": scan.tier,
-                    "expires_at": scan.expires_at,
-                    "created_at": scan.created_at,
-                    "completed_at": scan.completed_at,
-                    "findings": [],
-                    "summary": {"total": 0, "critical": 0, "high": 0, "medium": 0, "low": 0},
-                    "owner_verified": false,
-                });
-                return Ok(Json(response));
-            }
+        if let Some(scan) = expired_scan
+            && scan.status == ScanStatus::Expired
+        {
+            // Return lightweight expired response — target_url preserved for scan-again CTA
+            let response = json!({
+                "id": scan.results_token,
+                "target_url": scan.target_url,
+                "status": "expired",
+                "score": null,
+                "tier": scan.tier,
+                "expires_at": scan.expires_at,
+                "created_at": scan.created_at,
+                "completed_at": scan.completed_at,
+                "findings": [],
+                "summary": {"total": 0, "critical": 0, "high": 0, "medium": 0, "low": 0},
+                "owner_verified": false,
+            });
+            return Ok(Json(response));
         }
         return Err(ApiError::Custom {
             status: StatusCode::NOT_FOUND,
             error_type: "https://shipsecure.ai/errors/results-not-found".to_string(),
             title: "Results Not Found".to_string(),
-            detail: "Results not found or link has expired. Free scan results are available for 3 days.".to_string(),
+            detail:
+                "Results not found or link has expired. Free scan results are available for 3 days."
+                    .to_string(),
         });
     }
 
@@ -208,21 +210,23 @@ pub async fn download_results_markdown(
         // Check if it's explicitly expired (vs. never existed)
         let expired_scan =
             db::scans::get_scan_by_token_including_expired(&state.pool, &token).await?;
-        if let Some(scan) = expired_scan {
-            if scan.status == ScanStatus::Expired {
-                return Err(ApiError::Custom {
-                    status: StatusCode::GONE,
-                    error_type: "https://shipsecure.ai/errors/results-expired".to_string(),
-                    title: "Results Expired".to_string(),
-                    detail: "This scan report has expired. Scan again at shipsecure.ai to get a fresh report.".to_string(),
-                });
-            }
+        if let Some(scan) = expired_scan
+            && scan.status == ScanStatus::Expired
+        {
+            return Err(ApiError::Custom {
+                status: StatusCode::GONE,
+                error_type: "https://shipsecure.ai/errors/results-expired".to_string(),
+                title: "Results Expired".to_string(),
+                detail: "This scan report has expired. Scan again at shipsecure.ai to get a fresh report.".to_string(),
+            });
         }
         return Err(ApiError::Custom {
             status: StatusCode::NOT_FOUND,
             error_type: "https://shipsecure.ai/errors/results-not-found".to_string(),
             title: "Results Not Found".to_string(),
-            detail: "Results not found or link has expired. Free scan results are available for 3 days.".to_string(),
+            detail:
+                "Results not found or link has expired. Free scan results are available for 3 days."
+                    .to_string(),
         });
     }
 

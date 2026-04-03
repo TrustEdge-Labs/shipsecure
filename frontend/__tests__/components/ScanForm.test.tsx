@@ -25,13 +25,13 @@ describe('ScanForm', () => {
   })
 
   describe('Form Fields', () => {
-    test('renders disabled URL input pre-filled with demo target for anonymous users', () => {
+    test('renders editable URL input for anonymous users', () => {
       renderWithProviders(<ScanForm />)
       const urlInput = screen.getByLabelText(/website url/i)
       expect(urlInput).toBeInTheDocument()
       expect(urlInput).toHaveAttribute('type', 'url')
-      expect(urlInput).toBeDisabled()
-      expect(urlInput).toHaveValue('https://demo.owasp-juice.shop')
+      expect(urlInput).not.toBeDisabled()
+      expect(urlInput).toHaveAttribute('name', 'url')
     })
 
     test('renders editable URL input for authenticated users', () => {
@@ -43,10 +43,9 @@ describe('ScanForm', () => {
       expect(urlInput).not.toBeDisabled()
     })
 
-    test('shows demo target explanation for anonymous users', () => {
+    test('shows scan quota info for anonymous users', () => {
       renderWithProviders(<ScanForm />)
-      expect(screen.getByText(/anonymous scans are limited to our live demo target/i)).toBeInTheDocument()
-      expect(screen.getByText(/sign up for free/i)).toBeInTheDocument()
+      expect(screen.getByText(/3 free scans per day/i)).toBeInTheDocument()
     })
 
     test('renders email input with label containing "Email"', () => {

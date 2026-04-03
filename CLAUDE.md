@@ -123,3 +123,9 @@ ssh -p 2222 deploy@shipsecure.ai 'bash /opt/shipsecure/setup-production.sh'
 ### Branch Protection
 - `main` branch is protected: no force pushes, 2 required status checks
 - Admin bypass disabled
+
+## Design System
+Always read DESIGN.md before making any visual or UI decisions.
+All font choices, colors, spacing, and aesthetic direction are defined there.
+Do not deviate without explicit user approval.
+In QA mode, flag any code that doesn't match DESIGN.md.

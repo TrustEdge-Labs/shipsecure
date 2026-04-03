@@ -4,3 +4,4 @@ node_modules/
 frontend/.next/
 reports/
 infrastructure/inventory/group_vars/vault.yml
+.gstack/

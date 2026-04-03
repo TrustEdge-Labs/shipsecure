@@ -14,7 +14,7 @@ export function ScanForm({ isAuthenticated = false }: ScanFormProps) {
 
   useEffect(() => {
     if (state.scanId) {
-      window.plausible?.('Scan Submitted', { props: { scan_type: 'url' } })
+      window.plausible?.('Scan Started', { props: { scan_type: 'url' } })
       const timer = setTimeout(() => {
         router.push(`/scan/${state.scanId}`)
       }, 2500)

@@ -7,6 +7,7 @@ export function ShareButton({ url }: { url: string }) {
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(url)
+    window.plausible?.('Share Clicked')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

@@ -6,6 +6,7 @@ import { DomainBadge } from '@/components/domain-badge'
 import { ScanHistoryTable } from '@/components/scan-history-table'
 import { ActiveScansPoller } from '@/components/active-scans-poller'
 import { PageContainer } from '@/components/page-container'
+import { SignupTracker } from '@/components/signup-tracker'
 import type { VerifiedDomain, QuotaResponse, ScanHistoryResponse } from '@/lib/types'
 
 interface DashboardPageProps {
@@ -69,7 +70,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const isEmpty = completedScans.length === 0 && activeScans.length === 0
 
   return (
-    <main><PageContainer maxWidth="max-w-6xl" className="py-8">
+    <main><SignupTracker /><PageContainer maxWidth="max-w-6xl" className="py-8">
       <h1 className="text-3xl font-bold text-text-primary mb-1">Dashboard</h1>
       <p className="text-text-secondary mb-8">Welcome, {firstName}</p>
 

@@ -97,36 +97,46 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - ✓ Coverage thresholds enforced across all active components (no exclusions remaining) — v1.8
 - ✓ README accuracy (Next.js 16, proxy.ts) — v1.8
 
+- ✓ Reopen anonymous scans for any URL (revert Juice Shop lockdown) — v1.9
+- ✓ Per-target rate limiting (5/domain/hour, cached results) — v1.9
+- ✓ Increase anonymous rate limit to 3/IP/day — v1.9
+- ✓ Drop domain verification requirement for authenticated scans — v1.9
+- ✓ Share results button (copy URL + text OG meta tags) — v1.9
+- ✓ Expired results page with "scan again" CTA — v1.9
+- ✓ Plausible conversion events (scan-started, share-clicked, signup-completed) — v1.9
+- ✓ DESIGN.md formalized (Geist, industrial/utilitarian, no purple) — v1.9
+
 ### Active
 
-## Current Milestone: v1.9 Customer Acquisition
+## Current Milestone: v2.0 Supply Chain Scanning
 
-**Goal:** Get the first 10 authenticated users scanning their own sites through funnel polish, CVE-driven content marketing, and community launch on HN/Reddit.
+**Goal:** Add compromised package detection to ShipSecure, pivoting from pure web app scanning toward supply chain security for vibe-coders who don't know Dependabot exists.
 
 **Target features:**
-- Reopen anonymous scans for any URL (revert Juice Shop lockdown)
-- Per-target rate limiting (5/domain/hour, cached results)
-- Increase anonymous rate limit to 3/IP/day
-- Drop domain verification requirement for authenticated scans
-- Share results button (copy URL + text OG meta tags)
-- Expired results page with "scan again" CTA
-- Plausible conversion events (demo-scan-started, signup-completed, first-real-scan, share-click)
-- /blog route with MDX for CVE content hosting
-- /check/{platform} landing pages (Lovable, Bolt, v0) with platform-specific visual treatment
-- Empty blog "coming soon" page with scan CTA
-- DESIGN.md formalized (Geist, industrial/utilitarian, no purple)
+- Lockfile parsing (package-lock.json v1/v2/v3) in Rust backend
+- OSV.dev integration for known compromised/vulnerable package detection
+- GitHub URL input (main/master branch fallback) + lockfile upload/paste
+- Tiered results display (Infected/Vulnerable/Advisory/No Known Issues/Unscanned)
+- New /supply-chain page and /supply-chain/results/[token] page
+- Shareable results with 30-day expiry
+- Abuse control (reuse rate limiter, 5000 dep cap, 5MB body limit)
+- Full test suite (unit, integration, E2E)
 
 ### Out of Scope
 
-- GitHub repo scanning (Semgrep, Gitleaks, dependency analysis) — fast follow after auth foundation
-- Pro subscription tier (unlimited sites, deep scans, automation, API, PDF/CSV exports, permanent history) — build after Developer tier proves conversion
-- Agency tier (white-label reports, multi-repo) — future tier after Pro is proven
-- Certificate expiration monitoring — Pro tier feature
-- GitHub webhook triggers for automated re-scanning — Pro tier feature
-- Scheduled scans / CI/CD integration — Pro tier feature
+- Structural risk scoring (maintainer count, install scripts, provenance) — Phase 2 of supply chain, earn with demand
+- Continuous monitoring / GitHub App / webhook polling — Phase 2, requires background workers
+- Org-wide supply chain dashboard / policy engine — Phase 3, enterprise feature
+- Python/Rust/Go/yarn.lock/pnpm-lock ecosystem support — Phase 2, npm-only for MVP
+- Private repo scanning — requires GitHub OAuth, Phase 2
+- Billing / pricing tiers — validate demand first
+- SBOM generation — not in scope
+- Transitive dependency graph visualization — nice-to-have, not MVP
+- /blog route with MDX / /check/{platform} landing pages — deprioritized by supply chain pivot
+- Pro subscription tier — build after supply chain proves conversion
+- Agency tier (white-label reports, multi-repo) — future tier
 - Mobile app — web-first
 - Real-time scan progress (WebSocket) — polling sufficient for now
-- Cookie consent banner — not needed with cookieless Plausible analytics
 
 ## Context
 
@@ -149,8 +159,9 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 - **Post-v1.6 deployment hardening (2026-02-21):** 19 commits fixing CI/CD pipeline, Docker Compose standalone mode, systemd integration, env var management. Production deploy pipeline now reliable.
 - **v1.7 shipped 2026-02-25:** Frontend polish — touch targets, a11y, hydration fix, email copy, dashboard polling, design tokens, PageContainer, Plausible fix, 33 files changed, 3 phases, 7 plans
 - **v1.8 shipped 2026-03-02:** CI & quality hardening — backend CI pipeline, Docker healthchecks, frontend test coverage for v1.6 components, 54 files changed, 3 phases, 3 plans, 1 day
-- **Current:** 9 milestones shipped, 41 phases, 98 plans completed. Zero customers, zero revenue. Distribution problem, not product problem.
-- **v1.9 context (2026-03-30):** CEO review redirected from Skill Scan v1 to customer acquisition. 8+ competing scanners exist. CVE-driven content marketing chosen as distribution channel. DESIGN.md formalized (Geist, industrial/utilitarian).
+- **Current:** 9 milestones shipped, 41 phases, 98 plans completed. Zero customers, zero revenue.
+- **v1.9 shipped partially (2026-04-06):** Funnel unlock (phases 42-43) and analytics events (phase 45) shipped. Content routes/platform pages deprioritized by supply chain pivot.
+- **v2.0 context (2026-04-06):** Real user @_AIAcceleration on X asked for "known infected packages" detection. Didn't know Dependabot existed. Supply chain security market $3.5B by 2027. Socket.dev has $65M (a16z) but targets enterprises. ShipSecure pivoting to supply chain scanning for vibe-coders. Design doc approved via /office-hours, eng review completed with Codex outside voice.
 
 ## Constraints
 
@@ -230,4 +241,4 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | vi.useFakeTimers for date-dependent component tests | Deterministic assertions regardless of when tests run | ✓ Good — no flaky date-boundary failures |
 
 ---
-*Last updated: 2026-03-02 after v1.8 milestone*
+*Last updated: 2026-04-06 after v2.0 milestone start*

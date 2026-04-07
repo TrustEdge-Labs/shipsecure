@@ -1,5 +1,21 @@
 # Project Milestones: TrustEdge Audit
 
+## v1.9 Customer Acquisition (Shipped: 2026-04-07)
+
+**Phases completed:** 4 phases, 8 plans, 12 tasks
+
+**Key accomplishments:**
+
+- Lockfile parser extracting deduplicated dependencies from package-lock.json v1/v2/v3 with source classification and shared supply chain types
+- OSV.dev HTTP client with chunked batch query, retry logic, and tier-based categorization orchestrator producing serializable SupplyChainScanResult
+- Schema migration adding kind discriminator + JSONB results column, with 7 kind-aware query filters and 3 new supply chain DB functions
+- Supply chain scan endpoint with JSON/multipart/GitHub URL input modes, error mapping to HTTP status codes, and graceful DB persistence with token sharing
+- 3-tab supply chain form (GitHub URL / Upload / Paste) with loading spinner, RFC 7807 error mapping, and backend results endpoint patched to expose kind + supply_chain_results
+- Task 1 — 4 new component tests:
+- 1. [Rule 1 - Bug] Used page.route() instead of next.onFetch() for scan submission
+
+---
+
 ## v1.8 CI & Quality Hardening (Shipped: 2026-03-02)
 
 **Delivered:** Backend CI quality gates, Docker container health monitoring, and full frontend test coverage — closing all CI and quality gaps before sharing with real users
@@ -7,6 +23,7 @@
 **Phases completed:** 39-41 (3 plans, 7 tasks total)
 
 **Key accomplishments:**
+
 - Backend CI pipeline with cargo fmt, clippy (-D warnings), and test gates on every push/PR to main
 - Backend test coverage reporting via cargo-llvm-cov (report-only, no threshold enforcement yet)
 - Docker healthcheck directives on both production containers with service_healthy startup ordering
@@ -15,6 +32,7 @@
 - Coverage thresholds enforced across all active components — 126 tests, 88.75% lines / 89.22% branches / 84.9% functions
 
 **Stats:**
+
 - 54 files changed (+2,834 / -765 lines)
 - 3 phases, 3 plans, 7 tasks, 14 commits
 - 1 day (Mar 1, 2026)
@@ -32,6 +50,7 @@
 **Phases completed:** 1-4 (23 plans total)
 
 **Key accomplishments:**
+
 - Rust/Axum backend with 5 parallel security scanners (headers, TLS, exposed files, JS secrets, vibe-code)
 - Next.js frontend with landing page, real-time scan progress, and results dashboard
 - Framework/platform auto-detection with copy-paste remediation guidance for Next.js, Vite, React
@@ -40,6 +59,7 @@
 - SSRF protection, rate limiting, Docker-hardened container execution
 
 **Stats:**
+
 - 165 files created
 - ~7,000 lines of Rust + ~21,000 lines of TypeScript/TSX
 - 4 phases, 23 plans
@@ -58,6 +78,7 @@
 **Phases completed:** 05-07 (10 plans total)
 
 **Key accomplishments:**
+
 - Refactored scanners from Docker containers to native binary subprocesses with configurable paths
 - Production Docker builds with fail-fast config validation, multi-stage images, and resource limits
 - DigitalOcean droplet provisioned via Ansible with SSH hardening (port 2222), UFW firewall, Nginx + Let's Encrypt SSL
@@ -66,6 +87,7 @@
 - Paid audit pipeline validated: Stripe checkout, webhook processing, PDF report generation, email delivery
 
 **Stats:**
+
 - 77 files changed (+9,980 / -3,084 lines)
 - ~7,120 lines of Rust + ~1,272 lines of TypeScript
 - 3 phases, 10 plans, 31 commits
@@ -77,7 +99,6 @@
 
 ---
 
-
 ## v1.2 Launch Readiness (Shipped: 2026-02-10)
 
 **Delivered:** Launch-ready polish for Hacker News — analytics, SEO, legal compliance, mobile UX, and developer-focused landing page
@@ -85,6 +106,7 @@
 **Phases completed:** 08-12 (10 plans total)
 
 **Key accomplishments:**
+
 - Plausible analytics with privacy-friendly pageview tracking and conversion events (scan submit, paid audit purchase)
 - SEO metadata, Open Graph tags, JSON-LD schemas, dynamic OG image generation, sitemap, and robots.txt
 - Privacy Policy and Terms of Service pages with CFAA authorization consent checkbox on scan form
@@ -93,6 +115,7 @@
 - Automatic CI/CD deploy pipeline (push → build → SSH deploy to production)
 
 **Stats:**
+
 - 67 files changed (+11,410 / -1,192 lines)
 - 5 phases, 10 plans, 47 commits
 - 2 days from start to ship (Feb 8-10, 2026)
@@ -103,7 +126,6 @@
 
 ---
 
-
 ## v1.3 Brand Identity (Shipped: 2026-02-11)
 
 **Delivered:** Professional visual identity — design tokens, branded logo, header navigation, SVG icons, and branded favicon/OG assets
@@ -111,6 +133,7 @@
 **Phases completed:** 13-18 (10 plans total)
 
 **Key accomplishments:**
+
 - Two-layer design token system (OKLch primitives + semantic tokens) with automatic dark mode via `prefers-color-scheme`
 - WCAG AA contrast validation across all 26 color pairs with OKLch lightness adjustments
 - Professional shield logo (PNG) with responsive component serving icon/compact/full variants
@@ -119,6 +142,7 @@
 - Branded favicon (ICO + SVG with dark mode), Apple touch icon, and OG image with logo composite
 
 **Stats:**
+
 - 62 files changed (+8,462 / -392 lines)
 - 6 phases, 10 plans, 16 feat commits
 - 7 days from start to ship (Feb 4-11, 2026)
@@ -129,7 +153,6 @@
 
 ---
 
-
 ## v1.4 Observability (Shipped: 2026-02-16)
 
 **Delivered:** Production-grade observability — structured logging, request tracing, health checks, Prometheus metrics, graceful shutdown, and infrastructure monitoring
@@ -137,6 +160,7 @@
 **Phases completed:** 19-24 (11 plans total)
 
 **Key accomplishments:**
+
 - Structured JSON/text logging with environment-driven switching (LOG_FORMAT), sensible defaults, and panic hook integration
 - End-to-end request tracing with UUID correlation IDs flowing from HTTP middleware through database to scan orchestrator
 - Health check endpoints (liveness + readiness) with DB connectivity validation, scan capacity reporting, and latency-based degradation
@@ -145,6 +169,7 @@
 - Production infrastructure: Nginx-secured /metrics, Docker graceful shutdown coordination (90s grace), systemd timeout (95s), DO metrics agent
 
 **Stats:**
+
 - 47 files changed (+1,088 / -247 lines)
 - ~7,877 lines of Rust total
 - 6 phases, 11 plans, 52 commits
@@ -156,7 +181,6 @@
 
 ---
 
-
 ## v1.5 Frontend Testing (Shipped: 2026-02-17)
 
 **Delivered:** Comprehensive frontend test suite — Vitest unit/component tests, Playwright E2E tests, and GitHub Actions CI pipeline with coverage enforcement and branch protection
@@ -164,6 +188,7 @@
 **Phases completed:** 25-28 (11 plans total)
 
 **Key accomplishments:**
+
 - Vitest + React Testing Library test infrastructure with happy-dom, MSW mock handlers, and custom RTL render wrapper
 - 106 unit/component tests covering all 9 client components plus dark mode, loading, and error boundary states
 - Playwright E2E tests for free scan flow, paid audit flow (up to Stripe redirect), and 6 error scenarios against production builds
@@ -172,6 +197,7 @@
 - Branch protection on main requiring all CI checks to pass with no admin bypass
 
 **Stats:**
+
 - 72 files changed (+14,424 / -669 lines)
 - 4 phases, 11 plans, 48 commits
 - 2 days (Feb 16-17, 2026)
@@ -182,7 +208,6 @@
 
 ---
 
-
 ## v1.6 Auth & Tiered Access (Shipped: 2026-02-19)
 
 **Delivered:** Authentication, domain verification, tiered access model, results gating, rate limiting, scan history dashboard, and data retention — transforming anonymous-only scanning into a multi-tier product
@@ -190,6 +215,7 @@
 **Phases completed:** 29-35 (13 plans total)
 
 **Key accomplishments:**
+
 - Clerk authentication with email/password, Google, and GitHub OAuth via pre-built Next.js components
 - Axum JWT verification via cached JWKS public keys (no per-request Clerk API calls, RS256)
 - CVE-2025-29927 Nginx mitigation (x-middleware-subrequest header strip)
@@ -202,6 +228,7 @@
 - Data retention — hourly cleanup task, 24h anonymous / 30d Developer expiry with 24h grace period
 
 **Stats:**
+
 - 155 files changed (+17,584 / -4,085 lines)
 - 7 phases, 13 plans
 - 2 days (Feb 18-19, 2026)
@@ -209,6 +236,7 @@
 **Git range:** `docs(29)` → `docs(phase-35)`
 
 **Post-ship deployment hardening (2026-02-21):**
+
 - 19 commits fixing CI/CD deploy pipeline, Docker Compose production config, and systemd integration
 - docker-compose.prod.yml made standalone (no dev compose merging — Docker merge behavior unreliable)
 - Deploy workflow rewritten: scp compose files + systemd restart (not direct docker compose in CI)
@@ -222,7 +250,6 @@
 
 ---
 
-
 ## v1.7 Frontend Polish (Shipped: 2026-02-25)
 
 **Delivered:** Accessibility improvements, hydration fixes, and design consistency across the frontend
@@ -230,6 +257,7 @@
 **Phases completed:** 36-38 (7 plans total)
 
 **Key accomplishments:**
+
 - WCAG 2.5.5 touch targets (44px min) on header nav links, logo, and CFAA checkbox
 - Dashboard table row a11y — single link per row, no duplicate announcements
 - React hydration fix — suppressHydrationWarning on html + body elements
@@ -239,6 +267,7 @@
 - Plausible data-domain="shipsecure.ai" fix on analytics script tag
 
 **Stats:**
+
 - 33 files changed
 - 3 phases, 7 plans
 - 1 day (Feb 25, 2026)
@@ -246,4 +275,3 @@
 **Git range:** `feat(36-01)` → `docs(phase-38)`
 
 ---
-

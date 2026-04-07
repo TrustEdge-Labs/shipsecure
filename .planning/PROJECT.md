@@ -241,4 +241,4 @@ Catch security flaws in vibe-coded apps before they become breaches, with remedi
 | vi.useFakeTimers for date-dependent component tests | Deterministic assertions regardless of when tests run | ✓ Good — no flaky date-boundary failures |
 
 ---
-*Last updated: 2026-04-07 after Phase 48 (Frontend) complete — supply chain scanner UI shipped: /supply-chain input page with 3-tab form, /supply-chain/results page with tiered findings, header nav, landing page CTA*
+*Last updated: 2026-04-07 after v1.9 Customer Acquisition milestone complete — supply chain scanner shipped end-to-end: npm lockfile parsing, OSV vulnerability checking, 3-tab input page, tiered results display, test suite (141 frontend tests, 60+ Rust tests, 2 E2E tests)*

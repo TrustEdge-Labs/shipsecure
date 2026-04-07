@@ -45,7 +45,8 @@ function mapErrorResponse(status: number, body: Partial<ApiErrorResponse>): stri
 export async function submitSupplyChainScan(
   input: SupplyChainScanInput
 ): Promise<SupplyChainScanResult> {
-  const url = '/api/v1/scans/supply-chain'
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? ''
+  const url = `${baseUrl}/api/v1/scans/supply-chain`
 
   try {
     let response: Response

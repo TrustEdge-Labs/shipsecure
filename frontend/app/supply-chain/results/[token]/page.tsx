@@ -111,20 +111,23 @@ function ResultsView({
   return (
     <PageContainer maxWidth="max-w-4xl" className="py-8">
       {isInline && (
-        <div className="bg-warning-bg border border-warning-border rounded-(card) p-4 mb-6 text-sm text-warning-text">
+        <div className="bg-warning-bg border border-warning-border rounded-xl p-4 mb-6 text-sm text-warning-text">
           Share link unavailable — results shown inline only
         </div>
       )}
 
       {/* Header card */}
-      <div className="bg-surface-elevated rounded-(card) shadow-md p-6 mb-6">
-        <h1 className="text-2xl font-bold text-text-primary mb-4">
+      <div className="bg-surface-elevated rounded-xl shadow-md p-6 mb-6">
+        <h1 className="text-2xl font-bold text-text-primary mb-1">
           Supply Chain Scan Results
         </h1>
+        <p className="text-text-secondary text-sm mb-4">
+          {supplyChainResults.total_deps} npm {supplyChainResults.total_deps === 1 ? 'dependency' : 'dependencies'} scanned
+        </p>
         <div className="space-y-2 text-sm">
-          <div>
-            <span className="text-text-secondary">Target: </span>
-            {isGitHubUrl(data.target_url) ? (
+          {isGitHubUrl(data.target_url) ? (
+            <div>
+              <span className="text-text-secondary">Repository: </span>
               <a
                 href={data.target_url}
                 target="_blank"
@@ -133,10 +136,15 @@ function ResultsView({
               >
                 {data.target_url}
               </a>
-            ) : (
-              <span className="font-mono text-text-primary break-all">{data.target_url}</span>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div>
+              <span className="text-text-secondary">Source: </span>
+              <span className="text-text-primary">
+                {data.target_url === 'upload' ? 'Uploaded lockfile' : data.target_url === 'paste' ? 'Pasted lockfile' : data.target_url}
+              </span>
+            </div>
+          )}
           <div>
             <span className="text-text-secondary">Scanned: </span>
             <span className="text-text-primary">{formatDate(data.completed_at)}</span>
@@ -154,7 +162,7 @@ function ResultsView({
       <SupplyChainSummary results={supplyChainResults} />
 
       {/* Findings */}
-      <div className="bg-surface-elevated rounded-(card) shadow-md p-6 my-6">
+      <div className="bg-surface-elevated rounded-xl shadow-md p-6 my-6">
         <h2 className="text-xl font-bold text-text-primary mb-4">Findings</h2>
         <SupplyChainFindings results={supplyChainResults} />
       </div>
@@ -216,7 +224,7 @@ export default async function SupplyChainResultsPage({
     return (
       <div className="min-h-screen bg-surface-secondary py-8 px-4">
         <div className="max-w-md mx-auto mt-16">
-          <div className="bg-surface-elevated rounded-(card) shadow-md p-8 text-center">
+          <div className="bg-surface-elevated rounded-xl shadow-md p-8 text-center">
             <svg
               className="w-12 h-12 mx-auto text-text-secondary mb-4"
               fill="none"

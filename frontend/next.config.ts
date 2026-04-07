@@ -1,12 +1,15 @@
 import type { NextConfig } from "next";
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? '';
+const extraConnectSrc = backendUrl ? ` ${backendUrl}` : '';
+
 const cspHeader = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://*.clerk.accounts.dev",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https://img.clerk.com https://*.clerk.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.clerk.accounts.dev https://plausible.io",
+  `connect-src 'self' https://*.clerk.accounts.dev https://plausible.io${extraConnectSrc}`,
   "frame-src 'self' https://*.clerk.accounts.dev",
   "object-src 'none'",
   "base-uri 'self'",

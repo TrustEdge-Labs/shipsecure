@@ -247,8 +247,8 @@ Plans:
   5. GitHub 404, OSV down, invalid lockfile, and zero-dependency lockfile each display a distinct, actionable error message
 **Plans:** 2 plans
 Plans:
-- [x] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
-- [ ] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
+- [ ] 48-01-PLAN.md — Types, server action, 3-tab form component, backend results endpoint patch
+- [ ] 48-02-PLAN.md — Results page with summary cards and findings, Plausible events, header nav link, landing CTA
 **UI hint**: yes
 
 ### Phase 49: Test Suite

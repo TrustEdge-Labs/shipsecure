@@ -37,7 +37,7 @@ pub async fn create_scan(
                    expires_at::timestamp, detected_framework, detected_platform,
                    stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                    tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
-                   clerk_user_id"
+                   clerk_user_id, kind, supply_chain_results"
     )
     .bind(target_url)
     .bind(email)
@@ -59,7 +59,7 @@ pub async fn get_scan(pool: &PgPool, id: Uuid) -> Result<Option<Scan>, sqlx::Err
                 expires_at::timestamp, detected_framework, detected_platform,
                 stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                 tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
-                clerk_user_id
+                clerk_user_id, kind, supply_chain_results
          FROM scans WHERE id = $1"
     )
     .bind(id)
@@ -87,7 +87,7 @@ pub async fn claim_pending_scan(pool: &PgPool) -> Result<Option<Scan>, sqlx::Err
                    expires_at::timestamp, detected_framework, detected_platform,
                    stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                    tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
-                   clerk_user_id"
+                   clerk_user_id, kind, supply_chain_results"
     )
     .fetch_optional(pool)
     .await?;
@@ -205,7 +205,7 @@ pub async fn get_scan_by_token(pool: &PgPool, token: &str) -> Result<Option<Scan
                 expires_at::timestamp, detected_framework, detected_platform,
                 stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                 tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
-                clerk_user_id
+                clerk_user_id, kind, supply_chain_results
          FROM scans
          WHERE results_token = $1 AND (expires_at IS NULL OR expires_at > NOW())"
     )
@@ -379,7 +379,7 @@ pub async fn get_recent_completed_scan_for_domain(
                 expires_at::timestamp, detected_framework, detected_platform,
                 stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                 tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
-                clerk_user_id
+                clerk_user_id, kind, supply_chain_results
          FROM scans
          WHERE target_url LIKE $1
            AND status = 'completed'
@@ -532,7 +532,7 @@ pub async fn get_scan_by_token_including_expired(
                 expires_at::timestamp, detected_framework, detected_platform,
                 stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
                 tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
-                clerk_user_id
+                clerk_user_id, kind, supply_chain_results
          FROM scans
          WHERE results_token = $1",
     )

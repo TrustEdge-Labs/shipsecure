@@ -38,6 +38,8 @@ pub struct Scan {
     pub completed_at: Option<NaiveDateTime>,
     pub created_at: NaiveDateTime,
     pub clerk_user_id: Option<String>,
+    pub kind: String,
+    pub supply_chain_results: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize)]

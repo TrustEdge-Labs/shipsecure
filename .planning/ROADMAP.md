@@ -142,7 +142,7 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 
 **Milestone Goal:** Add compromised package detection to ShipSecure — parse package-lock.json, query OSV.dev for known vulnerabilities and malware, and surface tiered findings to users who don't know Dependabot exists.
 
-- [ ] **Phase 46: Backend Parsing Modules** — Lockfile parser (v1/v2/v3) + OSV.dev client with batching, retry, and categorization
+- [x] **Phase 46: Backend Parsing Modules** — Lockfile parser (v1/v2/v3) + OSV.dev client with batching, retry, and categorization (completed 2026-04-07)
 - [ ] **Phase 47: API Handler & Database** — POST /supply-chain/scan endpoint, DB migration (kind + JSONB columns), shareable results with 30-day expiry
 - [ ] **Phase 48: Frontend** — /supply-chain input page (URL/upload/paste), results page, loading and error states, Plausible events
 - [ ] **Phase 49: Test Suite** — 25 Rust unit tests, 2 integration tests, 4 Vitest component tests, 2 Playwright E2E tests
@@ -212,10 +212,10 @@ Plans:
   2. Git/file/link/tarball dependencies appear in findings as "Unscanned" rather than crashing or being silently dropped
   3. All extracted npm packages are checked against OSV.dev in parallel batches; a package with a MAL- advisory is returned as "Infected", CVSS>=7 as "Vulnerable", and any other match as "Advisory"
   4. If any OSV batch fails after one retry, the entire scan returns a clear error rather than silently returning partial results
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 46-01-PLAN.md — Shared types (SupplyChainError, ParsedDep, DepSource) + lockfile parser (v1/v2/v3)
-- [ ] 46-02-PLAN.md — OSV.dev client (batch query, retry, hydration) + supply chain orchestrator with categorization
+- [x] 46-01-PLAN.md — Shared types (SupplyChainError, ParsedDep, DepSource) + lockfile parser (v1/v2/v3)
+- [x] 46-02-PLAN.md — OSV.dev client (batch query, retry, hydration) + supply chain orchestrator with categorization
 
 ### Phase 47: API Handler & Database
 **Goal**: The supply chain scan endpoint is callable, persists results with a shareable token, and the existing scan history remains correct after the schema change
@@ -270,7 +270,7 @@ Plans:
 | 43. Share & Results UX | v1.9 | 2/2 | Complete | 2026-03-31 |
 | 44. Content Routes | v1.9 | 0/2 | Planning | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Complete | 2026-04-06 |
-| 46. Backend Parsing Modules | v2.0 | 0/2 | Planning | - |
+| 46. Backend Parsing Modules | v2.0 | 2/2 | Complete    | 2026-04-07 |
 | 47. API Handler & Database | v2.0 | 0/TBD | Not started | - |
 | 48. Frontend | v2.0 | 0/TBD | Not started | - |
 | 49. Test Suite | v2.0 | 0/TBD | Not started | - |

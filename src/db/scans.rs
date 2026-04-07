@@ -271,7 +271,8 @@ pub async fn count_completed_scans(pool: &PgPool) -> Result<i64, sqlx::Error> {
     let count: (i64,) = sqlx::query_as(
         "SELECT COUNT(*)
          FROM scans
-         WHERE status = 'completed'",
+         WHERE status = 'completed'
+           AND kind = 'web_app'",
     )
     .fetch_one(pool)
     .await?;
@@ -355,6 +356,7 @@ pub async fn count_scans_by_domain_last_hour(
         "SELECT COUNT(*)
          FROM scans
          WHERE target_url LIKE $1
+           AND kind = 'web_app'
            AND created_at >= NOW() - INTERVAL '1 hour'",
     )
     .bind(&pattern)
@@ -382,6 +384,7 @@ pub async fn get_recent_completed_scan_for_domain(
                 clerk_user_id, kind, supply_chain_results
          FROM scans
          WHERE target_url LIKE $1
+           AND kind = 'web_app'
            AND status = 'completed'
            AND (expires_at IS NULL OR expires_at > NOW())
          ORDER BY completed_at DESC
@@ -406,6 +409,7 @@ pub async fn count_scans_by_user_this_month(
         "SELECT COUNT(*)
          FROM scans
          WHERE clerk_user_id = $1
+           AND kind = 'web_app'
            AND created_at >= DATE_TRUNC('month', NOW() AT TIME ZONE 'UTC')",
     )
     .bind(clerk_user_id)
@@ -440,6 +444,7 @@ pub async fn get_user_scan_history(
          FROM scans s
          LEFT JOIN findings f ON f.scan_id = s.id
          WHERE s.clerk_user_id = $1
+           AND s.kind = 'web_app'
            AND s.status NOT IN ('pending', 'in_progress')
          GROUP BY s.id, s.target_url, s.status, s.results_token, s.expires_at, s.tier, s.created_at
          ORDER BY CASE WHEN s.expires_at IS NULL THEN 1 ELSE 0 END ASC,
@@ -466,6 +471,7 @@ pub async fn count_user_scans_history(
         "SELECT COUNT(*)
          FROM scans
          WHERE clerk_user_id = $1
+           AND kind = 'web_app'
            AND status NOT IN ('pending', 'in_progress')",
     )
     .bind(clerk_user_id)
@@ -565,6 +571,7 @@ pub async fn get_user_active_scans(
                 0::bigint AS low_count
          FROM scans s
          WHERE s.clerk_user_id = $1
+           AND s.kind = 'web_app'
            AND s.status IN ('pending', 'in_progress')
          ORDER BY s.created_at DESC",
     )
@@ -573,4 +580,92 @@ pub async fn get_user_active_scans(
     .await?;
 
     Ok(rows)
+}
+
+/// Insert a supply chain scan row.
+///
+/// Sets kind='supply_chain', expires_at=NOW()+30 days.
+/// Returns the created Scan (with results_token and supply_chain_results NULL initially).
+#[allow(dead_code)]
+pub async fn create_supply_chain_scan(
+    pool: &PgPool,
+    target_url: &str,
+    submitter_ip: Option<&str>,
+    request_id: Option<Uuid>,
+    clerk_user_id: Option<&str>,
+) -> Result<Scan, sqlx::Error> {
+    let tier = if clerk_user_id.is_some() {
+        "authenticated"
+    } else {
+        "free"
+    };
+
+    let scan = sqlx::query_as::<_, Scan>(
+        "INSERT INTO scans (target_url, email, submitter_ip, request_id, tier, clerk_user_id, kind, expires_at)
+         VALUES ($1, '', $2::inet, $3, $4, $5, 'supply_chain', NOW() + INTERVAL '30 days')
+         RETURNING id, target_url, email, submitter_ip::text, request_id, status, score, results_token,
+                   expires_at::timestamp, detected_framework, detected_platform,
+                   stage_headers, stage_tls, stage_files, stage_secrets, stage_detection, stage_vibecode,
+                   tier, error_message, started_at::timestamp, completed_at::timestamp, created_at::timestamp,
+                   clerk_user_id, kind, supply_chain_results"
+    )
+    .bind(target_url)
+    .bind(submitter_ip)
+    .bind(request_id)
+    .bind(tier)
+    .bind(clerk_user_id)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(scan)
+}
+
+/// Update a supply chain scan with results and token after successful scan.
+#[allow(dead_code)]
+pub async fn complete_supply_chain_scan(
+    pool: &PgPool,
+    scan_id: Uuid,
+    results: &serde_json::Value,
+    token: &str,
+    expires_at: chrono::NaiveDateTime,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE scans
+         SET status = 'completed',
+             supply_chain_results = $1,
+             results_token = $2,
+             expires_at = $3,
+             completed_at = NOW()
+         WHERE id = $4",
+    )
+    .bind(results)
+    .bind(token)
+    .bind(expires_at)
+    .bind(scan_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+/// Mark a supply chain scan as failed.
+#[allow(dead_code)]
+pub async fn fail_supply_chain_scan(
+    pool: &PgPool,
+    scan_id: Uuid,
+    error_message: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE scans
+         SET status = 'failed',
+             error_message = $1,
+             completed_at = NOW()
+         WHERE id = $2",
+    )
+    .bind(error_message)
+    .bind(scan_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
 }

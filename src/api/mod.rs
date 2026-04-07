@@ -6,5 +6,6 @@ pub mod metrics;
 pub mod results;
 pub mod scans;
 pub mod stats;
+pub mod supply_chain;
 pub mod users;
 pub mod webhooks;

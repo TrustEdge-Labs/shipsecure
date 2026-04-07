@@ -330,7 +330,10 @@ mod tests {
             .unwrap(),
         };
         let json = serde_json::to_string(&result);
-        assert!(json.is_ok(), "SupplyChainScanResult should serialize to JSON");
+        assert!(
+            json.is_ok(),
+            "SupplyChainScanResult should serialize to JSON"
+        );
     }
 
     #[test]

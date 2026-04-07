@@ -219,10 +219,9 @@ impl OsvClient {
             response
         };
 
-        let batch_response: OsvBatchResponse = response
-            .json()
-            .await
-            .map_err(|e| SupplyChainError::ChunkFailure(format!("Failed to parse response: {e}")))?;
+        let batch_response: OsvBatchResponse = response.json().await.map_err(|e| {
+            SupplyChainError::ChunkFailure(format!("Failed to parse response: {e}"))
+        })?;
 
         // Positionally align results with input deps
         let matches: Vec<DepVulnMatch> = deps

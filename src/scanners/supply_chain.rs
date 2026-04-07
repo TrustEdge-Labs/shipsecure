@@ -65,10 +65,7 @@ pub async fn scan_lockfile_with_client(
     for dep_match in &vuln_matches {
         if dep_match.vuln_ids.is_empty() {
             // No vulnerabilities found
-            no_known_issues.push(format!(
-                "{}@{}",
-                dep_match.dep.name, dep_match.dep.version
-            ));
+            no_known_issues.push(format!("{}@{}", dep_match.dep.name, dep_match.dep.version));
             continue;
         }
 
@@ -76,9 +73,7 @@ pub async fn scan_lockfile_with_client(
             let detail = detail_map.get(vuln_id);
             let tier = categorize_finding(vuln_id, detail);
 
-            let description = detail
-                .and_then(|d| d.summary.clone())
-                .unwrap_or_default();
+            let description = detail.and_then(|d| d.summary.clone()).unwrap_or_default();
 
             let finding = DepFinding {
                 name: dep_match.dep.name.clone(),
@@ -153,9 +148,7 @@ mod tests {
         severity: Vec<OsvSeverity>,
         db_severity: Option<&str>,
     ) -> OsvVulnDetail {
-        let database_specific = db_severity.map(|s| {
-            serde_json::json!({ "severity": s })
-        });
+        let database_specific = db_severity.map(|s| serde_json::json!({ "severity": s }));
         OsvVulnDetail {
             id: id.to_string(),
             summary: Some(summary.to_string()),

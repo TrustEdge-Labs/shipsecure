@@ -7,6 +7,7 @@
 import type { NextFixture } from 'next/experimental/testmode/playwright';
 import type { ScanFixtures } from '../fixtures/scan';
 import type { ResultsFixtures } from '../fixtures/results';
+import type { SupplyChainFixtures } from '../fixtures/supply-chain';
 
 /**
  * Intercepts POST to /api/v1/scans server-side (the Server Action's outbound fetch).
@@ -107,6 +108,48 @@ export function mockServerError(next: NextFixture): void {
           headers: { 'Content-Type': 'application/json' },
         }
       );
+    }
+    return undefined;
+  });
+}
+
+/**
+ * Intercepts POST to /api/v1/scans/supply-chain server-side.
+ * Returns 200 with the supply chain scan response fixture.
+ * Adds 100ms delay to simulate real scan submission timing.
+ */
+export function mockSupplyChainScan(
+  next: NextFixture,
+  fixtures: SupplyChainFixtures
+): void {
+  next.onFetch(async (request) => {
+    const url = new URL(request.url);
+    if (url.pathname === '/api/v1/scans/supply-chain' && request.method === 'POST') {
+      await new Promise((r) => setTimeout(r, 100));
+      return new Response(JSON.stringify(fixtures.scanResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return undefined;
+  });
+}
+
+/**
+ * Intercepts GET to /api/v1/results/{token} server-side for supply chain results pages.
+ * Returns 200 with the supply chain results page fixture.
+ */
+export function mockSupplyChainResults(
+  next: NextFixture,
+  fixtures: SupplyChainFixtures
+): void {
+  next.onFetch(async (request) => {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/v1/results/') && request.method === 'GET') {
+      return new Response(JSON.stringify(fixtures.resultsPageResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     return undefined;
   });

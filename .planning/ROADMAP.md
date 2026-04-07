@@ -262,8 +262,12 @@ Plans:
   4. 2 Playwright E2E tests cover the happy path (paste → results) and an error state (invalid input)
 **Plans:** 2 plans
 Plans:
-- [ ] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
-- [ ] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
+- [ ] 49-01-PLAN.md — Vitest component tests + coverage exclusion removal + backend test validation
+- [ ] 49-02-PLAN.md — Playwright E2E tests for supply chain paste flow and error state
+
+
+
+
 
 ## Progress
 

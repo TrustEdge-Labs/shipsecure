@@ -145,7 +145,7 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 - [x] **Phase 46: Backend Parsing Modules** — Lockfile parser (v1/v2/v3) + OSV.dev client with batching, retry, and categorization (completed 2026-04-07)
 - [x] **Phase 47: API Handler & Database** — POST /supply-chain/scan endpoint, DB migration (kind + JSONB columns), shareable results with 30-day expiry (completed 2026-04-07)
 - [x] **Phase 48: Frontend** — /supply-chain input page (URL/upload/paste), results page, loading and error states, Plausible events (completed 2026-04-07)
-- [ ] **Phase 49: Test Suite** — 25 Rust unit tests, 2 integration tests, 4 Vitest component tests, 2 Playwright E2E tests
+- [x] **Phase 49: Test Suite** — 25 Rust unit tests, 2 integration tests, 4 Vitest component tests, 2 Playwright E2E tests (completed 2026-04-07)
 
 ## Phase Details
 
@@ -260,10 +260,10 @@ Plans:
   2. 2 Rust integration tests cover the full scan flow with a mocked OSV server and the rate limit rejection path
   3. 4 Vitest component tests cover form submission behavior and results page rendering with fixture data
   4. 2 Playwright E2E tests cover the happy path (paste → results) and an error state (invalid input)
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 49-01-PLAN.md — Vitest component tests + coverage exclusion removal + backend test validation
-- [ ] 49-02-PLAN.md — Playwright E2E tests for supply chain paste flow and error state
+- [x] 49-01-PLAN.md — Vitest component tests + coverage exclusion removal + backend test validation
+- [x] 49-02-PLAN.md — Playwright E2E tests for supply chain paste flow and error state
 
 
 
@@ -289,7 +289,7 @@ Plans:
 | 46. Backend Parsing Modules | v2.0 | 2/2 | Complete    | 2026-04-07 |
 | 47. API Handler & Database | v2.0 | 2/2 | Complete    | 2026-04-07 |
 | 48. Frontend | v2.0 | 2/2 | Complete    | 2026-04-07 |
-| 49. Test Suite | v2.0 | 0/TBD | Not started | - |
+| 49. Test Suite | v2.0 | 2/2 | Complete    | 2026-04-07 |
 
 **Total: 9 milestones shipped, 45 phases complete, 102 plans complete. v1.9 in progress, v2.0 planned (4 phases).**
 

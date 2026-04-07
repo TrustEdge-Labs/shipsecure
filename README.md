@@ -424,10 +424,10 @@ cargo llvm-cov
 cd frontend
 
 # Unit and component tests (Vitest + React Testing Library)
-npm test                # 126 tests across 15 test files
+npm test                # 141 tests across 20 test files
 
 # Coverage report
-npm run test:coverage   # 88.75% lines / 89.22% branches / 84.9% functions
+npm run test:coverage   # 90.9% lines / 90.16% branches / 85.48% functions
 
 # E2E tests (Playwright)
 npm run build && npx playwright test

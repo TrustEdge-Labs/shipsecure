@@ -12,6 +12,7 @@
 - ✅ **v1.7 Frontend Polish** — Phases 36-38 (shipped 2026-02-25)
 - ✅ **v1.8 CI & Quality Hardening** — Phases 39-41 (shipped 2026-03-02)
 - 🚧 **v1.9 Customer Acquisition** — Phases 42-45 (in progress)
+- 📋 **v2.0 Supply Chain Scanning** — Phases 46-49 (planned)
 
 ## Phases
 
@@ -135,7 +136,16 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 - [x] **Phase 42: Funnel Unlock** — Reopen anonymous scans, raise rate limits, remove domain verification gate for authenticated users (completed 2026-03-30)
 - [x] **Phase 43: Share & Results UX** — Share button, OG meta tags, expired results page with scan-again CTA (completed 2026-03-31)
 - [ ] **Phase 44: Content Routes** — /blog MDX infrastructure and /check/{platform} landing pages for Lovable, Bolt, v0
-- [ ] **Phase 45: Analytics Events** — Plausible conversion events wired to scan, signup, and share actions
+- [x] **Phase 45: Analytics Events** — Plausible conversion events wired to scan, signup, and share actions (completed 2026-04-06)
+
+### v2.0 Supply Chain Scanning (Planned)
+
+**Milestone Goal:** Add compromised package detection to ShipSecure — parse package-lock.json, query OSV.dev for known vulnerabilities and malware, and surface tiered findings to users who don't know Dependabot exists.
+
+- [ ] **Phase 46: Backend Parsing Modules** — Lockfile parser (v1/v2/v3) + OSV.dev client with batching, retry, and categorization
+- [ ] **Phase 47: API Handler & Database** — POST /supply-chain/scan endpoint, DB migration (kind + JSONB columns), shareable results with 30-day expiry
+- [ ] **Phase 48: Frontend** — /supply-chain input page (URL/upload/paste), results page, loading and error states, Plausible events
+- [ ] **Phase 49: Test Suite** — 25 Rust unit tests, 2 integration tests, 4 Vitest component tests, 2 Playwright E2E tests
 
 ## Phase Details
 
@@ -193,6 +203,53 @@ Plans:
   3. Clicking the share button fires a "Share Clicked" custom event visible in the Plausible dashboard
 **Plans**: TBD
 
+### Phase 46: Backend Parsing Modules
+**Goal**: Rust can parse any package-lock.json (v1/v2/v3) and query OSV.dev for all extracted dependencies, producing categorized findings
+**Depends on**: Phase 45
+**Requirements**: LOCK-01, LOCK-02, LOCK-03, LOCK-04, OSV-01, OSV-02, OSV-03, OSV-04
+**Success Criteria** (what must be TRUE):
+  1. A package-lock.json with lockfileVersion 1, 2, or 3 yields the correct deduplicated dependency list
+  2. Git/file/link/tarball dependencies appear in findings as "Unscanned" rather than crashing or being silently dropped
+  3. All extracted npm packages are checked against OSV.dev in parallel batches; a package with a MAL- advisory is returned as "Infected", CVSS>=7 as "Vulnerable", and any other match as "Advisory"
+  4. If any OSV batch fails after one retry, the entire scan returns a clear error rather than silently returning partial results
+**Plans**: TBD
+
+### Phase 47: API Handler & Database
+**Goal**: The supply chain scan endpoint is callable, persists results with a shareable token, and the existing scan history remains correct after the schema change
+**Depends on**: Phase 46
+**Requirements**: API-01, API-02, API-03, API-04, API-05, API-06, DB-01, DB-02, DB-03, DB-04, RES-03, RES-04
+**Success Criteria** (what must be TRUE):
+  1. Submitting a GitHub repo URL, an uploaded file, or pasted lockfile text all produce a scan result via a single endpoint
+  2. A GitHub URL for a repo without a package-lock.json on main or master returns a clear 404-style error
+  3. Submitting a lockfile with more than 5000 dependencies or a body over 5MB is rejected with an appropriate error
+  4. The result page URL (token) works for 30 days; a DB write failure returns results inline with a "Share link unavailable" notice rather than failing the scan
+  5. The existing web app scan history dashboard shows no change after the migration — kind column defaults to 'web_app' for all prior rows
+**Plans**: TBD
+
+### Phase 48: Frontend
+**Goal**: Users can submit a lockfile by any supported method, see tiered findings on a dedicated results page, and track interactions in Plausible
+**Depends on**: Phase 47
+**Requirements**: FE-01, FE-02, FE-03, FE-04, FE-05, RES-01, RES-02
+**Success Criteria** (what must be TRUE):
+  1. /supply-chain loads with three input tabs (GitHub URL, Upload, Paste) and the correct tab captures its input method
+  2. After submitting, a spinner shows "Scanning N dependencies..." until results arrive
+  3. /supply-chain/results/[token] shows summary cards for each tier (Infected, Vulnerable, Advisory, No Known Issues, Unscanned) with counts
+  4. Each finding row shows the package name, version, OSV advisory ID, description, and a fix action
+  5. GitHub 404, OSV down, invalid lockfile, and zero-dependency lockfile each display a distinct, actionable error message
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 49: Test Suite
+**Goal**: The supply chain feature has comprehensive test coverage across parser, OSV client, API handler, frontend components, and full E2E flows
+**Depends on**: Phase 48
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04
+**Success Criteria** (what must be TRUE):
+  1. cargo test passes with 25 unit tests covering the lockfile parser (v1/v2/v3 fixtures), OSV categorizer, URL parser, and handler error paths
+  2. 2 Rust integration tests cover the full scan flow with a mocked OSV server and the rate limit rejection path
+  3. 4 Vitest component tests cover form submission behavior and results page rendering with fixture data
+  4. 2 Playwright E2E tests cover the happy path (paste → results) and an error state (invalid input)
+**Plans**: TBD
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -206,12 +263,16 @@ Plans:
 | 29-35. Auth & Tiered Access | v1.6 | 13/13 | Complete | 2026-02-19 |
 | 36-38. Frontend Polish | v1.7 | 7/7 | Complete | 2026-02-25 |
 | 39-41. CI & Quality Hardening | v1.8 | 3/3 | Complete | 2026-03-02 |
-| 42. Funnel Unlock | v1.9 | 2/2 | Complete    | 2026-03-31 |
-| 43. Share & Results UX | v1.9 | 2/2 | Complete    | 2026-03-31 |
-| 44. Content Routes | v1.9 | 0/2 | Planning    | - |
-| 45. Analytics Events | v1.9 | 0/TBD | Not started | - |
+| 42. Funnel Unlock | v1.9 | 2/2 | Complete | 2026-03-31 |
+| 43. Share & Results UX | v1.9 | 2/2 | Complete | 2026-03-31 |
+| 44. Content Routes | v1.9 | 0/2 | Planning | - |
+| 45. Analytics Events | v1.9 | 0/TBD | Complete | 2026-04-06 |
+| 46. Backend Parsing Modules | v2.0 | 0/TBD | Not started | - |
+| 47. API Handler & Database | v2.0 | 0/TBD | Not started | - |
+| 48. Frontend | v2.0 | 0/TBD | Not started | - |
+| 49. Test Suite | v2.0 | 0/TBD | Not started | - |
 
-**Total: 9 milestones shipped, 41 phases complete, 98 plans complete. v1.9 in progress (4 phases).**
+**Total: 9 milestones shipped, 45 phases complete, 102 plans complete. v1.9 in progress, v2.0 planned (4 phases).**
 
 ---
-*Last updated: 2026-03-31 after Phase 44 planning*
+*Last updated: 2026-04-06 after v2.0 roadmap creation*

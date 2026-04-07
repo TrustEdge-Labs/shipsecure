@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Supply Chain Scanning
-status: defining_requirements
+status: ready_to_plan
 stopped_at: null
-last_updated: "2026-04-06T22:40:00.000Z"
-last_activity: 2026-04-06 -- Milestone v2.0 started
+last_updated: "2026-04-06T00:00:00.000Z"
+last_activity: 2026-04-06 -- v2.0 roadmap created (phases 46-49)
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** Catch security flaws in vibe-coded apps before they become breaches, with remediation guidance anyone can follow.
-**Current focus:** Defining requirements for v2.0 Supply Chain Scanning
+**Current focus:** v2.0 Supply Chain Scanning — Phase 46 ready to plan
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-04-06 — Milestone v2.0 started
+Phase: 46 of 49 (Backend Parsing Modules)
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-04-06 — v2.0 roadmap created, phases 46-49 defined
 
-Progress: 9 milestones shipped, 45 phases, 102 plans completed
+Progress: [██████████░░░░░░░░░░] 45/49 phases complete across all milestones
 
 ## Performance Metrics
 
@@ -62,14 +62,15 @@ All decisions logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - v2.0 pivot: Supply chain scanning becomes primary product direction. Triggered by real user request on X.
-- JSONB column for supply chain results (not normalized findings table). TODO for migration in Phase 2.
-- 30-day expiry on all supply chain scans (privacy fix from Codex outside voice).
-- GitHub URL with hardcoded main/master branch fallback. Full branch detection deferred.
-- Separate /supply-chain/results/[token] page (not conditional in existing results page).
-- Three Rust modules: lockfile_parser, osv_client, supply_chain orchestrator.
-- "No Known Issues" label instead of "Clean" + Unscanned count for deps that can't be checked.
-- Shared scans table with kind column + mandatory query audit for kind awareness.
-- Synchronous scan (no polling, user waits 5-15s). OSV chunks run in parallel via futures::join_all.
+- JSONB column for supply chain results (not normalized findings table). Normalized migration deferred to Phase 2.
+- 30-day expiry on all supply chain scans (explicit expires_at required on insert).
+- GitHub URL with hardcoded main/master branch fallback. Full branch detection deferred to v2.1.
+- Separate /supply-chain/results/[token] page — not conditional logic in existing web app results page.
+- Three Rust modules: src/scanners/lockfile_parser.rs, src/scanners/osv_client.rs, src/scanners/supply_chain.rs
+- "No Known Issues" label instead of "Clean"; Unscanned count surfaces non-npm deps.
+- Shared scans table with kind column (VARCHAR default 'web_app') + mandatory query audit for kind awareness.
+- Synchronous scan (no polling). OSV chunks run in parallel via futures::join_all.
+- DB write failure returns results inline with "Share link unavailable" — never fails the scan.
 
 ### Pending Todos
 
@@ -77,11 +78,10 @@ See TODOS.md — P0 is "Ship supply chain scanning MVP"
 
 ### Blockers/Concerns
 
-- DB write failure should return results inline with "Share link unavailable" warning (critical gap from eng review)
-- Existing scans queries need audit for kind='supply_chain' awareness when adding kind column
+None blocking Phase 46. Phase 47 requires kind query audit to be thorough — existing dashboard and cleanup queries must filter correctly after migration.
 
 ## Session Continuity
 
 Last session: 2026-04-06
-Stopped at: Milestone v2.0 requirements definition
+Stopped at: v2.0 roadmap created — phases 46-49 written to ROADMAP.md
 Resume file: —

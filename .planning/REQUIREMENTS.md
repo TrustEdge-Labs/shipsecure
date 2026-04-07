@@ -92,43 +92,43 @@ Requirements for supply chain scanning MVP. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOCK-01 | TBD | Pending |
-| LOCK-02 | TBD | Pending |
-| LOCK-03 | TBD | Pending |
-| LOCK-04 | TBD | Pending |
-| OSV-01 | TBD | Pending |
-| OSV-02 | TBD | Pending |
-| OSV-03 | TBD | Pending |
-| OSV-04 | TBD | Pending |
-| API-01 | TBD | Pending |
-| API-02 | TBD | Pending |
-| API-03 | TBD | Pending |
-| API-04 | TBD | Pending |
-| API-05 | TBD | Pending |
-| API-06 | TBD | Pending |
-| RES-01 | TBD | Pending |
-| RES-02 | TBD | Pending |
-| RES-03 | TBD | Pending |
-| RES-04 | TBD | Pending |
-| DB-01 | TBD | Pending |
-| DB-02 | TBD | Pending |
-| DB-03 | TBD | Pending |
-| DB-04 | TBD | Pending |
-| FE-01 | TBD | Pending |
-| FE-02 | TBD | Pending |
-| FE-03 | TBD | Pending |
-| FE-04 | TBD | Pending |
-| FE-05 | TBD | Pending |
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
-| TEST-04 | TBD | Pending |
+| LOCK-01 | Phase 46 | Pending |
+| LOCK-02 | Phase 46 | Pending |
+| LOCK-03 | Phase 46 | Pending |
+| LOCK-04 | Phase 46 | Pending |
+| OSV-01 | Phase 46 | Pending |
+| OSV-02 | Phase 46 | Pending |
+| OSV-03 | Phase 46 | Pending |
+| OSV-04 | Phase 46 | Pending |
+| API-01 | Phase 47 | Pending |
+| API-02 | Phase 47 | Pending |
+| API-03 | Phase 47 | Pending |
+| API-04 | Phase 47 | Pending |
+| API-05 | Phase 47 | Pending |
+| API-06 | Phase 47 | Pending |
+| RES-01 | Phase 48 | Pending |
+| RES-02 | Phase 48 | Pending |
+| RES-03 | Phase 47 | Pending |
+| RES-04 | Phase 47 | Pending |
+| DB-01 | Phase 47 | Pending |
+| DB-02 | Phase 47 | Pending |
+| DB-03 | Phase 47 | Pending |
+| DB-04 | Phase 47 | Pending |
+| FE-01 | Phase 48 | Pending |
+| FE-02 | Phase 48 | Pending |
+| FE-03 | Phase 48 | Pending |
+| FE-04 | Phase 48 | Pending |
+| FE-05 | Phase 48 | Pending |
+| TEST-01 | Phase 49 | Pending |
+| TEST-02 | Phase 49 | Pending |
+| TEST-03 | Phase 49 | Pending |
+| TEST-04 | Phase 49 | Pending |
 
 **Coverage:**
-- v2.0 requirements: 24 total (+ 7 testing)
-- Mapped to phases: 0
-- Unmapped: 31
+- v2.0 requirements: 31 total (24 feature + 7 testing)
+- Mapped to phases: 31
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after initial definition*
+*Last updated: 2026-04-06 after v2.0 roadmap creation — all requirements mapped*

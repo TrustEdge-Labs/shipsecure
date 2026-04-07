@@ -212,7 +212,10 @@ Plans:
   2. Git/file/link/tarball dependencies appear in findings as "Unscanned" rather than crashing or being silently dropped
   3. All extracted npm packages are checked against OSV.dev in parallel batches; a package with a MAL- advisory is returned as "Infected", CVSS>=7 as "Vulnerable", and any other match as "Advisory"
   4. If any OSV batch fails after one retry, the entire scan returns a clear error rather than silently returning partial results
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 46-01-PLAN.md — Shared types (SupplyChainError, ParsedDep, DepSource) + lockfile parser (v1/v2/v3)
+- [ ] 46-02-PLAN.md — OSV.dev client (batch query, retry, hydration) + supply chain orchestrator with categorization
 
 ### Phase 47: API Handler & Database
 **Goal**: The supply chain scan endpoint is callable, persists results with a shareable token, and the existing scan history remains correct after the schema change
@@ -267,7 +270,7 @@ Plans:
 | 43. Share & Results UX | v1.9 | 2/2 | Complete | 2026-03-31 |
 | 44. Content Routes | v1.9 | 0/2 | Planning | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Complete | 2026-04-06 |
-| 46. Backend Parsing Modules | v2.0 | 0/TBD | Not started | - |
+| 46. Backend Parsing Modules | v2.0 | 0/2 | Planning | - |
 | 47. API Handler & Database | v2.0 | 0/TBD | Not started | - |
 | 48. Frontend | v2.0 | 0/TBD | Not started | - |
 | 49. Test Suite | v2.0 | 0/TBD | Not started | - |

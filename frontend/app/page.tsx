@@ -191,6 +191,24 @@ export default async function Home() {
           </div>
         </div>
 
+        {/* Supply Chain Scanner CTA */}
+        <div className="mb-12">
+          <div className="bg-surface-secondary rounded-(card) border border-border-subtle p-6 sm:p-8 text-center">
+            <h2 className="text-2xl font-semibold mb-3 text-text-primary">
+              Check your dependencies
+            </h2>
+            <p className="text-text-secondary mb-6 max-w-lg mx-auto">
+              Scan your package-lock.json for compromised packages, known vulnerabilities, and malware. No signup required.
+            </p>
+            <Link
+              href="/supply-chain"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold rounded-lg transition text-lg"
+            >
+              Scan Dependencies
+            </Link>
+          </div>
+        </div>
+
         {/* How It Works */}
         <div className="mb-12">
           <h2 className="text-2xl font-semibold mb-6 text-center text-text-primary">

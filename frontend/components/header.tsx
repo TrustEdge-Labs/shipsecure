@@ -33,6 +33,13 @@ export function Header() {
 
           {/* Navigation + Auth */}
           <div className="flex items-center gap-4 sm:gap-6">
+            {/* Supply Chain — visible to all users */}
+            <Link
+              href="/supply-chain"
+              className="inline-flex items-center min-h-[44px] text-sm font-medium text-text-secondary hover:text-text-primary transition"
+            >
+              Supply Chain
+            </Link>
             <SignedIn>
               <Link
                 href="/dashboard"

@@ -143,7 +143,7 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 **Milestone Goal:** Add compromised package detection to ShipSecure — parse package-lock.json, query OSV.dev for known vulnerabilities and malware, and surface tiered findings to users who don't know Dependabot exists.
 
 - [x] **Phase 46: Backend Parsing Modules** — Lockfile parser (v1/v2/v3) + OSV.dev client with batching, retry, and categorization (completed 2026-04-07)
-- [ ] **Phase 47: API Handler & Database** — POST /supply-chain/scan endpoint, DB migration (kind + JSONB columns), shareable results with 30-day expiry
+- [x] **Phase 47: API Handler & Database** — POST /supply-chain/scan endpoint, DB migration (kind + JSONB columns), shareable results with 30-day expiry (completed 2026-04-07)
 - [ ] **Phase 48: Frontend** — /supply-chain input page (URL/upload/paste), results page, loading and error states, Plausible events
 - [ ] **Phase 49: Test Suite** — 25 Rust unit tests, 2 integration tests, 4 Vitest component tests, 2 Playwright E2E tests
 
@@ -203,8 +203,8 @@ Plans:
   3. Clicking the share button fires a "Share Clicked" custom event visible in the Plausible dashboard
 **Plans:** 2 plans
 Plans:
-- [ ] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
-- [ ] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
+- [x] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
+- [x] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
 
 ### Phase 46: Backend Parsing Modules
 **Goal**: Rust can parse any package-lock.json (v1/v2/v3) and query OSV.dev for all extracted dependencies, producing categorized findings
@@ -230,10 +230,10 @@ Plans:
   3. Submitting a lockfile with more than 5000 dependencies or a body over 5MB is rejected with an appropriate error
   4. The result page URL (token) works for 30 days; a DB write failure returns results inline with a "Share link unavailable" notice rather than failing the scan
   5. The existing web app scan history dashboard shows no change after the migration — kind column defaults to 'web_app' for all prior rows
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
-- [ ] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
+- [x] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
+- [x] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
 
 ### Phase 48: Frontend
 **Goal**: Users can submit a lockfile by any supported method, see tiered findings on a dedicated results page, and track interactions in Plausible
@@ -247,7 +247,7 @@ Plans:
   5. GitHub 404, OSV down, invalid lockfile, and zero-dependency lockfile each display a distinct, actionable error message
 **Plans:** 2 plans
 Plans:
-- [ ] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
+- [x] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
 - [ ] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
 **UI hint**: yes
 
@@ -283,7 +283,7 @@ Plans:
 | 44. Content Routes | v1.9 | 0/2 | Planning | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Complete | 2026-04-06 |
 | 46. Backend Parsing Modules | v2.0 | 2/2 | Complete    | 2026-04-07 |
-| 47. API Handler & Database | v2.0 | 0/2 | Planning | - |
+| 47. API Handler & Database | v2.0 | 2/2 | Complete    | 2026-04-07 |
 | 48. Frontend | v2.0 | 0/TBD | Not started | - |
 | 49. Test Suite | v2.0 | 0/TBD | Not started | - |
 

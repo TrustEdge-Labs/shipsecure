@@ -282,7 +282,7 @@ mod tests {
 
     #[test]
     fn dep_source_variants_are_distinct() {
-        let variants = vec![
+        let variants = [
             DepSource::Registry,
             DepSource::Git,
             DepSource::File,

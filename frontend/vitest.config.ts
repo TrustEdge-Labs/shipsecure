@@ -31,6 +31,10 @@ export default defineConfig({
         'app/**/opengraph-image.tsx',
         'app/robots.ts',
         'app/sitemap.ts',
+        // Supply chain components — tests added in Phase 49
+        'components/supply-chain-form.tsx',
+        'components/supply-chain-summary.tsx',
+        'components/supply-chain-findings.tsx',
       ],
       thresholds: {
         lines: 80,

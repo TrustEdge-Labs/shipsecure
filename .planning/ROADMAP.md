@@ -201,7 +201,10 @@ Plans:
   1. Submitting an anonymous scan fires a "Scan Started" custom event visible in the Plausible dashboard
   2. Completing Clerk signup fires a "Signup Completed" custom event visible in the Plausible dashboard
   3. Clicking the share button fires a "Share Clicked" custom event visible in the Plausible dashboard
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
+- [ ] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
 
 ### Phase 46: Backend Parsing Modules
 **Goal**: Rust can parse any package-lock.json (v1/v2/v3) and query OSV.dev for all extracted dependencies, producing categorized findings
@@ -227,7 +230,10 @@ Plans:
   3. Submitting a lockfile with more than 5000 dependencies or a body over 5MB is rejected with an appropriate error
   4. The result page URL (token) works for 30 days; a DB write failure returns results inline with a "Share link unavailable" notice rather than failing the scan
   5. The existing web app scan history dashboard shows no change after the migration — kind column defaults to 'web_app' for all prior rows
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
+- [ ] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
 
 ### Phase 48: Frontend
 **Goal**: Users can submit a lockfile by any supported method, see tiered findings on a dedicated results page, and track interactions in Plausible
@@ -239,7 +245,10 @@ Plans:
   3. /supply-chain/results/[token] shows summary cards for each tier (Infected, Vulnerable, Advisory, No Known Issues, Unscanned) with counts
   4. Each finding row shows the package name, version, OSV advisory ID, description, and a fix action
   5. GitHub 404, OSV down, invalid lockfile, and zero-dependency lockfile each display a distinct, actionable error message
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
+- [ ] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
 **UI hint**: yes
 
 ### Phase 49: Test Suite
@@ -251,7 +260,10 @@ Plans:
   2. 2 Rust integration tests cover the full scan flow with a mocked OSV server and the rate limit rejection path
   3. 4 Vitest component tests cover form submission behavior and results page rendering with fixture data
   4. 2 Playwright E2E tests cover the happy path (paste → results) and an error state (invalid input)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 47-01-PLAN.md — DB migration (kind + JSONB columns) + query audit for kind awareness
+- [ ] 47-02-PLAN.md — Supply chain scan handler (3 input modes, GitHub fetch, error mapping, result persistence)
 
 ## Progress
 
@@ -271,7 +283,7 @@ Plans:
 | 44. Content Routes | v1.9 | 0/2 | Planning | - |
 | 45. Analytics Events | v1.9 | 0/TBD | Complete | 2026-04-06 |
 | 46. Backend Parsing Modules | v2.0 | 2/2 | Complete    | 2026-04-07 |
-| 47. API Handler & Database | v2.0 | 0/TBD | Not started | - |
+| 47. API Handler & Database | v2.0 | 0/2 | Planning | - |
 | 48. Frontend | v2.0 | 0/TBD | Not started | - |
 | 49. Test Suite | v2.0 | 0/TBD | Not started | - |
 

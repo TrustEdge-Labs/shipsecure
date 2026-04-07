@@ -66,12 +66,14 @@ pub async fn get_results_by_token(
                 "status": "expired",
                 "score": null,
                 "tier": scan.tier,
+                "kind": scan.kind,
                 "expires_at": scan.expires_at,
                 "created_at": scan.created_at,
                 "completed_at": scan.completed_at,
                 "findings": [],
                 "summary": {"total": 0, "critical": 0, "high": 0, "medium": 0, "low": 0},
                 "owner_verified": false,
+                "supply_chain_results": null,
             });
             return Ok(Json(response));
         }
@@ -174,6 +176,7 @@ pub async fn get_results_by_token(
         "status": format!("{:?}", scan.status).to_lowercase(),
         "score": scan.score,
         "tier": scan.tier,
+        "kind": scan.kind,
         "expires_at": scan.expires_at,
         "created_at": scan.created_at,
         "completed_at": scan.completed_at,
@@ -188,6 +191,7 @@ pub async fn get_results_by_token(
         "owner_verified": owner_verified,
         "findings": findings_json,
         "summary": summary,
+        "supply_chain_results": scan.supply_chain_results,
     });
 
     Ok(Json(response))

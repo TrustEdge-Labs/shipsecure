@@ -144,7 +144,7 @@ See: `.planning/milestones/v1.8-ROADMAP.md`
 
 - [x] **Phase 46: Backend Parsing Modules** — Lockfile parser (v1/v2/v3) + OSV.dev client with batching, retry, and categorization (completed 2026-04-07)
 - [x] **Phase 47: API Handler & Database** — POST /supply-chain/scan endpoint, DB migration (kind + JSONB columns), shareable results with 30-day expiry (completed 2026-04-07)
-- [ ] **Phase 48: Frontend** — /supply-chain input page (URL/upload/paste), results page, loading and error states, Plausible events
+- [x] **Phase 48: Frontend** — /supply-chain input page (URL/upload/paste), results page, loading and error states, Plausible events (completed 2026-04-07)
 - [ ] **Phase 49: Test Suite** — 25 Rust unit tests, 2 integration tests, 4 Vitest component tests, 2 Playwright E2E tests
 
 ## Phase Details
@@ -245,10 +245,10 @@ Plans:
   3. /supply-chain/results/[token] shows summary cards for each tier (Infected, Vulnerable, Advisory, No Known Issues, Unscanned) with counts
   4. Each finding row shows the package name, version, OSV advisory ID, description, and a fix action
   5. GitHub 404, OSV down, invalid lockfile, and zero-dependency lockfile each display a distinct, actionable error message
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 48-01-PLAN.md — Types, server action, 3-tab form component, backend results endpoint patch
-- [ ] 48-02-PLAN.md — Results page with summary cards and findings, Plausible events, header nav link, landing CTA
+- [x] 48-01-PLAN.md — Types, server action, 3-tab form component, backend results endpoint patch
+- [x] 48-02-PLAN.md — Results page with summary cards and findings, Plausible events, header nav link, landing CTA
 **UI hint**: yes
 
 ### Phase 49: Test Suite
@@ -284,7 +284,7 @@ Plans:
 | 45. Analytics Events | v1.9 | 0/TBD | Complete | 2026-04-06 |
 | 46. Backend Parsing Modules | v2.0 | 2/2 | Complete    | 2026-04-07 |
 | 47. API Handler & Database | v2.0 | 2/2 | Complete    | 2026-04-07 |
-| 48. Frontend | v2.0 | 0/TBD | Not started | - |
+| 48. Frontend | v2.0 | 2/2 | Complete    | 2026-04-07 |
 | 49. Test Suite | v2.0 | 0/TBD | Not started | - |
 
 **Total: 9 milestones shipped, 45 phases complete, 102 plans complete. v1.9 in progress, v2.0 planned (4 phases).**

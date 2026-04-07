@@ -146,6 +146,27 @@ export default async function Home() {
           <ScanForm isAuthenticated={!!userId} />
         </div>
 
+        {/* Supply Chain Scanner CTA */}
+        <div className="mb-12">
+          <div className="border border-border-subtle rounded-xl p-6 sm:p-8 text-center">
+            <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">
+              Also available
+            </p>
+            <h2 className="text-xl font-semibold mb-2 text-text-primary">
+              npm Supply Chain Scanner
+            </h2>
+            <p className="text-text-secondary text-sm mb-5 max-w-md mx-auto">
+              Check your package-lock.json for compromised packages, known vulnerabilities, and malware. No signup required.
+            </p>
+            <Link
+              href="/supply-chain"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] border border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white font-medium rounded-lg transition text-sm"
+            >
+              Scan Dependencies
+            </Link>
+          </div>
+        </div>
+
         {/* What We Check */}
         <div className="text-center mb-12">
           <h2 className="text-2xl font-semibold mb-4 text-text-primary">
@@ -188,24 +209,6 @@ export default async function Home() {
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Supply Chain Scanner CTA */}
-        <div className="mb-12">
-          <div className="bg-surface-secondary rounded-(card) border border-border-subtle p-6 sm:p-8 text-center">
-            <h2 className="text-2xl font-semibold mb-3 text-text-primary">
-              Check your dependencies
-            </h2>
-            <p className="text-text-secondary mb-6 max-w-lg mx-auto">
-              Scan your package-lock.json for compromised packages, known vulnerabilities, and malware. No signup required.
-            </p>
-            <Link
-              href="/supply-chain"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold rounded-lg transition text-lg"
-            >
-              Scan Dependencies
-            </Link>
           </div>
         </div>
 
@@ -253,13 +256,14 @@ export default async function Home() {
 
         {/* Social Proof */}
         {scanCount !== null && scanCount > 0 && (
-          <div className="text-center text-sm text-text-tertiary">
+          <div className="text-center text-sm text-text-tertiary mb-12">
             <span className="font-semibold text-brand-primary">
               {scanCount.toLocaleString()}
             </span>{' '}
             scans completed
           </div>
         )}
+
       </PageContainer></main>
     </>
   )

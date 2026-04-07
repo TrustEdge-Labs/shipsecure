@@ -22,7 +22,7 @@ use shipsecure::RequestId;
 use shipsecure::api::auth::ClerkClaims;
 use shipsecure::api::metrics as api_metrics;
 use shipsecure::api::scans::{self, AppState};
-use shipsecure::api::{domains, health, results, stats, users, webhooks};
+use shipsecure::api::{domains, health, results, stats, supply_chain, users, webhooks};
 use shipsecure::metrics;
 use shipsecure::orchestrator::ScanOrchestrator;
 
@@ -340,6 +340,15 @@ async fn main() {
         )
         .route("/api/v1/quota", get(scans::get_quota))
         .route("/api/v1/stats/scan-count", get(stats::get_scan_count))
+        // Supply chain scan — 5MB body limit for lockfile uploads (default is 2MB)
+        .merge(
+            Router::new()
+                .route(
+                    "/api/v1/scans/supply-chain",
+                    post(supply_chain::create_supply_chain_scan),
+                )
+                .layer(axum::extract::DefaultBodyLimit::max(5 * 1024 * 1024)),
+        )
         .route(
             "/api/v1/webhooks/clerk",
             post(webhooks::handle_clerk_webhook),

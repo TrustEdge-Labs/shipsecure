@@ -1,8 +1,11 @@
 # ShipSecure
 
-Security scanning platform for vibe-coded apps. Paste a URL, get an A-F security grade with actionable fixes — no security expertise required.
+Security scanning platform for vibe-coded apps. Two tools, no signup required:
 
-Built for developers shipping fast with AI code generators (Cursor, Bolt, Lovable, etc.) who need to know if their app is leaking secrets, missing headers, or exposing admin panels.
+- **Web Security Scanner** — Paste a URL, get an A-F security grade with actionable fixes
+- **Supply Chain Scanner** — Upload a package-lock.json, find compromised packages and vulnerabilities
+
+Built for developers shipping fast with AI code generators (Cursor, Bolt, Lovable, etc.) who need to know if their app is leaking secrets, missing headers, shipping malware dependencies, or exposing admin panels.
 
 Live at [shipsecure.ai](https://shipsecure.ai)
 
@@ -43,6 +46,30 @@ Anonymous scans target [OWASP Juice Shop](https://demo.owasp-juice.shop), a well
 - **Netlify** — Function exposure, form handling issues
 - **Railway/Render** — Debug endpoints, exposed metrics
 - **Remediation playbooks** — Framework-specific copy-paste fixes
+
+## Supply Chain Scanner
+
+Scan npm dependencies for compromised packages, known vulnerabilities, and malware. No signup required.
+
+Available at [shipsecure.ai/supply-chain](https://shipsecure.ai/supply-chain)
+
+**Three input methods:**
+- **GitHub URL** — Paste a repo URL, we fetch the package-lock.json from the default branch
+- **Upload** — Drag and drop or browse for a package-lock.json file
+- **Paste** — Paste lockfile content directly
+
+**What it checks:**
+- Infected packages (known malware via OSV database)
+- Vulnerable packages (CVEs and GitHub Security Advisories)
+- Advisory notices (lower-severity issues)
+- Unscanned dependencies (git/file/tarball sources that can't be verified)
+
+**Results include:**
+- 5-tier summary cards (Infected, Vulnerable, Advisory, No Known Issues, Unscanned)
+- Per-package findings with OSV advisory links, descriptions, and fix actions
+- Shareable results via capability URL (30-day retention)
+
+**Currently supports:** npm (package-lock.json v1, v2, v3). More ecosystems planned.
 
 ## Tech Stack
 
@@ -142,6 +169,7 @@ Copy `frontend/.env.example` and set the following:
 | `GET` | `/api/v1/results/{token}/download` | Optional | Download results as markdown |
 | `GET` | `/api/v1/quota` | Required | Get scan quota usage |
 | `GET` | `/api/v1/stats/scan-count` | No | Get total scan count |
+| `POST` | `/api/v1/scans/supply-chain` | No | Submit supply chain scan (GitHub URL, upload, or paste) |
 | `POST` | `/api/v1/webhooks/clerk` | Svix | Clerk user sync webhook |
 | `POST` | `/api/v1/domains/verify-start` | Required | Start domain verification |
 | `POST` | `/api/v1/domains/verify-confirm` | Required | Confirm domain verification |
@@ -164,8 +192,8 @@ src/
   metrics/       # Prometheus metrics (HTTP, scan, rate limit counters)
   cleanup.rs     # Hourly data retention (24h anonymous, 30d Developer)
 frontend/
-  app/           # Next.js pages (landing, scan, results, dashboard, verify-domain, sign-in/up)
-  components/    # UI components (scan form, results dashboard, scan history, auth gate, header)
+  app/           # Next.js pages (landing, scan, results, dashboard, supply-chain, verify-domain, sign-in/up)
+  components/    # UI components (scan form, results dashboard, supply-chain form/summary/findings, scan history, auth gate, header)
   proxy.ts      # Clerk auth middleware (protects /dashboard, /verify-domain)
   __tests__/     # Vitest unit tests and Playwright E2E tests
 migrations/      # PostgreSQL schema migrations

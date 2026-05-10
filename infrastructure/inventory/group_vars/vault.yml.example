@@ -13,3 +13,10 @@ vault_database_url: "REPLACE_WITH_MANAGED_DB_URL"
 vault_resend_api_key: ""
 vault_stripe_secret_key: ""
 vault_stripe_webhook_secret: ""
+
+# Clerk authentication (Phase 29). Required by env.production.j2.
+# Pull these from the Clerk dashboard for the production instance.
+vault_clerk_jwks_url: "REPLACE_WITH_CLERK_JWKS_URL"            # https://<your-instance>.clerk.accounts.dev/.well-known/jwks.json
+vault_clerk_secret_key: "REPLACE_WITH_CLERK_SECRET_KEY"        # sk_live_...
+vault_clerk_publishable_key: "REPLACE_WITH_CLERK_PUBLISHABLE_KEY"  # pk_live_...
+vault_clerk_webhook_signing_secret: ""                         # whsec_... (optional but recommended)

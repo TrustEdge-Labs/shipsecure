@@ -24,10 +24,14 @@ post-deploy health check → auto-rollback to previous SHA on failure
 Key files:
 - `docker-compose.prod.yml` — **standalone** production compose (NOT an override of docker-compose.yml)
 - `docker-compose.yml` — local development only, never used in production
-- `deploy/shipsecure.service` — systemd unit that manages Docker Compose
-- `deploy/setup-production.sh` — full server setup/reset script
+- `deploy/shipsecure.service` — systemd unit that manages Docker Compose (kept in sync with `infrastructure/templates/shipsecure.service.j2`)
+- `infrastructure/playbooks/provision.yml` — Ansible bootstrap for a fresh droplet (Docker, nginx, certbot, systemd, .env, metrics agent). Single source of truth for host provisioning.
+- `infrastructure/templates/shipsecure.nginx.conf.j2` — production nginx config (reverse proxy, SSL, CVE mitigations)
+- `infrastructure/templates/env.production.j2` — production `.env` template, rendered from `inventory/group_vars/{all,vault}.yml`
 - `.github/workflows/build-push.yml` — CI/CD build and deploy
 - `.github/workflows/ci.yml` — tests (unit + E2E)
+
+Note: `deploy/setup-production.sh` is **deprecated** — it only handled the app layer and assumed a pre-prepared host. Use the Ansible playbook above for any provisioning or recovery work.
 
 ### Critical Rules
 
@@ -59,7 +63,7 @@ Required in `/opt/shipsecure/.env`:
 When adding a new required env var to the backend or frontend:
 1. Add it to `docker-compose.prod.yml` environment section
 2. Add it to `.env.example` with documentation
-3. Add it to `deploy/setup-production.sh` validation list
+3. Add it to `infrastructure/templates/env.production.j2` (and wire `vault_*` → bare name in `infrastructure/inventory/group_vars/all.yml` if it's a secret)
 4. Update this table
 
 ### Database Backups
@@ -84,12 +88,24 @@ pg_restore --clean --if-exists -d "$DATABASE_URL" /opt/shipsecure/backup-YYYYMMD
 
 Run `sqlx migrate run` after restoring if the backup predates recent migrations.
 
-### Server Reset
+### Server Reset / Fresh Droplet Provisioning
 
-If production is broken beyond repair:
+If production is broken beyond repair, or you need to provision a brand-new droplet:
+
 ```bash
-scp -P 2222 deploy/setup-production.sh deploy@shipsecure.ai:/opt/shipsecure/
-ssh -p 2222 deploy@shipsecure.ai 'bash /opt/shipsecure/setup-production.sh'
+cd infrastructure
+ansible-galaxy collection install -r requirements.yml
+pip3 install pydo azure-core boto3
+ansible-playbook playbooks/provision.yml --ask-vault-pass
+```
+
+The playbook creates the droplet, allocates a Reserved IP, hardens SSH (port 2222, deploy user, root disabled), installs Docker + nginx + certbot, renders `.env` from the vault, installs the systemd unit, and starts the app. Idempotent — safe to re-run.
+
+After provision: update DNS A record for `shipsecure.ai` to the new Reserved IP, then add the new droplet IP to the Managed Postgres "Trusted Sources" list (DO Dashboard → Databases → shipsecure → Settings).
+
+To re-deploy only the application layer to an already-provisioned host:
+```bash
+ansible-playbook playbooks/resume-app.yml --ask-vault-pass
 ```
 
 ### GitHub Secrets

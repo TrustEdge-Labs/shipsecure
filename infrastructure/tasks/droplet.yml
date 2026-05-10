@@ -40,7 +40,24 @@
   set_fact:
     droplet_id: "{{ droplet_result.droplet.id }}"
 
-- name: Assign Reserved IP to droplet
+- name: List existing Reserved IPs on the account
+  uri:
+    url: "https://api.digitalocean.com/v2/reserved_ips?per_page=200"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ do_api_token }}"
+    status_code: [200]
+  register: existing_reserved_ips
+
+- name: Detect Reserved IP already assigned to this droplet
+  set_fact:
+    existing_reserved_ip: "{{ (existing_reserved_ips.json.reserved_ips
+                                | selectattr('droplet', 'mapping')
+                                | selectattr('droplet.id', 'equalto', droplet_id | int)
+                                | map(attribute='ip')
+                                | list | first) | default('') }}"
+
+- name: Assign new Reserved IP to droplet
   uri:
     url: "https://api.digitalocean.com/v2/reserved_ips"
     method: POST
@@ -52,25 +69,46 @@
       droplet_id: "{{ droplet_id | int }}"
     status_code: [200, 202]
   register: reserved_ip_result
+  when: existing_reserved_ip == ''
 
 - name: Extract static IP address
   set_fact:
-    droplet_ip: "{{ reserved_ip_result.json.reserved_ip.ip }}"
+    droplet_ip: "{{ existing_reserved_ip if existing_reserved_ip else reserved_ip_result.json.reserved_ip.ip }}"
 
-- name: Add droplet to in-memory inventory
+- name: Detect whether droplet is already hardened (SSH on {{ ssh_port }})
+  wait_for:
+    host: "{{ droplet_ip }}"
+    port: "{{ ssh_port }}"
+    timeout: 5
+    state: started
+  ignore_errors: true
+  register: hardened_ssh_check
+
+- name: Wait for default SSH (port 22) on fresh droplet
+  wait_for:
+    host: "{{ droplet_ip }}"
+    port: 22
+    timeout: 120
+    state: started
+  when: hardened_ssh_check is failed
+
+- name: Add fresh droplet to in-memory inventory (root@22)
   add_host:
     name: "{{ droplet_ip }}"
     groups: production
     ansible_user: root
     ansible_port: 22
     ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+  when: hardened_ssh_check is failed
 
-- name: Wait for SSH to be available on droplet
-  wait_for:
-    host: "{{ droplet_ip }}"
-    port: 22
-    timeout: 120
-    state: started
+- name: Add hardened droplet to in-memory inventory (deploy@{{ ssh_port }})
+  add_host:
+    name: "{{ droplet_ip }}"
+    groups: production
+    ansible_user: "{{ deploy_user }}"
+    ansible_port: "{{ ssh_port }}"
+    ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+  when: hardened_ssh_check is succeeded
 
 - name: Display droplet IP address
   debug:

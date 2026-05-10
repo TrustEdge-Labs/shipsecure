@@ -2,7 +2,7 @@
 # DigitalOcean
 do_api_token: "{{ vault_do_api_token }}"
 droplet_name: shipsecureai
-droplet_size: s-4vcpu-8gb
+droplet_size: s-2vcpu-4gb
 droplet_image: ubuntu-24-04-x64
 droplet_region: nyc3
 
@@ -29,3 +29,9 @@ database_url: "{{ vault_database_url }}"
 resend_api_key: "{{ vault_resend_api_key | default('') }}"
 stripe_secret_key: "{{ vault_stripe_secret_key | default('') }}"
 stripe_webhook_secret: "{{ vault_stripe_webhook_secret | default('') }}"
+
+# Clerk authentication (Phase 29) — referenced by env.production.j2
+clerk_jwks_url: "{{ vault_clerk_jwks_url }}"
+clerk_secret_key: "{{ vault_clerk_secret_key | default('') }}"
+clerk_publishable_key: "{{ vault_clerk_publishable_key }}"
+clerk_webhook_signing_secret: "{{ vault_clerk_webhook_signing_secret | default('') }}"

@@ -5,12 +5,12 @@ const extraConnectSrc = backendUrl ? ` ${backendUrl}` : '';
 
 const cspHeader = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://*.clerk.accounts.dev",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://*.clerk.accounts.dev https://clerk.shipsecure.ai https://accounts.shipsecure.ai",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://img.clerk.com https://*.clerk.com",
+  "img-src 'self' data: https://img.clerk.com https://*.clerk.com https://clerk.shipsecure.ai",
   "font-src 'self' data:",
-  `connect-src 'self' https://*.clerk.accounts.dev https://plausible.io${extraConnectSrc}`,
-  "frame-src 'self' https://*.clerk.accounts.dev",
+  `connect-src 'self' https://*.clerk.accounts.dev https://clerk.shipsecure.ai https://accounts.shipsecure.ai https://plausible.io${extraConnectSrc}`,
+  "frame-src 'self' https://*.clerk.accounts.dev https://clerk.shipsecure.ai https://accounts.shipsecure.ai",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
